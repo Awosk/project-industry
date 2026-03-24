@@ -77,6 +77,7 @@
                 <li><a href="<?= ROOT_URL ?>pages/kullanicilar.php">👥 Kullanıcı Yönetimi</a></li>
                 <li><a href="<?= ROOT_URL ?>pages/loglar.php">🔍 Sistem Kayıtları</a></li>
                 <li><a href="<?= ROOT_URL ?>pages/backup.php">💾 Veritabanı Yedekleme</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/guncelleme.php">🔄 Sistem Güncelleme</a></li>
             </ul>
         </li>
         <?php endif; ?>
@@ -110,6 +111,7 @@
             <li><a href="<?= ROOT_URL ?>pages/kullanicilar.php" onclick="closeDrawer()">👥 Kullanıcı Yönetimi</a></li>
             <li><a href="<?= ROOT_URL ?>pages/loglar.php" onclick="closeDrawer()">🔍 Sistem Kayıtları</a></li>
             <li><a href="<?= ROOT_URL ?>pages/backup.php" onclick="closeDrawer()">💾 Veritabanı Yedekleme</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/guncelleme.php" onclick="closeDrawer()">🔄 Sistem Güncelleme</a></li>
             <?php endif; ?>
         </ul>
         <div class="nav-drawer-footer">
