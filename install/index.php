@@ -127,6 +127,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['adim3'])) {
                     "INSERT INTO kullanicilar (ad_soyad, kullanici_adi, sifre, rol) VALUES (?, ?, ?, 'admin')"
                 )->execute([$ad_soyad, $k_adi, password_hash($sifre, PASSWORD_DEFAULT)]);
 
+                // İlk kurulum versiyonunu migration tablosuna kaydet
+                $ver_dosya = ROOT_DIR . '/version.php';
+                $ilk_versiyon = '1.0';
+                if (file_exists($ver_dosya)) {
+                    $ver_icerik = file_get_contents($ver_dosya);
+                    if (preg_match("/SITE_VERSIYONU[',\\s]+([0-9.]+)/", $ver_icerik, $vm)) {
+                        $ilk_versiyon = $vm[1];
+                    }
+                }
+                $pdo->prepare("INSERT IGNORE INTO sistem_migrations (versiyon) VALUES (?)")->execute([$ilk_versiyon]);
+
                 // .env dosyasını oluştur
                 $env = "DB_HOST={$_SESSION['db_host']}\n"
                      . "DB_NAME={$_SESSION['db_name']}\n"

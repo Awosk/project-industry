@@ -113,4 +113,11 @@ CREATE TABLE `sistem_loglari` (
   CONSTRAINT `sistem_loglari_ibfk_1` FOREIGN KEY (`kullanici_id`) REFERENCES `kullanicilar` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
+DROP TABLE IF EXISTS `sistem_migrations`;
+CREATE TABLE `sistem_migrations` (
+  `versiyon` varchar(20) NOT NULL,
+  `uygulandi_tarih` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`versiyon`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
 SET foreign_key_checks = 1;
