@@ -8,6 +8,7 @@ $sayfa_basligi = 'Ürün Yönetimi';
 $ku = mevcutKullanici();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
+    csrfDogrula();
     $kod = strtoupper(trim($_POST['urun_kodu']));
     $adi = trim($_POST['urun_adi']);
     if ($kod && $adi) {
@@ -31,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
     header('Location: urunler.php'); exit;
 }
 
-// ── DÜZENLE ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
+    csrfDogrula();
     $did = (int)$_POST['duzenle_id'];
     $kod = strtoupper(trim($_POST['duzenle_kod']));
     $adi = trim($_POST['duzenle_adi']);
@@ -74,6 +75,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="card">
     <div class="card-title">➕ Yeni Ürün Ekle</div>
     <form method="post">
+        <?= csrfInput() ?>
         <div class="form-grid">
             <div class="form-group">
                 <label>Ürün Kodu *</label>
@@ -123,6 +125,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="modal-box" style="max-width:420px;">
         <div style="font-weight:700;font-size:16px;margin-bottom:16px;">✏️ Ürün Düzenle</div>
         <form method="post">
+            <?= csrfInput() ?>
             <input type="hidden" name="duzenle_id" id="duzenle_urun_id">
             <div class="form-group">
                 <label>Ürün Kodu *</label>

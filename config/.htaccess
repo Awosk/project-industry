@@ -1,0 +1,8 @@
+# =====================================================
+# Project Oil — Config Klasörü Güvenliği
+# Bu klasördeki dosyalara doğrudan web erişimi engellenir.
+# Sadece PHP include/require ile kullanılabilir.
+# =====================================================
+
+Order allow,deny
+Deny from all

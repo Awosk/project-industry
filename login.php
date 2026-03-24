@@ -4,25 +4,61 @@ require_once __DIR__ . '/includes/auth.php';
 
 if (girisYapildi()) { header('Location: ' . ROOT_URL . 'index.php'); exit; }
 
+// Oturum sonlandırma bildirimi
+$oturum_mesaj = '';
+if (isset($_GET['oturum']) && $_GET['oturum'] === 'sonlandi') {
+    $oturum_mesaj = 'Hesabınız devre dışı bırakıldığı için oturumunuz sonlandırıldı.';
+}
+
 $hata = '';
+$ip   = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1')[0]);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $kadi  = trim($_POST['kullanici_adi'] ?? '');
-    $sifre = $_POST['sifre'] ?? '';
-    if ($kadi && $sifre) {
-        $stmt = $pdo->prepare("SELECT * FROM kullanicilar WHERE kullanici_adi=? AND aktif=1");
-        $stmt->execute([$kadi]);
-        $k = $stmt->fetch();
-        if ($k && password_verify($sifre, $k['sifre'])) {
-            $_SESSION['kullanici_id']  = $k['id'];
-            $_SESSION['kullanici_adi'] = $k['kullanici_adi'];
-            $_SESSION['ad_soyad']      = $k['ad_soyad'];
-            $_SESSION['kullanici_rol'] = $k['rol'];
-            $_SESSION['kullanici_tema']= $k['tema'] ?? 'light';
-            require_once __DIR__ . '/includes/log.php';
-            logGiris($pdo, $k, 'lite');
-            header('Location: ' . ROOT_URL . 'index.php'); exit;
-        } else { $hata = 'Kullanıcı adı veya şifre hatalı.'; }
-    } else { $hata = 'Lütfen tüm alanları doldurun.'; }
+
+    // Brute force kontrolü
+    $engel_sure = bfEngelliMi($ip);
+    if ($engel_sure > 0) {
+        $dk  = ceil($engel_sure / 60);
+        $hata = "Çok fazla başarısız giriş denemesi. Lütfen {$dk} dakika bekleyin.";
+    } else {
+        $kadi  = trim($_POST['kullanici_adi'] ?? '');
+        $sifre = $_POST['sifre'] ?? '';
+
+        if ($kadi && $sifre) {
+            $stmt = $pdo->prepare("SELECT * FROM kullanicilar WHERE kullanici_adi=? AND aktif=1");
+            $stmt->execute([$kadi]);
+            $k = $stmt->fetch();
+
+            if ($k && password_verify($sifre, $k['sifre'])) {
+                // Başarılı giriş — sayacı sıfırla, session güvenli yenile
+                bfSifirla($ip);
+                session_regenerate_id(true);
+
+                $_SESSION['kullanici_id']   = $k['id'];
+                $_SESSION['kullanici_adi']  = $k['kullanici_adi'];
+                $_SESSION['ad_soyad']       = $k['ad_soyad'];
+                $_SESSION['kullanici_rol']  = $k['rol'];
+                $_SESSION['kullanici_tema'] = $k['tema'] ?? 'light';
+                $_SESSION['son_aktivite']   = time();
+                $_SESSION['aktif_kontrol_zaman'] = time(); // İlk kontrolü şimdi yaptı say
+
+                require_once __DIR__ . '/includes/log.php';
+                logGiris($pdo, $k, 'lite');
+                header('Location: ' . ROOT_URL . 'index.php'); exit;
+            } else {
+                bfDenemeEkle($ip);
+                $kalan_hak = BF_LIMIT - ($_SESSION['bf_' . md5($ip)]['sayi'] ?? 0);
+                if ($kalan_hak > 0) {
+                    $hata = "Kullanıcı adı veya şifre hatalı. ({$kalan_hak} deneme hakkınız kaldı)";
+                } else {
+                    $dk   = ceil(BF_SURE / 60);
+                    $hata = "Çok fazla başarısız giriş denemesi. Lütfen {$dk} dakika bekleyin.";
+                }
+            }
+        } else {
+            $hata = 'Lütfen tüm alanları doldurun.';
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -42,13 +78,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h2><?= SITE_ADI ?></h2>
             <p>Araç/Tesis Yağ Takip Sistemi</p>
         </div>
+        <?php if ($oturum_mesaj): ?>
+        <div class="alert alert-warning"><?= htmlspecialchars($oturum_mesaj) ?></div>
+        <?php endif; ?>
         <?php if ($hata): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($hata) ?></div>
         <?php endif; ?>
         <form method="post">
+            <?= csrfInput() ?>
             <div class="form-group">
                 <label>Kullanıcı Adı</label>
-                <input type="text" name="kullanici_adi" autofocus required placeholder="kullanıcı adı">
+                <input type="text" name="kullanici_adi" autofocus required placeholder="kullanıcı adı"
+                       value="<?= htmlspecialchars($_POST['kullanici_adi'] ?? '') ?>">
             </div>
             <div class="form-group">
                 <label>Şifre</label>

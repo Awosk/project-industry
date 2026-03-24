@@ -1,0 +1,24 @@
+# =====================================================
+# Project Oil — Ana Dizin .htaccess
+# =====================================================
+
+# .env dosyasını web'den koru
+<Files ".env">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# .env yedek / örnek dosyaları da koru
+<Files ".env_example">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# version.php ve config klasörüne doğrudan erişimi engelle
+<FilesMatch "^(version\.php)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Dizin listelemeyi kapat
+Options -Indexes

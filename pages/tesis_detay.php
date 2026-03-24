@@ -15,8 +15,8 @@ if (!$tesis) { flash('Tesis bulunamadı.', 'danger'); header('Location: tesisler
 
 $sayfa_basligi = $tesis['firma_adi'];
 
-// Kayıt ekle
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
+    csrfDogrula();
     $urun_id  = (int)$_POST['urun_id'];
     $miktar   = (float)str_replace(',', '.', $_POST['miktar']);
     $tarih    = $_POST['tarih'];
@@ -30,16 +30,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
         $stmt->execute([$id, $urun_id, $miktar, $tarih, $aciklama ?: null, $ku['id']]);
         $yeni_id = $pdo->lastInsertId();
         $urun_adi_log = $pdo->prepare('SELECT urun_kodu, urun_adi FROM lite_urunler WHERE id=?'); $urun_adi_log->execute([$urun_id]); $urun_adi_log = $urun_adi_log->fetch();
-        logYaz(
-    $pdo,
-    'ekle',
-    'tesis_kayit', 
-    $tesis['firma_adi'].' tesisine yağ eklendi: '.($urun_adi_log['urun_kodu']??'').' - '.($urun_adi_log['urun_adi']??'').', '.$miktar.'L, tarih:'.$tarih.'. Açıklama: '.($aciklama ?? 'Yok'), 
-    $yeni_id, 
-    null, 
-    ['tesis_id'=>$id,'firma'=>$tesis['firma_adi'],'urun_id'=>$urun_id,'miktar'=>$miktar,'tarih'=>$tarih,'aciklama'=>$aciklama], 
-    'lite'
-);
+        logYaz($pdo,'ekle','tesis_kayit',
+            $tesis['firma_adi'].' tesisine yağ eklendi: '.($urun_adi_log['urun_kodu']??'').' - '.($urun_adi_log['urun_adi']??'').', '.$miktar.'L, tarih:'.$tarih.'. Açıklama: '.($aciklama ?? 'Yok'),
+            $yeni_id, null,
+            ['tesis_id'=>$id,'firma'=>$tesis['firma_adi'],'urun_id'=>$urun_id,'miktar'=>$miktar,'tarih'=>$tarih,'aciklama'=>$aciklama],
+            'lite');
         flash('Kayıt eklendi.');
     } else {
         flash('Ürün, miktar ve tarih zorunludur.', 'danger');
@@ -47,8 +42,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
     header('Location: tesis_detay.php?id=' . $id); exit;
 }
 
-// Açıklama güncelle
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle'])) {
+    csrfDogrula();
     $kayit_id      = (int)$_POST['kayit_id'];
     $yeni_aciklama = trim($_POST['aciklama_yeni'] ?? '');
     $sr = $pdo->prepare('SELECT lk.*,u.urun_kodu,u.urun_adi FROM lite_kayitlar lk JOIN lite_urunler u ON lk.urun_id=u.id WHERE lk.id=? AND lk.tesis_id=? AND lk.aktif=1');
@@ -61,22 +56,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle']))
     header('Location: tesis_detay.php?id='.$id); exit;
 }
 
-// Kayıt sil
 if (isset($_GET['sil'])) {
     $sil_id = (int)$_GET['sil'];
     $sr = $pdo->prepare('SELECT lk.*, u.urun_kodu, u.urun_adi FROM lite_kayitlar lk JOIN lite_urunler u ON lk.urun_id=u.id WHERE lk.id=? AND lk.tesis_id=?');
     $sr->execute([$sil_id, $id]); $sr = $sr->fetch();
     $pdo->prepare("UPDATE lite_kayitlar SET aktif=0 WHERE id=? AND tesis_id=?")->execute([$sil_id, $id]);
-    if ($sr) logYaz(
-    $pdo,
-    'sil',
-    'tesis_kayit', 
-    $tesis['firma_adi'].' tesisinden yağ kaydı silindi: '.$sr['urun_kodu'].' - '.$sr['urun_adi'].', '.$sr['miktar'].'L, tarih:'.$sr['tarih'].'. Açıklama: '.($sr['aciklama'] ?? 'Yok'), 
-    $sil_id, 
-    $sr, 
-    null, 
-    'lite'
-);
+    if ($sr) logYaz($pdo,'sil','tesis_kayit',
+        $tesis['firma_adi'].' tesisinden yağ kaydı silindi: '.$sr['urun_kodu'].' - '.$sr['urun_adi'].', '.$sr['miktar'].'L, tarih:'.$sr['tarih'].'. Açıklama: '.($sr['aciklama'] ?? 'Yok'),
+        $sil_id, $sr, null, 'lite');
     flash('Kayıt silindi.');
     header('Location: tesis_detay.php?id=' . $id); exit;
 }
@@ -117,6 +104,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="card">
     <div class="card-title">➕ Yağ Kaydı Ekle</div>
     <form method="post">
+        <?= csrfInput() ?>
         <div class="form-grid">
             <div class="form-group">
                 <label>Ürün *</label>
@@ -180,6 +168,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="modal-box" style="max-width:400px;">
         <div style="font-weight:700;font-size:16px;margin-bottom:16px;">✏️ Açıklama Düzenle</div>
         <form method="post">
+            <?= csrfInput() ?>
             <input type="hidden" name="kayit_id" id="aciklama_kayit_id">
             <div class="form-group">
                 <label>Açıklama <span style="font-weight:400;color:var(--muted);font-size:12px;">(boş bırakılırsa silinir)</span></label>
@@ -229,10 +218,7 @@ document.getElementById('aciklamaModal').addEventListener('click', function(e) {
     60%  { background: #fef9c3; box-shadow: 0 0 0 3px #fbbf24; }
     100% { background: transparent; box-shadow: none; }
 }
-.kayit-parlat {
-    animation: parlat 2.5s ease-out forwards;
-    border-radius: 8px;
-}
+.kayit-parlat { animation: parlat 2.5s ease-out forwards; border-radius: 8px; }
 </style>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

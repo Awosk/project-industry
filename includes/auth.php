@@ -22,7 +22,6 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!defined('ROOT_URL')) {
-    // Protokol
     $proto = 'http';
     if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
         $proto = 'https';
@@ -30,11 +29,8 @@ if (!defined('ROOT_URL')) {
         $proto = 'https';
     }
 
-    // Host
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
-    // Kök dizini fiziksel dosya yolundan hesapla (Windows backslash güvenli)
-    // auth.php: htdocs/includes/auth.php → htdocs/ kök dizini
     $root_path = str_replace('\\', '/', realpath(__DIR__ . '/..'));
     $doc_root  = str_replace('\\', '/', realpath($_SERVER['DOCUMENT_ROOT'] ?? ''));
 
@@ -44,12 +40,136 @@ if (!defined('ROOT_URL')) {
         $base = '';
     }
 
-    // Başında / olduğundan emin ol, sonundaki / kaldır, sonra / ekle
     $base = '/' . ltrim($base, '/');
     $base = rtrim($base, '/');
 
     define('ROOT_URL', $proto . '://' . $host . $base . '/');
 }
+
+// =====================================================
+// CSRF KORUМASI
+// =====================================================
+
+/**
+ * Mevcut CSRF token'ı döner, yoksa yeni oluşturur.
+ */
+function csrfToken(): string {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+/**
+ * Formlar için gizli CSRF input alanı HTML'i döner.
+ */
+function csrfInput(): string {
+    return '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(csrfToken()) . '">';
+}
+
+/**
+ * POST isteğindeki CSRF token'ı doğrular.
+ * Başarısız olursa 403 döner ve uyarı gösterir.
+ */
+function csrfDogrula(): void {
+    $gelen = $_POST['csrf_token'] ?? '';
+    if (!hash_equals(csrfToken(), $gelen)) {
+        http_response_code(403);
+        // Token'ı yenile (olası replay saldırısına karşı)
+        unset($_SESSION['csrf_token']);
+        die('<div style="font-family:sans-serif;padding:40px;color:#c0392b">
+            <h2>⛔ Güvenlik Hatası</h2>
+            <p>Geçersiz veya süresi dolmuş form token. Lütfen sayfayı yenileyip tekrar deneyin.</p>
+            <a href="javascript:history.back()">← Geri Dön</a>
+        </div>');
+    }
+}
+
+// =====================================================
+// SİLİNMİŞ / PASİF KULLANICI KONTROLÜ
+// =====================================================
+
+/**
+ * Oturumda kayıtlı kullanıcının veritabanında hâlâ aktif olup olmadığını kontrol eder.
+ * Admin hesabı silerse veya pasife alırsa oturum otomatik sonlandırılır.
+ * Performans için her 60 saniyede bir kontrol edilir.
+ */
+function aktifKullaniciKontrol($pdo): void {
+    if (!isset($_SESSION['kullanici_id'])) return;
+
+    $son_kontrol = $_SESSION['aktif_kontrol_zaman'] ?? 0;
+    if (time() - $son_kontrol < 60) return; // 60 saniyede bir kontrol
+
+    $_SESSION['aktif_kontrol_zaman'] = time();
+
+    $stmt = $pdo->prepare("SELECT aktif FROM kullanicilar WHERE id = ?");
+    $stmt->execute([$_SESSION['kullanici_id']]);
+    $sonuc = $stmt->fetchColumn();
+
+    if ($sonuc === false || (int)$sonuc === 0) {
+        // Kullanıcı silinmiş veya pasife alınmış
+        session_destroy();
+        session_start();
+        header('Location: ' . ROOT_URL . 'login.php?oturum=sonlandi');
+        exit;
+    }
+}
+
+// =====================================================
+// BRUTE FORCE KORUМASI
+// =====================================================
+
+define('BF_LIMIT',    5);   // Maksimum başarısız deneme
+define('BF_SURE',    900);  // Engel süresi: 15 dakika (saniye)
+
+/**
+ * Belirli bir anahtar (IP) için başarısız deneme kaydeder.
+ */
+function bfDenemeEkle(string $ip): void {
+    $key = 'bf_' . md5($ip);
+    if (!isset($_SESSION[$key])) {
+        $_SESSION[$key] = ['sayi' => 0, 'ilk' => time()];
+    }
+    // Süre dolmuşsa sıfırla
+    if (time() - $_SESSION[$key]['ilk'] > BF_SURE) {
+        $_SESSION[$key] = ['sayi' => 0, 'ilk' => time()];
+    }
+    $_SESSION[$key]['sayi']++;
+    $_SESSION[$key]['son']  = time();
+}
+
+/**
+ * IP'nin engellenip engellenmediğini kontrol eder.
+ * Engelliyse kalan süreyi (saniye) döner, değilse 0.
+ */
+function bfEngelliMi(string $ip): int {
+    $key = 'bf_' . md5($ip);
+    if (!isset($_SESSION[$key])) return 0;
+
+    $veri = $_SESSION[$key];
+    // Süre geçmişse engel kalktı
+    if (time() - $veri['ilk'] > BF_SURE) {
+        unset($_SESSION[$key]);
+        return 0;
+    }
+    if ($veri['sayi'] >= BF_LIMIT) {
+        $kalan = BF_SURE - (time() - $veri['ilk']);
+        return max(0, $kalan);
+    }
+    return 0;
+}
+
+/**
+ * Başarılı girişte sayacı sıfırlar.
+ */
+function bfSifirla(string $ip): void {
+    $key = 'bf_' . md5($ip);
+    unset($_SESSION[$key]);
+}
+
+// =====================================================
+// MEVCUT FONKSİYONLAR
+// =====================================================
 
 function girisKontrol() {
     if (!isset($_SESSION['kullanici_id'])) {

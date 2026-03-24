@@ -8,6 +8,7 @@ $sayfa_basligi = 'Araç Yönetimi';
 $ku = mevcutKullanici();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
+    csrfDogrula();
     $tur   = trim($_POST['arac_turu']);
     $plaka = strtoupper(trim($_POST['plaka']));
     $model = trim($_POST['marka_model']);
@@ -32,15 +33,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
     header('Location: araclar.php'); exit;
 }
 
-// ── DÜZENLE ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
+    csrfDogrula();
     $did   = (int)$_POST['duzenle_id'];
     $tur   = trim($_POST['duzenle_tur']);
     $plaka = strtoupper(trim($_POST['duzenle_plaka']));
     $model = trim($_POST['duzenle_model']);
     if ($did && $tur && $plaka && $model) {
         $sr = $pdo->prepare('SELECT * FROM lite_araclar WHERE id=?'); $sr->execute([$did]); $sr = $sr->fetch();
-        // Plaka değiştiyse çakışma kontrolü
         $cakisma = $pdo->prepare("SELECT id FROM lite_araclar WHERE plaka=? AND id!=? AND aktif=1");
         $cakisma->execute([$plaka, $did]);
         if ($cakisma->fetch()) {
@@ -77,6 +77,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="card">
     <div class="card-title">➕ Yeni Araç Ekle</div>
     <form method="post">
+        <?= csrfInput() ?>
         <div class="form-grid">
             <div class="form-group">
                 <label>Araç Türü *</label>
@@ -138,6 +139,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="modal-box" style="max-width:460px;">
         <div style="font-weight:700;font-size:16px;margin-bottom:16px;">✏️ Araç Düzenle</div>
         <form method="post">
+            <?= csrfInput() ?>
             <input type="hidden" name="duzenle_id" id="duzenle_arac_id">
             <div class="form-group">
                 <label>Araç Türü *</label>

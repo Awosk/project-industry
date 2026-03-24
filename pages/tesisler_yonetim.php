@@ -8,15 +8,14 @@ $sayfa_basligi = 'Tesis Yönetimi';
 $ku = mevcutKullanici();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
+    csrfDogrula();
     $firma = trim($_POST['firma_adi']);
     $adres = trim($_POST['firma_adresi']);
     if ($firma && $adres) {
-        // Aynı firma adıyla silinmiş kayıt var mı kontrol et
         $mevcut = $pdo->prepare("SELECT * FROM lite_tesisler WHERE firma_adi=?");
         $mevcut->execute([$firma]); $mevcut = $mevcut->fetch();
 
         if ($mevcut && $mevcut['aktif'] == 0) {
-            // Reaktif et
             $pdo->prepare("UPDATE lite_tesisler SET firma_adresi=?, olusturan_id=?, aktif=1 WHERE id=?")->execute([$adres, $ku['id'], $mevcut['id']]);
             logYaz($pdo,'ekle','tesis','Silinen tesis reaktif edildi: '.$firma, $mevcut['id'], null, ['firma'=>$firma,'adres'=>$adres], 'lite');
             flash('Daha önce silinmiş tesis tekrar aktif edildi.');
@@ -41,8 +40,8 @@ if (isset($_GET['sil'])) {
     header('Location: tesisler_yonetim.php'); exit;
 }
 
-// ── DÜZENLE ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
+    csrfDogrula();
     $did   = (int)$_POST['duzenle_id'];
     $firma = trim($_POST['duzenle_firma']);
     $adres = trim($_POST['duzenle_adres']);
@@ -75,6 +74,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="card">
     <div class="card-title">➕ Yeni Tesis / Şantiye Ekle</div>
     <form method="post">
+        <?= csrfInput() ?>
         <div class="form-grid">
             <div class="form-group">
                 <label>Firma / Şantiye Adı *</label>
@@ -124,6 +124,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="modal-box" style="max-width:420px;">
         <div style="font-weight:700;font-size:16px;margin-bottom:16px;">✏️ Tesis Düzenle</div>
         <form method="post">
+            <?= csrfInput() ?>
             <input type="hidden" name="duzenle_id" id="duzenle_tesis_id">
             <div class="form-group">
                 <label>Firma / Şantiye Adı *</label>

@@ -8,17 +8,16 @@ $sayfa_basligi = 'Kullanıcı Yönetimi';
 $ku = mevcutKullanici();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
+    csrfDogrula();
     $ad   = trim($_POST['ad_soyad']);
     $kadi = trim($_POST['kullanici_adi']);
     $sifre= $_POST['sifre'];
     $rol  = $_POST['rol'] === 'admin' ? 'admin' : 'kullanici';
     if ($ad && $kadi && strlen($sifre) >= 6) {
-        // Silinmiş kullanıcı var mı kontrol et
         $mevcut = $pdo->prepare("SELECT * FROM kullanicilar WHERE kullanici_adi=?");
         $mevcut->execute([$kadi]); $mevcut = $mevcut->fetch();
 
         if ($mevcut && $mevcut['aktif'] == 0) {
-            // Reaktif et
             $pdo->prepare("UPDATE kullanicilar SET ad_soyad=?, sifre=?, rol=?, aktif=1 WHERE id=?")->execute([$ad, password_hash($sifre, PASSWORD_DEFAULT), $rol, $mevcut['id']]);
             logYaz($pdo,'ekle','kullanici','Silinen kullanıcı reaktif edildi: '.$kadi.' ('.$rol.')', $mevcut['id'], null, ['ad_soyad'=>$ad,'kullanici_adi'=>$kadi,'rol'=>$rol], 'lite');
             flash('Daha önce silinmiş kullanıcı tekrar aktif edildi.');
@@ -37,6 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rol_degistir'])) {
+    csrfDogrula();
     $rol_id  = (int)$_POST['rol_id'];
     $yeni_rol = $_POST['yeni_rol'] === 'admin' ? 'admin' : 'kullanici';
     if ($rol_id) {
@@ -52,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rol_degistir'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sifre_reset'])) {
+    csrfDogrula();
     $reset_id  = (int)$_POST['reset_id'];
     $yeni_sifre = $_POST['yeni_sifre'] ?? '';
     if ($reset_id && strlen($yeni_sifre) >= 6) {
@@ -89,6 +90,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="card">
     <div class="card-title">➕ Yeni Kullanıcı</div>
     <form method="post">
+        <?= csrfInput() ?>
         <div class="form-grid">
             <div class="form-group">
                 <label>Ad Soyad *</label>
@@ -148,6 +150,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="modal-box" style="max-width:360px;">
         <div style="font-weight:700;font-size:16px;margin-bottom:16px;">🔑 Şifre Sıfırla — <span id="modal_ad"></span></div>
         <form method="post">
+            <?= csrfInput() ?>
             <input type="hidden" name="reset_id" id="modal_reset_id">
             <div class="form-group">
                 <label>Yeni Şifre * <span style="font-weight:400;color:var(--muted);font-size:12px;">(min. 6 karakter)</span></label>
@@ -166,6 +169,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="modal-box" style="max-width:360px;">
         <div style="font-weight:700;font-size:16px;margin-bottom:16px;">👤 Rol Değiştir — <span id="rol_modal_ad"></span></div>
         <form method="post">
+            <?= csrfInput() ?>
             <input type="hidden" name="rol_id" id="rol_modal_id">
             <div class="form-group">
                 <label>Yeni Rol</label>
@@ -191,9 +195,7 @@ function sifreModal(id, ad) {
     m.style.display = 'flex';
     setTimeout(() => document.getElementById('modal_sifre').focus(), 50);
 }
-function sifreModalKapat() {
-    document.getElementById('sifreModal').style.display = 'none';
-}
+function sifreModalKapat() { document.getElementById('sifreModal').style.display = 'none'; }
 document.getElementById('sifreModal').addEventListener('click', function(e) {
     if (e.target === this) sifreModalKapat();
 });
@@ -205,9 +207,7 @@ function rolModal(id, ad, mevcutRol) {
     var m = document.getElementById('rolModal');
     m.style.display = 'flex';
 }
-function rolModalKapat() {
-    document.getElementById('rolModal').style.display = 'none';
-}
+function rolModalKapat() { document.getElementById('rolModal').style.display = 'none'; }
 document.getElementById('rolModal').addEventListener('click', function(e) {
     if (e.target === this) rolModalKapat();
 });

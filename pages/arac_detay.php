@@ -15,8 +15,8 @@ if (!$arac) { flash('Araç bulunamadı.', 'danger'); header('Location: ../index.
 
 $sayfa_basligi = $arac['plaka'];
 
-// ── YAĞ KAYDI EKLE ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['yag_ekle'])) {
+    csrfDogrula();
     $urun_id    = (int)$_POST['urun_id'];
     $miktar     = (float)str_replace(',', '.', $_POST['miktar']);
     $tarih      = $_POST['tarih'];
@@ -41,8 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['yag_ekle'])) {
     header('Location: arac_detay.php?id='.$id); exit;
 }
 
-// ── AÇIKLAMA GÜNCELLE ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle'])) {
+    csrfDogrula();
     $kayit_id  = (int)$_POST['kayit_id'];
     $yeni_aciklama = trim($_POST['aciklama_yeni'] ?? '');
     $sr = $pdo->prepare('SELECT lk.*,u.urun_kodu,u.urun_adi FROM lite_kayitlar lk JOIN lite_urunler u ON lk.urun_id=u.id WHERE lk.id=? AND lk.arac_id=? AND lk.aktif=1');
@@ -55,7 +55,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle']))
     header('Location: arac_detay.php?id='.$id); exit;
 }
 
-// ── YAĞ KAYDI SİL (aktif=0) ──
 if (isset($_GET['yag_sil'])) {
     $sil_id = (int)$_GET['yag_sil'];
     $sr = $pdo->prepare('SELECT lk.*,u.urun_kodu,u.urun_adi FROM lite_kayitlar lk JOIN lite_urunler u ON lk.urun_id=u.id WHERE lk.id=? AND lk.arac_id=?');
@@ -71,7 +70,6 @@ if (isset($_GET['yag_sil'])) {
     header('Location: arac_detay.php?id='.$id); exit;
 }
 
-// ── VERİLERİ ÇEK ──
 $urunler = $pdo->query("SELECT * FROM lite_urunler WHERE aktif=1 ORDER BY urun_adi")->fetchAll();
 
 $yag_kayitlari = $pdo->prepare("
@@ -97,7 +95,6 @@ require_once __DIR__ . '/../includes/header.php';
     <a href="../index.php" class="btn btn-secondary btn-sm">← Geri</a>
 </div>
 
-<!-- Araç Özet -->
 <div class="card" style="padding:14px 16px;margin-bottom:14px;">
     <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;">
         <div>
@@ -109,7 +106,6 @@ require_once __DIR__ . '/../includes/header.php';
             <div style="font-weight:600;"><?= count($yag_kayitlari) ?> işlem</div>
         </div>
         <?php
-        // Son yağ bakımını bul
         $son_bakim = null;
         foreach ($yag_kayitlari as $yk) {
             if ($yk['yag_bakimi']) { $son_bakim = $yk; break; }
@@ -133,10 +129,10 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<!-- Yağ Ekleme Formu -->
 <div class="card">
     <div class="card-title">➕ Yağ Kaydı Ekle</div>
     <form method="post">
+        <?= csrfInput() ?>
         <div class="form-grid">
             <div class="form-group">
                 <label>Ürün *</label>
@@ -155,7 +151,6 @@ require_once __DIR__ . '/../includes/header.php';
                 <label>Tarih *</label>
                 <input type="date" name="tarih" value="<?= date('Y-m-d') ?>" required>
             </div>
-            <!-- Yağ Bakımı Checkbox -->
             <div class="form-group full">
                 <label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none;font-size:14px;font-weight:600;color:var(--text);background:var(--warning-l);padding:12px 14px;border-radius:var(--r-sm);border:1.5px solid var(--warning);">
                     <input type="checkbox" name="yag_bakimi" id="yag_bakimi" value="1" onchange="kmToggle()" style="width:20px;height:20px;accent-color:var(--warning);cursor:pointer;flex-shrink:0;">
@@ -177,7 +172,6 @@ require_once __DIR__ . '/../includes/header.php';
     </form>
 </div>
 
-<!-- Geçmiş Kayıtlar -->
 <div class="card">
     <div class="card-title">📋 Yağ Geçmişi (<?= count($yag_kayitlari) ?>)</div>
     <?php if (empty($yag_kayitlari)): ?>
@@ -218,6 +212,7 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="modal-box" style="max-width:400px;">
         <div style="font-weight:700;font-size:16px;margin-bottom:16px;">✏️ Açıklama Düzenle</div>
         <form method="post">
+            <?= csrfInput() ?>
             <input type="hidden" name="kayit_id" id="aciklama_kayit_id">
             <div class="form-group">
                 <label>Açıklama <span style="font-weight:400;color:var(--muted);font-size:12px;">(boş bırakılırsa silinir)</span></label>
@@ -251,7 +246,6 @@ document.getElementById('aciklamaModal').addEventListener('click', function(e) {
     if (e.target === this) aciklamaModalKapat();
 });
 
-// Anchor'dan gelen kayıt vurgulama
 (function() {
     var hash = window.location.hash;
     if (hash && hash.startsWith('#kayit-')) {

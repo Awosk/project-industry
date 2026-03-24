@@ -25,7 +25,16 @@
 </head>
 <body>
 
-<?php if (girisYapildi()): $ku = mevcutKullanici(); $curr = basename($_SERVER['PHP_SELF']); ?>
+<?php if (girisYapildi()):
+    // ── Silinmiş / pasife alınmış kullanıcı oturumu otomatik kapat ──
+    // $pdo bu noktada config/database.php tarafından zaten tanımlı olmalı
+    if (isset($pdo)) {
+        aktifKullaniciKontrol($pdo);
+    }
+
+    $ku = mevcutKullanici();
+    $curr = basename($_SERVER['PHP_SELF']);
+?>
 
 <nav class="navbar">
     <button class="nav-hamburger" id="hamburger" onclick="toggleDrawer()" aria-label="Menü">
@@ -159,14 +168,12 @@ async function temaToggle() {
     var yeni    = mevcut === 'light' ? 'dark' : 'light';
     var base    = '<?= ROOT_URL ?>';
 
-    // CSS'i anında değiştir
     if (yeni === 'dark') {
         linkEl.href = base + 'assets/css/style-dark.css';
     } else {
         linkEl.href = '';
     }
 
-    // Buton ikonları
     var icon  = yeni === 'dark' ? '☀️' : '🌙';
     var label = yeni === 'dark' ? 'Açık Temaya Geç' : 'Koyu Temaya Geç';
     var desktopBtn   = document.getElementById('temaBtn');
@@ -176,7 +183,6 @@ async function temaToggle() {
     if (drawerIcon)  drawerIcon.textContent  = icon;
     if (drawerLabel) drawerLabel.textContent = label;
 
-    // Sunucuya kaydet
     try {
         await fetch(base + 'pages/tema.php', {
             method: 'POST',

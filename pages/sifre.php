@@ -8,6 +8,7 @@ $sayfa_basligi = 'Şifre Değiştir';
 $ku = mevcutKullanici();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrfDogrula();
     $eski  = $_POST['eski_sifre']  ?? '';
     $yeni  = $_POST['yeni_sifre']  ?? '';
     $tekrar= $_POST['yeni_tekrar'] ?? '';
@@ -19,7 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($yeni !== $tekrar) {
         flash('Yeni şifreler eşleşmiyor.', 'danger');
     } else {
-        // Eski şifreyi doğrula
         $stmt = $pdo->prepare("SELECT sifre FROM kullanicilar WHERE id=? AND aktif=1");
         $stmt->execute([$ku['id']]);
         $mevcut_hash = $stmt->fetchColumn();
@@ -47,6 +47,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="card" style="max-width:480px;">
     <div class="card-title">🔒 Yeni Şifre Belirle</div>
     <form method="post">
+        <?= csrfInput() ?>
         <div class="form-group">
             <label>Mevcut Şifre *</label>
             <input type="password" name="eski_sifre" required autofocus placeholder="••••••••">
