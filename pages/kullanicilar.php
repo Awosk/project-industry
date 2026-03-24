@@ -1,0 +1,215 @@
+<?php
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/log.php';
+adminKontrol();
+
+$sayfa_basligi = 'Kullanıcı Yönetimi';
+$ku = mevcutKullanici();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
+    $ad   = trim($_POST['ad_soyad']);
+    $kadi = trim($_POST['kullanici_adi']);
+    $sifre= $_POST['sifre'];
+    $rol  = $_POST['rol'] === 'admin' ? 'admin' : 'kullanici';
+    if ($ad && $kadi && strlen($sifre) >= 6) {
+        // Silinmiş kullanıcı var mı kontrol et
+        $mevcut = $pdo->prepare("SELECT * FROM kullanicilar WHERE kullanici_adi=?");
+        $mevcut->execute([$kadi]); $mevcut = $mevcut->fetch();
+
+        if ($mevcut && $mevcut['aktif'] == 0) {
+            // Reaktif et
+            $pdo->prepare("UPDATE kullanicilar SET ad_soyad=?, sifre=?, rol=?, aktif=1 WHERE id=?")->execute([$ad, password_hash($sifre, PASSWORD_DEFAULT), $rol, $mevcut['id']]);
+            logYaz($pdo,'ekle','kullanici','Silinen kullanıcı reaktif edildi: '.$kadi.' ('.$rol.')', $mevcut['id'], null, ['ad_soyad'=>$ad,'kullanici_adi'=>$kadi,'rol'=>$rol], 'lite');
+            flash('Daha önce silinmiş kullanıcı tekrar aktif edildi.');
+        } elseif ($mevcut && $mevcut['aktif'] == 1) {
+            flash('Bu kullanıcı adı zaten kullanımda.', 'danger');
+        } else {
+            try {
+                $pdo->prepare("INSERT INTO kullanicilar (ad_soyad, kullanici_adi, sifre, rol) VALUES (?,?,?,?)")->execute([$ad, $kadi, password_hash($sifre, PASSWORD_DEFAULT), $rol]);
+                $yeni_id = $pdo->lastInsertId();
+                logYaz($pdo,'ekle','kullanici','Yeni kullanıcı eklendi: '.$kadi.' ('.$rol.')', $yeni_id, null, ['ad_soyad'=>$ad,'kullanici_adi'=>$kadi,'rol'=>$rol], 'lite');
+                flash('Kullanıcı eklendi.');
+            } catch (PDOException $e) { flash('Bir hata oluştu.', 'danger'); }
+        }
+    } else { flash('Tüm alanlar zorunludur, şifre min. 6 karakter.', 'danger'); }
+    header('Location: kullanicilar.php'); exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rol_degistir'])) {
+    $rol_id  = (int)$_POST['rol_id'];
+    $yeni_rol = $_POST['yeni_rol'] === 'admin' ? 'admin' : 'kullanici';
+    if ($rol_id) {
+        $sr = $pdo->prepare('SELECT * FROM kullanicilar WHERE id=? AND aktif=1'); $sr->execute([$rol_id]); $sr = $sr->fetch();
+        if ($sr) {
+            $eski_rol = $sr['rol'];
+            $pdo->prepare("UPDATE kullanicilar SET rol=? WHERE id=?")->execute([$yeni_rol, $rol_id]);
+            logYaz($pdo,'guncelle','kullanici','Kullanıcı rolü değiştirildi: '.$sr['kullanici_adi'].' ('.$eski_rol.' → '.$yeni_rol.')', $rol_id, ['rol'=>$eski_rol], ['rol'=>$yeni_rol], 'lite');
+            flash($sr['ad_soyad'] . ' kullanıcısının rolü ' . $yeni_rol . ' olarak güncellendi.');
+        } else { flash('Kullanıcı bulunamadı.', 'danger'); }
+    }
+    header('Location: kullanicilar.php'); exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sifre_reset'])) {
+    $reset_id  = (int)$_POST['reset_id'];
+    $yeni_sifre = $_POST['yeni_sifre'] ?? '';
+    if ($reset_id && strlen($yeni_sifre) >= 6) {
+        $sr = $pdo->prepare('SELECT * FROM kullanicilar WHERE id=? AND aktif=1'); $sr->execute([$reset_id]); $sr = $sr->fetch();
+        if ($sr) {
+            $pdo->prepare("UPDATE kullanicilar SET sifre=? WHERE id=?")->execute([password_hash($yeni_sifre, PASSWORD_DEFAULT), $reset_id]);
+            logYaz($pdo,'guncelle','kullanici','Admin tarafından şifre sıfırlandı: '.$sr['kullanici_adi'], $reset_id, null, null, 'lite');
+            flash($sr['ad_soyad'] . ' kullanıcısının şifresi güncellendi.');
+        } else { flash('Kullanıcı bulunamadı.', 'danger'); }
+    } else { flash('Şifre en az 6 karakter olmalıdır.', 'danger'); }
+    header('Location: kullanicilar.php'); exit;
+}
+
+if (isset($_GET['sil'])) {
+    $sil_id = (int)$_GET['sil'];
+    if ($sil_id === $ku['id']) { flash('Kendi hesabınızı silemezsiniz.', 'danger'); }
+    else {
+        $sr = $pdo->prepare('SELECT * FROM kullanicilar WHERE id=?'); $sr->execute([$sil_id]); $sr = $sr->fetch();
+        $pdo->prepare("UPDATE kullanicilar SET aktif=0 WHERE id=?")->execute([$sil_id]);
+        if ($sr) logYaz($pdo,'sil','kullanici','Kullanıcı silindi: '.$sr['kullanici_adi'].' ('.$sr['rol'].')', $sil_id, ['kullanici_adi'=>$sr['kullanici_adi'],'ad_soyad'=>$sr['ad_soyad'],'rol'=>$sr['rol']], null, 'lite');
+        flash('Kullanıcı silindi.');
+    }
+    header('Location: kullanicilar.php'); exit;
+}
+
+$kullanicilar = $pdo->query("SELECT * FROM kullanicilar WHERE aktif=1 ORDER BY ad_soyad")->fetchAll();
+
+require_once __DIR__ . '/../includes/header.php';
+?>
+
+<div class="page-header">
+    <h1><span>👥</span> Kullanıcı Yönetimi</h1>
+</div>
+
+<div class="card">
+    <div class="card-title">➕ Yeni Kullanıcı</div>
+    <form method="post">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Ad Soyad *</label>
+                <input type="text" name="ad_soyad" required>
+            </div>
+            <div class="form-group">
+                <label>Kullanıcı Adı *</label>
+                <input type="text" name="kullanici_adi" required>
+            </div>
+            <div class="form-group">
+                <label>Şifre * (min. 6 karakter)</label>
+                <input type="password" name="sifre" required minlength="6">
+            </div>
+            <div class="form-group">
+                <label>Rol</label>
+                <select name="rol">
+                    <option value="kullanici">Kullanıcı</option>
+                    <option value="admin">Admin</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-top:14px;">
+            <button type="submit" name="ekle" class="btn btn-primary">💾 Ekle</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-title">📋 Kullanıcılar (<?= count($kullanicilar) ?>)</div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>Ad Soyad</th><th>Kullanıcı Adı</th><th>Rol</th><th>İşlem</th></tr></thead>
+            <tbody>
+            <?php foreach ($kullanicilar as $u): ?>
+            <tr>
+                <td><?= htmlspecialchars($u['ad_soyad']) ?></td>
+                <td><code><?= htmlspecialchars($u['kullanici_adi']) ?></code></td>
+                <td><?= $u['rol']==='admin' ? '<span class="badge badge-warning">👑 Admin</span>' : '<span class="badge badge-info">👤 Kullanıcı</span>' ?></td>
+                <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <button class="btn btn-sm btn-secondary" onclick="sifreModal(<?= $u['id'] ?>, '<?= htmlspecialchars($u['ad_soyad'], ENT_QUOTES) ?>')">🔑 Şifre</button>
+                    <button class="btn btn-sm btn-secondary" onclick="rolModal(<?= $u['id'] ?>, '<?= htmlspecialchars($u['ad_soyad'], ENT_QUOTES) ?>', '<?= $u['rol'] ?>')">👤 Rol</button>
+                    <?php if ($u['id'] !== $ku['id']): ?>
+                    <a href="?sil=<?= $u['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Silmek istediğinize emin misiniz?')">🗑️ Sil</a>
+                    <?php else: ?>
+                    <span class="badge badge-success">← Siz</span>
+                    <?php endif; ?>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Şifre Reset Modal -->
+<div id="sifreModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+    <div class="modal-box" style="max-width:360px;">
+        <div style="font-weight:700;font-size:16px;margin-bottom:16px;">🔑 Şifre Sıfırla — <span id="modal_ad"></span></div>
+        <form method="post">
+            <input type="hidden" name="reset_id" id="modal_reset_id">
+            <div class="form-group">
+                <label>Yeni Şifre * <span style="font-weight:400;color:var(--muted);font-size:12px;">(min. 6 karakter)</span></label>
+                <input type="password" name="yeni_sifre" id="modal_sifre" required minlength="6" placeholder="••••••••">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+                <button type="submit" name="sifre_reset" class="btn btn-primary" style="flex:1;">💾 Kaydet</button>
+                <button type="button" class="btn btn-secondary" onclick="sifreModalKapat()">İptal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Rol Değiştir Modal -->
+<div id="rolModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+    <div class="modal-box" style="max-width:360px;">
+        <div style="font-weight:700;font-size:16px;margin-bottom:16px;">👤 Rol Değiştir — <span id="rol_modal_ad"></span></div>
+        <form method="post">
+            <input type="hidden" name="rol_id" id="rol_modal_id">
+            <div class="form-group">
+                <label>Yeni Rol</label>
+                <select name="yeni_rol" id="rol_modal_select">
+                    <option value="kullanici">👤 Kullanıcı</option>
+                    <option value="admin">👑 Admin</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+                <button type="submit" name="rol_degistir" class="btn btn-primary" style="flex:1;">💾 Kaydet</button>
+                <button type="button" class="btn btn-secondary" onclick="rolModalKapat()">İptal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function sifreModal(id, ad) {
+    document.getElementById('modal_reset_id').value = id;
+    document.getElementById('modal_ad').textContent = ad;
+    document.getElementById('modal_sifre').value = '';
+    var m = document.getElementById('sifreModal');
+    m.style.display = 'flex';
+    setTimeout(() => document.getElementById('modal_sifre').focus(), 50);
+}
+function sifreModalKapat() {
+    document.getElementById('sifreModal').style.display = 'none';
+}
+document.getElementById('sifreModal').addEventListener('click', function(e) {
+    if (e.target === this) sifreModalKapat();
+});
+
+function rolModal(id, ad, mevcutRol) {
+    document.getElementById('rol_modal_id').value = id;
+    document.getElementById('rol_modal_ad').textContent = ad;
+    document.getElementById('rol_modal_select').value = mevcutRol;
+    var m = document.getElementById('rolModal');
+    m.style.display = 'flex';
+}
+function rolModalKapat() {
+    document.getElementById('rolModal').style.display = 'none';
+}
+document.getElementById('rolModal').addEventListener('click', function(e) {
+    if (e.target === this) rolModalKapat();
+});
+</script>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

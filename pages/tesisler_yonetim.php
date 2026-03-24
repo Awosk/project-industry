@@ -1,0 +1,158 @@
+<?php
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../includes/log.php';
+girisKontrol();
+
+$sayfa_basligi = 'Tesis Yönetimi';
+$ku = mevcutKullanici();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
+    $firma = trim($_POST['firma_adi']);
+    $adres = trim($_POST['firma_adresi']);
+    if ($firma && $adres) {
+        // Aynı firma adıyla silinmiş kayıt var mı kontrol et
+        $mevcut = $pdo->prepare("SELECT * FROM lite_tesisler WHERE firma_adi=?");
+        $mevcut->execute([$firma]); $mevcut = $mevcut->fetch();
+
+        if ($mevcut && $mevcut['aktif'] == 0) {
+            // Reaktif et
+            $pdo->prepare("UPDATE lite_tesisler SET firma_adresi=?, olusturan_id=?, aktif=1 WHERE id=?")->execute([$adres, $ku['id'], $mevcut['id']]);
+            logYaz($pdo,'ekle','tesis','Silinen tesis reaktif edildi: '.$firma, $mevcut['id'], null, ['firma'=>$firma,'adres'=>$adres], 'lite');
+            flash('Daha önce silinmiş tesis tekrar aktif edildi.');
+        } elseif ($mevcut && $mevcut['aktif'] == 1) {
+            flash('Bu tesis adı zaten kayıtlı.', 'danger');
+        } else {
+            $pdo->prepare("INSERT INTO lite_tesisler (firma_adi, firma_adresi, olusturan_id) VALUES (?,?,?)")->execute([$firma, $adres, $ku['id']]);
+            $yeni_id = $pdo->lastInsertId();
+            logYaz($pdo,'ekle','tesis','Tesis eklendi: '.$firma, $yeni_id, null, ['firma'=>$firma,'adres'=>$adres], 'lite');
+            flash('Tesis eklendi.');
+        }
+    } else { flash('Tüm alanlar zorunludur.', 'danger'); }
+    header('Location: tesisler_yonetim.php'); exit;
+}
+
+if (isset($_GET['sil'])) {
+    $sil_id = (int)$_GET['sil'];
+    $sr = $pdo->prepare('SELECT * FROM lite_tesisler WHERE id=?'); $sr->execute([$sil_id]); $sr = $sr->fetch();
+    $pdo->prepare("UPDATE lite_tesisler SET aktif=0 WHERE id=?")->execute([$sil_id]);
+    if ($sr) logYaz($pdo,'sil','tesis','Tesis silindi: '.$sr['firma_adi'], $sil_id, $sr, null, 'lite');
+    flash('Tesis silindi.');
+    header('Location: tesisler_yonetim.php'); exit;
+}
+
+// ── DÜZENLE ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
+    $did   = (int)$_POST['duzenle_id'];
+    $firma = trim($_POST['duzenle_firma']);
+    $adres = trim($_POST['duzenle_adres']);
+    if ($did && $firma && $adres) {
+        $sr = $pdo->prepare('SELECT * FROM lite_tesisler WHERE id=?'); $sr->execute([$did]); $sr = $sr->fetch();
+        $cakisma = $pdo->prepare("SELECT id FROM lite_tesisler WHERE firma_adi=? AND id!=? AND aktif=1");
+        $cakisma->execute([$firma, $did]);
+        if ($cakisma->fetch()) {
+            flash('Bu tesis adı başka bir kayıtta kullanılıyor.', 'danger');
+        } else {
+            $pdo->prepare("UPDATE lite_tesisler SET firma_adi=?, firma_adresi=? WHERE id=?")->execute([$firma, $adres, $did]);
+            logYaz($pdo,'guncelle','tesis','Tesis güncellendi: '.$firma, $did,
+                ['firma_adi'=>$sr['firma_adi'],'firma_adresi'=>$sr['firma_adresi']],
+                ['firma_adi'=>$firma,'firma_adresi'=>$adres], 'lite');
+            flash('Tesis güncellendi.');
+        }
+    } else { flash('Tüm alanlar zorunludur.', 'danger'); }
+    header('Location: tesisler_yonetim.php'); exit;
+}
+
+$tesisler = $pdo->query("SELECT t.*, k.ad_soyad FROM lite_tesisler t LEFT JOIN kullanicilar k ON t.olusturan_id=k.id WHERE t.aktif=1 ORDER BY t.firma_adi")->fetchAll();
+
+require_once __DIR__ . '/../includes/header.php';
+?>
+
+<div class="page-header">
+    <h1><span>🏭</span> Tesis Yönetimi</h1>
+</div>
+
+<div class="card">
+    <div class="card-title">➕ Yeni Tesis / Şantiye Ekle</div>
+    <form method="post">
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Firma / Şantiye Adı *</label>
+                <input type="text" name="firma_adi" required placeholder="Örn: ABC Şantiyesi" maxlength="200">
+            </div>
+            <div class="form-group">
+                <label>Adres *</label>
+                <input type="text" name="firma_adresi" required placeholder="Tam adres">
+            </div>
+        </div>
+        <div style="margin-top:14px;">
+            <button type="submit" name="ekle" class="btn btn-primary">💾 Ekle</button>
+        </div>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-title">📋 Kayıtlı Tesisler (<?= count($tesisler) ?>)</div>
+    <?php if (empty($tesisler)): ?>
+    <div class="alert alert-info">Henüz tesis kaydı yok.</div>
+    <?php else: ?>
+    <div class="table-wrap">
+        <table>
+            <thead><tr><th>#</th><th>Firma Adı</th><th>Adres</th><th>İşlem</th></tr></thead>
+            <tbody>
+            <?php foreach ($tesisler as $i => $t): ?>
+            <tr>
+                <td><?= $i+1 ?></td>
+                <td><strong><?= htmlspecialchars($t['firma_adi']) ?></strong></td>
+                <td><?= htmlspecialchars($t['firma_adresi']) ?></td>
+                <td style="display:flex;gap:6px;flex-wrap:wrap;">
+                    <a href="tesis_detay.php?id=<?= $t['id'] ?>" class="btn btn-sm btn-primary">👁️ Detay</a>
+                    <button class="btn btn-sm btn-secondary"
+                        onclick="tesisDuzenleModal(<?= $t['id'] ?>, '<?= htmlspecialchars($t['firma_adi'], ENT_QUOTES) ?>', '<?= htmlspecialchars($t['firma_adresi'], ENT_QUOTES) ?>')">✏️ Düzenle</button>
+                    <a href="?sil=<?= $t['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Silmek istediğinize emin misiniz?')">🗑️</a>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php endif; ?>
+</div>
+
+<!-- Düzenleme Modal -->
+<div id="tesisDuzenleModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+    <div class="modal-box" style="max-width:420px;">
+        <div style="font-weight:700;font-size:16px;margin-bottom:16px;">✏️ Tesis Düzenle</div>
+        <form method="post">
+            <input type="hidden" name="duzenle_id" id="duzenle_tesis_id">
+            <div class="form-group">
+                <label>Firma / Şantiye Adı *</label>
+                <input type="text" name="duzenle_firma" id="duzenle_tesis_firma" required maxlength="200">
+            </div>
+            <div class="form-group">
+                <label>Adres *</label>
+                <input type="text" name="duzenle_adres" id="duzenle_tesis_adres" required>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:16px;">
+                <button type="submit" name="duzenle" class="btn btn-primary" style="flex:1;">💾 Kaydet</button>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('tesisDuzenleModal').style.display='none'">İptal</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function tesisDuzenleModal(id, firma, adres) {
+    document.getElementById('duzenle_tesis_id').value = id;
+    document.getElementById('duzenle_tesis_firma').value = firma;
+    document.getElementById('duzenle_tesis_adres').value = adres;
+    var m = document.getElementById('tesisDuzenleModal');
+    m.style.display = 'flex';
+    setTimeout(() => document.getElementById('duzenle_tesis_firma').focus(), 50);
+}
+document.getElementById('tesisDuzenleModal').addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+});
+</script>
+
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

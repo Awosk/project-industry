@@ -1,0 +1,69 @@
+<?php
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../includes/auth.php';
+girisKontrol();
+
+$sayfa_basligi = 'Tesisler';
+
+$tesisler = $pdo->query("
+    SELECT t.*,
+           COUNT(CASE WHEN lk.aktif = 1 THEN 1 END) AS kayit_sayisi,
+           MAX(CASE WHEN lk.aktif = 1 THEN lk.tarih END) AS son_kayit
+    FROM lite_tesisler t
+    LEFT JOIN lite_kayitlar lk ON lk.tesis_id = t.id
+    WHERE t.aktif = 1
+    GROUP BY t.id
+    ORDER BY t.firma_adi
+")->fetchAll();
+
+$arama = trim($_GET['q'] ?? '');
+if ($arama) {
+    $tesisler = array_filter($tesisler, function($t) use ($arama) {
+        return stripos($t['firma_adi'], $arama) !== false
+            || stripos($t['firma_adresi'], $arama) !== false;
+    });
+}
+
+require_once __DIR__ . '/../includes/header.php';
+?>
+
+<div class="page-header">
+    <h1><span>🏭</span> Tesisler</h1>
+    <a href="tesisler_yonetim.php" class="btn btn-primary btn-sm">➕ Tesis Ekle</a>
+</div>
+
+<!-- Arama -->
+<div class="card" style="padding:12px 16px; margin-bottom:14px;">
+    <form method="get" style="display:flex; gap:8px;">
+        <input type="text" name="q" value="<?= htmlspecialchars($arama) ?>" placeholder="🔍  Tesis veya adres ara..." style="flex:1;">
+        <?php if ($arama): ?>
+        <a href="tesisler.php" class="btn btn-secondary btn-sm">✕</a>
+        <?php endif; ?>
+    </form>
+</div>
+
+<?php if (empty($tesisler)): ?>
+<div class="alert alert-info">Henüz tesis kaydı yok. <a href="tesisler_yonetim.php" class="btn btn-sm btn-primary" style="margin-left:8px">➕ Ekle</a></div>
+<?php else: ?>
+<div class="arac-grid">
+    <?php foreach ($tesisler as $t): ?>
+    <a href="tesis_detay.php?id=<?= $t['id'] ?>" class="arac-card">
+        <div class="arac-card-plaka" style="font-size:16px;"><?= htmlspecialchars($t['firma_adi']) ?></div>
+        <div class="arac-card-model"><?= htmlspecialchars($t['firma_adresi']) ?></div>
+        <div class="arac-card-meta">
+            <span class="badge badge-primary">🏭 Tesis</span>
+            <span class="arac-card-sayi">
+                <?php if ($t['kayit_sayisi'] > 0): ?>
+                📋 <?= $t['kayit_sayisi'] ?> kayıt
+                <?php if ($t['son_kayit']): ?> · <?= formatliTarih($t['son_kayit']) ?><?php endif; ?>
+                <?php else: ?>
+                <span style="color:var(--muted)">Kayıt yok</span>
+                <?php endif; ?>
+            </span>
+        </div>
+    </a>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
