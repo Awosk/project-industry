@@ -8,4 +8,7 @@ file_get_contents
 Dizin okuma/yazma izni 
 allow_url_fopen
 
-** Yönetici hesabı admin:admin123 **
+project_oil.sql veritabanını mysql sunucunuza aktarın.
+.env_example adını .env olarak değiştir, ilgili kısımları kendinize göre değiştirin.
+
+** Varsayılan yönetici hesabı admin:admin123 **
