@@ -8,7 +8,12 @@ $id = (int)($_GET['id'] ?? 0);
 if (!$id) { header('Location: ../index.php'); exit; }
 $ku = mevcutKullanici();
 
-$arac = $pdo->prepare("SELECT * FROM lite_araclar WHERE id=? AND aktif=1");
+$arac = $pdo->prepare("
+    SELECT a.*, t.tur_adi
+    FROM lite_araclar a
+    LEFT JOIN lite_arac_turleri t ON a.arac_turu_id = t.id
+    WHERE a.id=? AND a.aktif=1
+");
 $arac->execute([$id]);
 $arac = $arac->fetch();
 if (!$arac) { flash('Araç bulunamadı.', 'danger'); header('Location: ../index.php'); exit; }
@@ -90,7 +95,7 @@ require_once __DIR__ . '/../includes/header.php';
     <h1>
         <span>🚗</span>
         <?= htmlspecialchars($arac['plaka']) ?>
-        <span class="badge badge-info" style="font-size:13px;"><?= htmlspecialchars($arac['arac_turu']) ?></span>
+        <span class="badge badge-info" style="font-size:13px;"><?= htmlspecialchars($arac['tur_adi'] ?? '—') ?></span>
     </h1>
     <a href="../index.php" class="btn btn-secondary btn-sm">← Geri</a>
 </div>
@@ -245,7 +250,6 @@ function aciklamaModalKapat() {
 document.getElementById('aciklamaModal').addEventListener('click', function(e) {
     if (e.target === this) aciklamaModalKapat();
 });
-
 (function() {
     var hash = window.location.hash;
     if (hash && hash.startsWith('#kayit-')) {
@@ -267,10 +271,7 @@ document.getElementById('aciklamaModal').addEventListener('click', function(e) {
     60%  { background: #fef9c3; box-shadow: 0 0 0 3px #fbbf24; }
     100% { background: transparent; box-shadow: none; }
 }
-.kayit-parlat {
-    animation: parlat 2.5s ease-out forwards;
-    border-radius: 8px;
-}
+.kayit-parlat { animation: parlat 2.5s ease-out forwards; border-radius: 8px; }
 </style>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

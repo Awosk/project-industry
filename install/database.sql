@@ -20,9 +20,18 @@ CREATE TABLE IF NOT EXISTS `kullanicilar` (
   UNIQUE KEY `kullanici_adi` (`kullanici_adi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
+CREATE TABLE IF NOT EXISTS `lite_arac_turleri` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `tur_adi` varchar(100) NOT NULL,
+  `aktif` tinyint(1) NOT NULL DEFAULT 1,
+  `olusturma_tarihi` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `tur_adi` (`tur_adi`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
 CREATE TABLE IF NOT EXISTS `lite_araclar` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `arac_turu` varchar(100) NOT NULL,
+  `arac_turu_id` int(11) NULL,
   `plaka` varchar(20) NOT NULL,
   `marka_model` varchar(150) NOT NULL,
   `aktif` tinyint(1) NOT NULL DEFAULT 1,
@@ -31,7 +40,9 @@ CREATE TABLE IF NOT EXISTS `lite_araclar` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `plaka` (`plaka`),
   KEY `olusturan_id` (`olusturan_id`),
-  CONSTRAINT `lite_araclar_ibfk_1` FOREIGN KEY (`olusturan_id`) REFERENCES `kullanicilar` (`id`)
+  KEY `arac_turu_id` (`arac_turu_id`),
+  CONSTRAINT `lite_araclar_ibfk_1` FOREIGN KEY (`olusturan_id`) REFERENCES `kullanicilar` (`id`),
+  CONSTRAINT `lite_araclar_ibfk_tur` FOREIGN KEY (`arac_turu_id`) REFERENCES `lite_arac_turleri` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
 CREATE TABLE IF NOT EXISTS `lite_tesisler` (

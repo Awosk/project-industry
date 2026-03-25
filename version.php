@@ -1,2 +1,2 @@
 <?php
-define('SITE_VERSIYONU', '1.0.0');
+define('SITE_VERSIYONU', '1.0.1');

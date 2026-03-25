@@ -84,26 +84,28 @@ $offset       = ($sayfa - 1) * $sayfa_basina;
 // PDF modunda tüm kayıtları çek (sayfalama yok)
 if ($pdf_mod) {
     $kayitlar_stmt = $pdo->prepare("
-        SELECT lk.*, u.urun_adi, u.urun_kodu, a.plaka, a.marka_model, a.arac_turu,
-               t.firma_adi, k.ad_soyad
+        SELECT lk.*, u.urun_adi, u.urun_kodu, a.plaka, a.marka_model, at.tur_adi AS arac_turu,
+           t.firma_adi, k.ad_soyad
         FROM lite_kayitlar lk
         JOIN lite_urunler u  ON lk.urun_id    = u.id
-        LEFT JOIN lite_araclar  a ON lk.arac_id    = a.id
-        LEFT JOIN lite_tesisler t ON lk.tesis_id   = t.id
-        LEFT JOIN kullanicilar  k ON lk.olusturan_id = k.id
+        LEFT JOIN lite_araclar  a  ON lk.arac_id    = a.id
+        LEFT JOIN lite_arac_turleri at ON a.arac_turu_id = at.id
+        LEFT JOIN lite_tesisler t  ON lk.tesis_id   = t.id
+        LEFT JOIN kullanicilar  k  ON lk.olusturan_id = k.id
         WHERE $where_sql
         ORDER BY lk.tarih DESC, lk.olusturma_tarihi DESC
     ");
     $kayitlar_stmt->execute($params);
 } else {
     $kayitlar_stmt = $pdo->prepare("
-        SELECT lk.*, u.urun_adi, u.urun_kodu, a.plaka, a.marka_model, a.arac_turu,
-               t.firma_adi, k.ad_soyad
+        SELECT lk.*, u.urun_adi, u.urun_kodu, a.plaka, a.marka_model, at.tur_adi AS arac_turu,
+           t.firma_adi, k.ad_soyad
         FROM lite_kayitlar lk
         JOIN lite_urunler u  ON lk.urun_id    = u.id
-        LEFT JOIN lite_araclar  a ON lk.arac_id    = a.id
-        LEFT JOIN lite_tesisler t ON lk.tesis_id   = t.id
-        LEFT JOIN kullanicilar  k ON lk.olusturan_id = k.id
+        LEFT JOIN lite_araclar  a  ON lk.arac_id    = a.id
+        LEFT JOIN lite_arac_turleri at ON a.arac_turu_id = at.id
+        LEFT JOIN lite_tesisler t  ON lk.tesis_id   = t.id
+        LEFT JOIN kullanicilar  k  ON lk.olusturan_id = k.id
         WHERE $where_sql
         ORDER BY lk.tarih DESC, lk.olusturma_tarihi DESC
         LIMIT $sayfa_basina OFFSET $offset

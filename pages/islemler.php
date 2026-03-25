@@ -87,11 +87,12 @@ $sayfa = min($sayfa, $toplam_sayfa);
 $offset = ($sayfa - 1) * $sayfa_basina;
 
 $kayitlar = $pdo->prepare("
-    SELECT lk.*, u.urun_adi, u.urun_kodu, a.plaka, a.marka_model, a.arac_turu,
+    SELECT lk.*, u.urun_adi, u.urun_kodu, a.plaka, a.marka_model, at.tur_adi AS arac_turu,
            t.firma_adi, k.ad_soyad, ik.ad_soyad AS islendi_ad_soyad
     FROM lite_kayitlar lk
     LEFT JOIN lite_urunler u ON lk.urun_id = u.id
     LEFT JOIN lite_araclar a ON lk.arac_id = a.id
+    LEFT JOIN lite_arac_turleri at ON a.arac_turu_id = at.id
     LEFT JOIN lite_tesisler t ON lk.tesis_id = t.id
     LEFT JOIN kullanicilar k ON lk.olusturan_id = k.id
     LEFT JOIN kullanicilar ik ON lk.islendi_kullanici_id = ik.id
