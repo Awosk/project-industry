@@ -65,6 +65,7 @@
             <ul class="dropdown-menu">
                 <li><a href="<?= ROOT_URL ?>pages/urunler.php">🛢️ Ürün Yönetimi</a></li>
                 <li><a href="<?= ROOT_URL ?>pages/araclar.php">🚗 Araç Yönetimi</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/arac_turleri.php">🚗 Araç Türü Yönetimi</a></li>
                 <li><a href="<?= ROOT_URL ?>pages/tesisler_yonetim.php">🏭 Tesis Yönetimi</a></li>
             </ul>
         </li>
@@ -105,6 +106,7 @@
             <li><span class="drawer-section">Kayıtlar</span></li>
             <li><a href="<?= ROOT_URL ?>pages/urunler.php" onclick="closeDrawer()">🛢️ Ürünler</a></li>
             <li><a href="<?= ROOT_URL ?>pages/araclar.php" onclick="closeDrawer()">🚗 Araç Yönetimi</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/arac_turleri.php" onclick="closeDrawer()">🚗 Araç Türü Yönetimi</a></li>
             <li><a href="<?= ROOT_URL ?>pages/tesisler_yonetim.php" onclick="closeDrawer()">🏭 Tesis Yönetimi</a></li>
             <?php if (isAdmin()): ?>
             <li><span class="drawer-section">Yönetim</span></li>
