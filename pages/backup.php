@@ -299,8 +299,8 @@ function tumunuSec(sec) { document.querySelectorAll('input[name="tablolar[]"]').
 function labelGuncelle(cb) {
     var lbl = document.getElementById('lbl_' + cb.value);
     if (!lbl) return;
-    if (cb.checked) { lbl.style.borderColor='var(--primary)'; lbl.style.background='#e8f0fe'; lbl.style.color='var(--primary)'; }
-    else { lbl.style.borderColor='var(--border)'; lbl.style.background='#fff'; lbl.style.color='var(--text)'; }
+    if (cb.checked) { lbl.style.borderColor='var(--primary)'; lbl.style.background='var(--primary-bg-l)'; lbl.style.color='var(--primary-text)'; }
+    else { lbl.style.borderColor='var(--border)'; lbl.style.background='var(--card)'; lbl.style.color='var(--text)'; }
 }
 document.querySelectorAll('input[name="tablolar[]"]').forEach(cb => labelGuncelle(cb));
 </script>
