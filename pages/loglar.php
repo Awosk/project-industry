@@ -413,8 +413,8 @@ require_once __DIR__ . '/../includes/header.php';
 .log-item:hover { background: var(--hover-bg); }
 .log-tiklanabilir { cursor: pointer; }
 .log-tiklanabilir:hover { background: var(--hover-bg-blue) !important; }
-.log-sil { background: #fff8f8; }
-.log-sil:hover { background: var(--danger-l); }
+.log-sil { background: var(--danger-l) !important; }
+.log-sil:hover { background: rgba(239, 68, 68, 0.25) !important; }
 
 .log-aksiyon {
     padding: 3px 9px;
@@ -454,11 +454,11 @@ require_once __DIR__ . '/../includes/header.php';
     word-break: break-all;
     overflow: hidden;
 }
-.log-veri-eski { background: #fff1f1; border: 1px solid #fecaca; }
-.log-veri-yeni { background: var(--success-l); border: 1px solid var(--success-l); }
+.log-veri-eski { background: var(--danger-l); border: 1px solid var(--danger); }
+.log-veri-yeni { background: var(--success-l); border: 1px solid var(--success); }
 .log-veri-baslik { font-weight: 700; color: var(--muted); width: 100%; margin-bottom: 2px; }
 .log-veri-item {
-    background: rgba(0,0,0,.06);
+    background: rgba(255, 255, 255, 0.1);
     padding: 2px 7px;
     border-radius: 4px;
     color: var(--text);
