@@ -24,7 +24,6 @@ define('MIGRATIONS_DIR', ROOT_DIR . '/migrations');
 // Korunacak yol/dosyalar — güncelleme sırasında üzerine yazılmaz
 define('KORUNANLAR', [
     '.env',
-    'install/',
     'pages/db_backups/',
 ]);
 
@@ -276,7 +275,7 @@ if (isset($_GET['guncelle']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($migration_yapildi === 0) $log[] = 'ℹ️ Uygulanacak SQL migrasyonu yok';
 
         // ── 5. version.php güncelle ──
-        file_put_contents(ROOT_DIR . '/version.php', "<?php\ndefine('SITE_VERSIYONU', '$uzak_versiyon');\n");
+        file_put_contents(ROOT_DIR . '/version.php', "<?php\n/*\n * Project Oil - Vehicle and Facility Industrial Oil Tracking System\n * Copyright (C) 2026 Awosk\n *\n * This program is free software: you can redistribute it and/or modify\n * it under the terms of the GNU General Public License as published by\n * the Free Software Foundation, either version 3 of the License, or\n * (at your option) any later version.\n */\n\ndefine('SITE_VERSIYONU', '$uzak_versiyon');\n");
         $log[] = "✓ Versiyon $uzak_versiyon olarak güncellendi";
 
         // ── 6. Temp temizle ──
