@@ -309,56 +309,82 @@ require_once __DIR__ . '/../includes/header.php';
     <?php else: ?>
 
     <?php foreach ($mail_adminler as $admin): ?>
-        <div style="margin-bottom: 14px;">
-            
-            <div class="admin-accordion-header" onclick="toggleAccordion(this)">
-                <div style="display: flex; align-items: center; gap: 10px;">
+    <div style="background:var(--bg); border:1px solid var(--border); border-radius:var(--r-sm); padding:16px; margin-bottom:14px;">
+        
+        <form method="post">
+            <?= csrfInput() ?>
+            <input type="hidden" name="bildirim_kullanici_id" value="<?= $admin['id'] ?>">
+
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; padding-bottom:12px; border-bottom:1px solid var(--border); cursor:pointer;" 
+                 onclick="toggleAdminPanel(<?= $admin['id'] ?>)">
+                
+                <div style="display:flex; align-items:center; gap:10px;">
                     <input type="checkbox" name="mail_bildirim_aktif" value="1" 
-                        <?= ($admin['mail_bildirim_aktif'] == 1) ? 'checked' : '' ?> 
-                        style="width: 18px; height: 18px; accent-color: var(--success);"
-                        onclick="event.stopPropagation();"> 
+                           <?= ($admin['mail_bildirim_aktif'] == 1) ? 'checked' : '' ?> 
+                           style="width:18px; height:18px; accent-color:var(--success);"
+                           onclick="event.stopPropagation();">
                     
-                    <div style="display: flex; flex-direction: column;">
-                        <span style="font-weight: 700; font-size: 14px; color: var(--text);">
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-weight:700; font-size:14px;">
                             👤 <?= htmlspecialchars($admin['ad_soyad']) ?>
                         </span>
-                        <span style="font-size: 11px; color: var(--muted);">
-                            <?= htmlspecialchars($admin['email']) ?>
+                        <span style="font-weight:400; font-size:12px; color:var(--muted);">
+                            (<?= htmlspecialchars($admin['email']) ?>)
                         </span>
                     </div>
                 </div>
 
-                <div>
-                    <span class="admin-toggle-icon">▼</span>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="display:flex; gap:5px;" onclick="event.stopPropagation();">
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="topluSec(this, true)" style="font-size:11px; padding:4px 8px;">✅ Tümü</button>
+                        <button type="button" class="btn btn-sm btn-secondary" onclick="topluSec(this, false)" style="font-size:11px; padding:4px 8px;">❌ Seçme</button>
+                    </div>
+                    <span id="admin_ok_<?= $admin['id'] ?>" style="font-size:12px; color:var(--muted); transition:.2s;">▼</span>
                 </div>
             </div>
 
-            <div class="admin-accordion-content">
-                <form method="post">
-                    <?= csrfInput() ?>
-                    <input type="hidden" name="bildirim_kullanici_id" value="<?= $admin['id'] ?>">
-
-                    <div style="display: flex; justify-content: flex-end; gap: 5px; margin-bottom: 15px;">
-                        <button type="button" class="btn btn-sm btn-secondary" onclick="topluSec(this, true)" style="font-size: 11px; padding: 4px 8px;">✅ Tümünü Seç</button>
-                        <button type="button" class="btn btn-sm btn-secondary" onclick="topluSec(this, false)" style="font-size: 11px; padding: 4px 8px;">❌ Seçimleri Kaldır</button>
+            <div id="admin_panel_<?= $admin['id'] ?>" style="display:none; padding-top:16px;">
+                
+                <?php foreach ($bildirim_secenekleri as $grup_adi => $secenekler): ?>
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px;"><?= $grup_adi ?></div>
+                    <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                        <?php foreach ($secenekler as [$modul, $aksiyon, $etiket]): ?>
+                        <?php $key = $modul . '|' . $aksiyon; $checked = isset($mevcut_filtreler[$admin['id']][$key]); ?>
+                        <label style="display:flex; align-items:center; gap:6px; padding:6px 12px; border:1.5px solid <?= $checked ? 'var(--primary)' : 'var(--border)' ?>; border-radius:6px; cursor:pointer; font-size:12px; font-weight:500; background:<?= $checked ? 'var(--primary-bg-l)' : 'var(--card)' ?>; color:<?= $checked ? 'var(--primary-text)' : 'var(--text)' ?>;">
+                            <input type="checkbox" name="bildirim_filtreler[]" value="<?= $key ?>" class="filtre-check"
+                                   <?= $checked ? 'checked' : '' ?>
+                                   style="width:14px; height:14px; accent-color:var(--primary); cursor:pointer;"
+                                   onchange="filtreStilGuncelle(this)">
+                            <?= $etiket ?>
+                        </label>
+                        <?php endforeach; ?>
                     </div>
+                </div>
+                <?php endforeach; ?>
 
-                    <div class="filtre-konteyner">
-                        <?php foreach ($bildirim_secenekleri as $grup_adi => $secenekler): ?>
-                            <?php endforeach; ?>
-                    </div>
-
-                    <button type="submit" name="bildirim_kaydet" class="btn btn-sm btn-primary" style="margin-top: 15px;">💾 Değişiklikleri Kaydet</button>
-                </form>
+                <button type="submit" name="bildirim_kaydet" class="btn btn-sm btn-primary" style="margin-top:6px;">💾 Değişiklikleri Kaydet</button>
             </div>
 
-        </div>
-        <?php endforeach; ?>
+        </form>
+    </div>
+    <?php endforeach; ?>
     <?php endif; ?>
 </div>
 
 <script>
-// Tekil stil güncelleme
+// Admin panel açıp kapatma (islemler.php mantığıyla)
+function toggleAdminPanel(adminId) {
+    var panel = document.getElementById('admin_panel_' + adminId);
+    var ok = document.getElementById('admin_ok_' + adminId);
+    
+    var gizli = (panel.style.display === 'none');
+    
+    panel.style.display = gizli ? 'block' : 'none';
+    ok.textContent = gizli ? '▲' : '▼';
+}
+
+// Filtreler kutucuğu seçildiğinde stilini (renklerini) günceller
 function filtreStilGuncelle(el) {
     const parent = el.closest('label');
     if (el.checked) {
@@ -372,17 +398,18 @@ function filtreStilGuncelle(el) {
     }
 }
 
-// Tümünü Seç / Kaldır
+// Tümünü Seç / Tümünü Kaldır
 function topluSec(btn, durum) {
     const form = btn.closest('form');
     const checks = form.querySelectorAll('.filtre-check');
     
     checks.forEach(check => {
         check.checked = durum;
-        filtreStilGuncelle(check); // Görsel tasarımı da güncelle
+        filtreStilGuncelle(check);
     });
 }
 
+// SMTP ve Şifreleme Port Otomasyonu
 document.addEventListener("DOMContentLoaded", function() {
     const selectSifreleme = document.getElementById('smtp_sifrelem');
     const inputPort = document.getElementById('smtp_port');
@@ -401,20 +428,6 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 });
-
-function toggleAccordion(headerElement) {
-    // Başlığın aktif sınıfını değiştir
-    headerElement.classList.toggle('active');
-    
-    // Hemen altındaki içerik panelini bul
-    const content = headerElement.nextElementSibling;
-    
-    if (content.style.display === "block") {
-        content.style.display = "none";
-    } else {
-        content.style.display = "block";
-    }
-}
 </script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
