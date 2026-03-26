@@ -11,6 +11,10 @@
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/auth.php';
+if (function_exists('smtpAktifMi') === false && file_exists(__DIR__ . '/mail.php')) {
+    require_once __DIR__ . '/mail.php';
+}
+
 
 if (girisYapildi()) { header('Location: ' . ROOT_URL . 'index.php'); exit; }
 
@@ -107,6 +111,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
             <button type="submit" class="btn btn-primary">🔐 Giriş Yap</button>
         </form>
+        <div style="text-align:center;margin-top:14px;">
+            <a href="<?= ROOT_URL ?>sifre_unut.php" style="font-size:13px;color:var(--muted);">🔑 Şifremi unuttum</a>
+        </div>
     </div>
 </div>
 </body>

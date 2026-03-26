@@ -45,6 +45,11 @@ function logYaz($pdo, $aksiyon, $modul, $aciklama, $kayit_id = null, $eski = nul
         // Log yazılamaması ana işlemi durdurmasın
         error_log('Log yazma hatası: ' . $e->getMessage());
     }
+
+    // Admin bildirimlerini tetikle (mail.php yüklüyse)
+    if (function_exists('adminBildirimGonder')) {
+        adminBildirimGonder($pdo, $aksiyon, $modul, $aciklama, $ku);
+    }
 }
 
 // Giriş/çıkış logları için oturum olmadan da çalışır

@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS `kullanicilar` (
   `rol` enum('admin','kullanici') NOT NULL DEFAULT 'kullanici',
   `aktif` tinyint(1) NOT NULL DEFAULT 1,
   `tema` enum('light','dark') NOT NULL DEFAULT 'light',
+  `email` varchar(150) DEFAULT NULL,
   `olusturma_tarihi` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `kullanici_adi` (`kullanici_adi`)
@@ -117,6 +118,48 @@ CREATE TABLE IF NOT EXISTS `sistem_loglari` (
   PRIMARY KEY (`id`),
   KEY `kullanici_id` (`kullanici_id`),
   CONSTRAINT `sistem_loglari_ibfk_1` FOREIGN KEY (`kullanici_id`) REFERENCES `kullanicilar` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+CREATE TABLE IF NOT EXISTS `sistem_ayarlar` (
+  `anahtar` varchar(100) NOT NULL,
+  `deger` text DEFAULT NULL,
+  `guncelleme_tarihi` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`anahtar`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+INSERT IGNORE INTO `sistem_ayarlar` (`anahtar`, `deger`) VALUES
+('smtp_aktif',     '0'),
+('smtp_host',      ''),
+('smtp_port',      '587'),
+('smtp_sifrelem',  'tls'),
+('smtp_kullanici', ''),
+('smtp_sifre',     ''),
+('smtp_gonderen',  ''),
+('smtp_ad',        '');
+
+CREATE TABLE IF NOT EXISTS `admin_bildirim_filtreler` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `kullanici_id` int(11) NOT NULL,
+  `aktif` tinyint(1) NOT NULL DEFAULT 0,
+  `modul` varchar(50) NOT NULL,
+  `aksiyon` varchar(50) NOT NULL,
+  `olusturma_tarihi` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `kullanici_modul_aksiyon` (`kullanici_id`, `modul`, `aksiyon`),
+  CONSTRAINT `fk_bildirim_kullanici` FOREIGN KEY (`kullanici_id`) REFERENCES `kullanicilar` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+CREATE TABLE IF NOT EXISTS `sifre_sifirlama` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `kullanici_id` int(11) NOT NULL,
+  `token` varchar(100) NOT NULL,
+  `son_kullanma` datetime NOT NULL,
+  `kullanildi` tinyint(1) NOT NULL DEFAULT 0,
+  `olusturma_tarihi` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token` (`token`),
+  KEY `kullanici_id` (`kullanici_id`),
+  CONSTRAINT `fk_sifre_sifirlama_kullanici` FOREIGN KEY (`kullanici_id`) REFERENCES `kullanicilar` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
 CREATE TABLE IF NOT EXISTS `sistem_migrations` (
