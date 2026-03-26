@@ -24,6 +24,8 @@ define('ROOT_DIR', dirname(__DIR__));
 require_once ROOT_DIR . '/config/database.php';
 require_once ROOT_DIR . '/includes/mail.php';
 
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
 // ─────────────────────────────────────────────
 // COOLDOWN KONTROLÜ
 // ─────────────────────────────────────────────
