@@ -142,11 +142,12 @@ function adminBildirimGonder($pdo, string $aksiyon, string $modul, string $acikl
             FROM admin_bildirim_filtreler f
             JOIN kullanicilar k ON f.kullanici_id = k.id
             WHERE f.aktif = 1
-              AND f.modul = ?
-              AND f.aksiyon = ?
-              AND k.aktif = 1
-              AND k.email IS NOT NULL
-              AND k.email != ''
+            AND f.modul = ?
+            AND f.aksiyon = ?
+            AND k.aktif = 1
+            AND k.mail_bildirim_aktif = 1 -- YENİ EKLENEN ŞART
+            AND k.email IS NOT NULL
+            AND k.email != ''
         ");
         $stmt->execute([$modul, $aksiyon]);
         $alicilar = $stmt->fetchAll();

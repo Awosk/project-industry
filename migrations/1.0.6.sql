@@ -3,6 +3,9 @@
 
 SET foreign_key_checks = 0;
 
+ALTER TABLE `kullanicilar`
+  ADD COLUMN IF NOT EXISTS `mail_bildirim_aktif` TINYINT(1) NOT NULL DEFAULT 1;
+
 -- 1. Mail kuyruğu tablosu
 CREATE TABLE IF NOT EXISTS `mail_queue` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

@@ -146,3 +146,11 @@ function _workerLog(string $mesaj): void {
     $zaman = date('Y-m-d H:i:s');
     echo "[$zaman] $mesaj" . PHP_EOL;
 }
+
+// Haftada 1 kez rastgele denk gelirse (Yüzde 5 ihtimalle) çalışır ve 30 günden eski 'sent' veya 'failed' mailleri siler.
+if (rand(1, 100) <= 5) {
+    $silinen = $pdo->exec("DELETE FROM mail_queue WHERE (status = 'sent' OR status = 'failed' OR status = 'cancelled') AND created_at < DATE_SUB(NOW(), INTERVAL 30 DAY)");
+    if ($silinen > 0) {
+        _workerLog("♻️ Çöp Toplayıcı: 30 günden eski $silinen adet geçmiş mail silindi.");
+    }
+}

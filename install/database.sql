@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS `kullanicilar` (
   `tema` enum('light','dark') NOT NULL DEFAULT 'light',
   `email` varchar(150) DEFAULT NULL,
   `olusturma_tarihi` datetime NOT NULL DEFAULT current_timestamp(),
+  `mail_bildirim_aktif` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE KEY `kullanici_adi` (`kullanici_adi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;

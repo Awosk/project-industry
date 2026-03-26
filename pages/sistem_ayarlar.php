@@ -83,10 +83,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['test_mail'])) {
 }
 
 // ── BİLDİRİM FİLTRELERİNİ KAYDET ──
+// sistem_ayarlar.php -> bildirim_kaydet POST bloğu
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bildirim_kaydet'])) {
     csrfDogrula();
     $hedef_id = (int)$_POST['bildirim_kullanici_id'];
+    
     if ($hedef_id) {
+        // GENEL AKTİFLİK DURUMUNU GÜNCELLE
+        $mail_aktif = isset($_POST['mail_bildirim_aktif']) ? 1 : 0;
+        $pdo->prepare("UPDATE kullanicilar SET mail_bildirim_aktif = ? WHERE id = ?")->execute([$mail_aktif, $hedef_id]);
+
         // Mevcut filtreleri sil
         $pdo->prepare("DELETE FROM admin_bildirim_filtreler WHERE kullanici_id = ?")->execute([$hedef_id]);
 
@@ -99,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bildirim_kaydet'])) {
                 $stmt->execute([$hedef_id, $modul, $aksiyon]);
             }
         }
-        flash('Bildirim filtreleri kaydedildi.');
+        flash('Bildirim filtreleri ve aktiflik durumu kaydedildi.');
     }
     header('Location: sistem_ayarlar.php'); exit;
 }
@@ -112,7 +118,7 @@ $cooldown_dakika   = sistemAyarGetir($pdo, 'mail_cooldown_dakika',   '15');
 $cooldown_bitis    = sistemAyarGetir($pdo, 'mail_cooldown_bitis',    '');
 
 // Admin kullanıcıları çek
-$adminler = $pdo->query("SELECT id, ad_soyad, kullanici_adi, email FROM kullanicilar WHERE rol = 'admin' AND aktif = 1 ORDER BY ad_soyad")->fetchAll();
+$adminler = $pdo->query("SELECT id, ad_soyad, kullanici_adi, email, mail_bildirim_aktif FROM kullanicilar WHERE rol = 'admin' AND aktif = 1 ORDER BY ad_soyad")->fetchAll();
 
 // Bildirim filtrelerini çek
 $mevcut_filtreler = [];
@@ -292,45 +298,62 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="card">
     <div class="card-title">🔔 Admin Bildirim Filtreleri</div>
     <p style="color:var(--muted);font-size:13px;margin-bottom:18px;">
-        Hangi admin hangi işlemlerde e-posta alsın? Sadece e-posta adresi tanımlı adminler listelenmiştir.
+        Hangi admin hangi işlemlerde e-posta alsın? Genel mail gönderimini durdurabilir veya modül bazlı filtreleyebilirsiniz.
     </p>
 
     <?php
     $mail_adminler = array_filter($adminler, fn($a) => !empty($a['email']));
     if (empty($mail_adminler)):
     ?>
-    <div class="alert alert-warning">⚠️ E-posta adresi tanımlı admin bulunamadı. Kullanıcı yönetiminden admin hesaplarına e-posta ekleyin.</div>
+    <div class="alert alert-warning">⚠️ E-posta adresi tanımlı aktif admin bulunamadı.</div>
     <?php else: ?>
 
     <?php foreach ($mail_adminler as $admin): ?>
     <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--r-sm);padding:16px;margin-bottom:14px;">
-        <div style="font-weight:700;font-size:14px;margin-bottom:4px;">
-            👤 <?= htmlspecialchars($admin['ad_soyad']) ?>
-            <span style="font-weight:400;font-size:12px;color:var(--muted);">(<?= htmlspecialchars($admin['email']) ?>)</span>
-        </div>
-        <form method="post" style="margin-top:14px;">
+        
+        <form method="post">
             <?= csrfInput() ?>
             <input type="hidden" name="bildirim_kullanici_id" value="<?= $admin['id'] ?>">
 
-            <?php foreach ($bildirim_secenekleri as $grup_adi => $secenekler): ?>
-            <div style="margin-bottom:14px;">
-                <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;"><?= $grup_adi ?></div>
-                <div style="display:flex;flex-wrap:wrap;gap:8px;">
-                    <?php foreach ($secenekler as [$modul, $aksiyon, $etiket]): ?>
-                    <?php $key = $modul . '|' . $aksiyon; $checked = isset($mevcut_filtreler[$admin['id']][$key]); ?>
-                    <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid <?= $checked ? 'var(--primary)' : 'var(--border)' ?>;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;background:<?= $checked ? 'var(--primary-bg-l)' : 'var(--card)' ?>;color:<?= $checked ? 'var(--primary-text)' : 'var(--text)' ?>;">
-                        <input type="checkbox" name="bildirim_filtreler[]" value="<?= $key ?>"
-                               <?= $checked ? 'checked' : '' ?>
-                               style="width:14px;height:14px;accent-color:var(--primary);cursor:pointer;"
-                               onchange="this.closest('label').style.borderColor=this.checked?'var(--primary)':'var(--border)';this.closest('label').style.background=this.checked?'var(--primary-bg-l)':'var(--card)';this.closest('label').style.color=this.checked?'var(--primary-text)':'var(--text)';">
-                        <?= $etiket ?>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:15px; padding-bottom:12px; border-bottom:1px solid var(--border);">
+                <div>
+                    <label style="display:flex; align-items:center; gap:8px; font-weight:700; font-size:14px; cursor:pointer;">
+                        <input type="checkbox" name="mail_bildirim_aktif" value="1" 
+                               <?= ($admin['mail_bildirim_aktif'] == 1) ? 'checked' : '' ?> 
+                               style="width:18px; height:18px; accent-color:var(--success);">
+                        👤 <?= htmlspecialchars($admin['ad_soyad']) ?> 
+                        <span style="font-weight:400; font-size:12px; color:var(--muted);">(<?= htmlspecialchars($admin['email']) ?>)</span>
                     </label>
-                    <?php endforeach; ?>
+                    <div style="font-size:11px; color:var(--muted); margin-left:26px;">Bu adminin bildirim maillerini tamamen aç/kapat.</div>
+                </div>
+
+                <div style="display:flex; gap:5px;">
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="topluSec(this, true)" style="font-size:11px; padding:4px 8px;">✅ Tümünü Seç</button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="topluSec(this, false)" style="font-size:11px; padding:4px 8px;">❌ Seçimleri Kaldır</button>
                 </div>
             </div>
-            <?php endforeach; ?>
 
-            <button type="submit" name="bildirim_kaydet" class="btn btn-sm btn-primary" style="margin-top:6px;">💾 Kaydet</button>
+            <div class="filtre-konteyner">
+                <?php foreach ($bildirim_secenekleri as $grup_adi => $secenekler): ?>
+                <div style="margin-bottom:14px;">
+                    <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;"><?= $grup_adi ?></div>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                        <?php foreach ($secenekler as [$modul, $aksiyon, $etiket]): ?>
+                        <?php $key = $modul . '|' . $aksiyon; $checked = isset($mevcut_filtreler[$admin['id']][$key]); ?>
+                        <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:1.5px solid <?= $checked ? 'var(--primary)' : 'var(--border)' ?>;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;background:<?= $checked ? 'var(--primary-bg-l)' : 'var(--card)' ?>;color:<?= $checked ? 'var(--primary-text)' : 'var(--text)' ?>;">
+                            <input type="checkbox" name="bildirim_filtreler[]" value="<?= $key ?>" class="filtre-check"
+                                   <?= $checked ? 'checked' : '' ?>
+                                   style="width:14px;height:14px;accent-color:var(--primary);cursor:pointer;"
+                                   onchange="filtreStilGuncelle(this)">
+                            <?= $etiket ?>
+                        </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+
+            <button type="submit" name="bildirim_kaydet" class="btn btn-sm btn-primary" style="margin-top:6px;">💾 Değişiklikleri Kaydet</button>
         </form>
     </div>
     <?php endforeach; ?>
@@ -338,6 +361,31 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <script>
+// Tekil stil güncelleme
+function filtreStilGuncelle(el) {
+    const parent = el.closest('label');
+    if (el.checked) {
+        parent.style.borderColor = 'var(--primary)';
+        parent.style.background = 'var(--primary-bg-l)';
+        parent.style.color = 'var(--primary-text)';
+    } else {
+        parent.style.borderColor = 'var(--border)';
+        parent.style.background = 'var(--card)';
+        parent.style.color = 'var(--text)';
+    }
+}
+
+// Tümünü Seç / Kaldır
+function topluSec(btn, durum) {
+    const form = btn.closest('form');
+    const checks = form.querySelectorAll('.filtre-check');
+    
+    checks.forEach(check => {
+        check.checked = durum;
+        filtreStilGuncelle(check); // Görsel tasarımı da güncelle
+    });
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     const selectSifreleme = document.getElementById('smtp_sifrelem');
     const inputPort = document.getElementById('smtp_port');
