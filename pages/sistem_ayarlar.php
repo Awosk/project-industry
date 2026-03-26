@@ -24,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['smtp_kaydet'])) {
         'smtp_aktif'     => isset($_POST['smtp_aktif']) ? '1' : '0',
         'smtp_host'      => trim($_POST['smtp_host']      ?? ''),
         'smtp_port'      => trim($_POST['smtp_port']      ?? '587'),
-        'smtp_sifrelem'  => in_array($_POST['smtp_sifrelem'] ?? '', ['tls','ssl']) ? $_POST['smtp_sifrelem'] : 'tls',
+        'smtp_sifrelem'  => in_array($_POST['smtp_sifrelem'] ?? '', ['tls','ssl','none']) ? $_POST['smtp_sifrelem'] : 'none',
         'smtp_kullanici' => trim($_POST['smtp_kullanici'] ?? ''),
         'smtp_gonderen'  => trim($_POST['smtp_gonderen']  ?? ''),
         'smtp_ad'        => trim($_POST['smtp_ad']        ?? ''),
@@ -193,13 +193,16 @@ require_once __DIR__ . '/../includes/header.php';
                 <label>SMTP Sunucu *</label>
                 <input type="text" name="smtp_host" value="<?= htmlspecialchars($smtp['smtp_host'] ?? '') ?>" placeholder="smtp.gmail.com">
             </div>
+
             <div class="form-group">
                 <label>Port *</label>
-                <input type="number" name="smtp_port" value="<?= htmlspecialchars($smtp['smtp_port'] ?? '587') ?>" placeholder="587">
+                <input type="number" id="smtp_port" name="smtp_port" value="<?= htmlspecialchars($smtp['smtp_port'] ?? '587') ?>" placeholder="587">
             </div>
+
             <div class="form-group">
                 <label>Şifreleme</label>
-                <select name="smtp_sifrelem">
+                <select id="smtp_sifrelem" name="smtp_sifrelem">
+                    <option value="none" <?= ($smtp['smtp_sifrelem'] ?? '') === 'none' ? 'selected' : '' ?>>Yok (None)</option>
                     <option value="tls" <?= ($smtp['smtp_sifrelem'] ?? 'tls') === 'tls' ? 'selected' : '' ?>>TLS (Önerilen)</option>
                     <option value="ssl" <?= ($smtp['smtp_sifrelem'] ?? '') === 'ssl' ? 'selected' : '' ?>>SSL</option>
                 </select>
@@ -333,5 +336,26 @@ require_once __DIR__ . '/../includes/header.php';
     <?php endforeach; ?>
     <?php endif; ?>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const selectSifreleme = document.getElementById('smtp_sifrelem');
+    const inputPort = document.getElementById('smtp_port');
+
+    if(selectSifreleme && inputPort) {
+        selectSifreleme.addEventListener('change', function() {
+            const secilen = this.value;
+            
+            if (secilen === 'ssl') {
+                inputPort.value = 465;
+            } else if (secilen === 'tls') {
+                inputPort.value = 587;
+            } else if (secilen === 'none') {
+                inputPort.value = 25;
+            }
+        });
+    }
+});
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
