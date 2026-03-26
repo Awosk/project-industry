@@ -145,7 +145,8 @@ function adminBildirimGonder($pdo, string $aksiyon, string $modul, string $acikl
             AND f.modul = ?
             AND f.aksiyon = ?
             AND k.aktif = 1
-            AND k.mail_bildirim_aktif = 1 -- YENİ EKLENEN ŞART
+            AND k.rol = 'admin' -- CRITICAL FIX: Sadece rolü hala admin olanlara gönder!
+            AND k.mail_bildirim_aktif = 1
             AND k.email IS NOT NULL
             AND k.email != ''
         ");
