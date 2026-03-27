@@ -9,7 +9,7 @@
 
 ## 📌 Proje Hakkında
 
-`Project Oil`, endüstriyel tesislerde veya araç filolarında yağ tüketimini izlemek için geliştirilmiş hafif (lightweight) ve güvenli bir web uygulamasıdır. Karmaşık stok giriş-çıkış süreçleriyle uğraşmak yerine, sisteme tanımlı her araç/tesis birer **görsel kart** olarak listelenir. Personeller bu kartlar üzerinden saniyeler içinde yağ çıkışı işleyebilir, yöneticiler ise geçmiş tüm çıkış kayıtlarını, sistem loglarını ve veritabanı yedeklerini denetleyebilir.
+`Project Oil`, endüstriyel tesislerde veya araç filolarında yağ tüketimini izlemek için geliştirilmiş hafif (lightweight) ve güvenli bir web uygulamasıdır. Karmaşık stok giriş-çıkış süreçleriyle uğraşmak yerine, sisteme tanımlı her araç/tesis birer **görsel kart** olarak listelenir. Personeller bu kartlar üzerinden saniyeler içinde yağ çıkışı işleyebilir, yöneticiler ise geçmiş tüm çıkış kayıtlarını, sistem loglarını, asenkron mail kuyruğunu ve veritabanı yedeklerini denetleyebilir.
 
 ---
 
@@ -23,6 +23,11 @@
 - **Ürün Yönetimi:** Sistemde kullanılan endüstriyel yağların (ürünlerin) dinamik olarak eklenmesi, düzenlenmesi ve silinmesi.
 - **Araç & Tesis Yönetimi:** Takipten sorumlu olunan araç ve tesislerin yönetimi.
 - **Araç Türleri Kategorizasyonu:** Araçların türlerine göre gruplandırılmasını ve daha düzenli listelenmesini sağlar.
+
+### 📨 Asenkron E-Posta Bildirim Sistemi (v1.1.0+)
+- **Akıllı Mail Kuyruğu (Queue):** Mailler web sayfasını yavaşlatmadan arka planda sıraya eklenir ve arka plan işçisi (`mail_worker.php`) tarafından sırayla gönderilir.
+- **Rate Limit & Cooldown:** Spam veya sunucu blokajını önlemek için otomatik kısıtlama. Limit aşımında yöneticilere otomatik `force` uyarı düşer.
+- **Mükerrer Gönderim Koruması:** Eşzamanlı (Race Condition) çalışan arka plan işçilerinin aynı kişiye çift mail göndermesi veritabanı kilitleme mekanizmasıyla (`FOR UPDATE`) engellenmiştir.
 
 ### 🔍 İşlemler ve Depo Entegrasyonu
 - **İşlemler Sayfası:** Yapılan tüm işlemleri varsayılan olarak listeler. Gelişmiş filtreleme yeteneğine sahiptir.
@@ -44,6 +49,8 @@ Admin rolündeki kullanıcılar sistemin kalbi olan yönetim araçlarına tam er
 
 - **Kullanıcı Yönetimi:** Kullanıcı ekleme, düzenleme, silme ve yetki seviyelerini (Kullanıcı / Admin) belirleme.
 - **Sistem Kayıtları (Loglar):** Sistemde gerçekleştirilen tüm operasyonların şeffaf bir şekilde loglanması ve izlenmesi.
+- **Admin Bildirim Filtreleri (v1.1.0+):** Hangi adminin hangi modül eyleminden (Araç Ekleme, Tesis Silme vb.) e-posta bildirimi alacağı kişi bazlı filtrelenebilir. Kompakt akordeon tasarımıyla kolayca yönetilir.
+- **SMTP Port Otomasyonu (v1.1.0+):** Şifreleme (SSL / TLS / Yok) tercihine göre portların otomatik tayin edilmesi ve dinamik test maili altyapısı.
 - **Seçmeli Veritabanı Yedekleme:** İster tabloları tek tek seçerek, ister tüm veritabanını tek tıkla yedekleme ve alınan yedeği anında geri yükleme (Restore).
 - **Güvenli Sistem Güncelleme:** GitHub üzerinden yayınlanan son kararlı sürümü (Release) otomatik çeker. Güncelleme esnasında `.env` gibi özel yapılandırma dosyaları korunur, veritabanı şeması güncellenir ve **veri kaybı yaşanmaz**.
 
@@ -75,6 +82,13 @@ Uygulamanın çalışabilmesi için sunucunuzda aşağıdaki yapılandırmaları
 3. İndirdiğiniz dosyayı Apache web sunucunuzun kök dizinine çıkartın.
 4. Tarayıcınızdan web sitenizi açarak `/install` dizinine gidin (Örn: `http://localhost/install`).
 5. Web tabanlı kurulum sihirbazındaki adımları (Veritabanı bilgileri vb.) takip ederek kurulumu tamamlayın.
+6. **E-posta bildirimleri için (Opsiyonel):** Sunucu üzerinde bir Cron Job tanımlayarak her 1 dakikada `mail_worker.php` tetiklenmelidir.
+
+---
+
+## 🛠️ Geliştiriciler İçin Test Ortamı (v1.1.0+)
+
+Geliştirme aşamasında her küçük itme eylemi için release üretmek istemeyen yazılımcılar, projeye dahil olmayan ve repo üzerinde en son push edilen commit hash'ini izleyen `dev_updater.php` komut dosyasını kullanabilirler. Bu dosya canlı test sunucularında `.env` veya `database.php` gibi yapılandırma kilitlerini bozmadan dosyaları dinamik olarak eşzamanlar.
 
 ---
 
