@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/log.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/log.php';
 girisKontrol();
 
 $sayfa_basligi = 'Araç Yönetimi';
@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
             } catch (PDOException $e) { flash('Bir hata oluştu.', 'danger'); }
         }
     } else { flash('Tüm alanlar zorunludur.', 'danger'); }
-    header('Location: araclar.php'); exit;
+    header('Location: vehicles.php'); exit;
 }
 
 // ── DÜZENLE ──
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
             flash('Araç güncellendi.');
         }
     } else { flash('Tüm alanlar zorunludur.', 'danger'); }
-    header('Location: araclar.php'); exit;
+    header('Location: vehicles.php'); exit;
 }
 
 // ── SİL ──
@@ -85,7 +85,7 @@ if (isset($_GET['sil'])) {
     $pdo->prepare("UPDATE lite_araclar SET aktif=0 WHERE id=?")->execute([$sil_id]);
     if ($sr) logYaz($pdo,'sil','arac','Araç silindi: '.$sr['plaka'].' - '.$sr['marka_model'], $sil_id, $sr, null, 'lite');
     flash('Araç silindi.');
-    header('Location: araclar.php'); exit;
+    header('Location: vehicles.php'); exit;
 }
 
 $araclar  = $pdo->query("
@@ -99,12 +99,12 @@ $araclar  = $pdo->query("
 
 $arac_turleri = $pdo->query("SELECT id, tur_adi FROM lite_arac_turleri WHERE aktif=1 ORDER BY tur_adi")->fetchAll();
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
     <h1><span>🚗</span> Araç Yönetimi</h1>
-    <a href="arac_turleri.php" class="btn btn-secondary btn-sm">⚙️ Araç Türleri</a>
+    <a href="vehicle_types.php" class="btn btn-secondary btn-sm">⚙️ Araç Türleri</a>
 </div>
 
 <?php if (empty($arac_turleri)): ?>
@@ -116,7 +116,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div style="font-size:12px;color:var(--warning-text);opacity:.85;margin-top:2px;">Araç ekleyebilmek için önce en az bir araç türü oluşturmalısınız.</div>
         </div>
     </div>
-    <a href="arac_turleri.php" class="btn btn-sm" style="background:var(--warning);color:#fff;white-space:nowrap;">⚙️ Araç Türü Ekle →</a>
+    <a href="vehicle_types.php" class="btn btn-sm" style="background:var(--warning);color:#fff;white-space:nowrap;">⚙️ Araç Türü Ekle →</a>
 </div>
 <?php endif; ?>
 
@@ -165,7 +165,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <td><strong><?= htmlspecialchars($a['plaka']) ?></strong></td>
                 <td><?= htmlspecialchars($a['marka_model']) ?></td>
                 <td style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <a href="arac_detay.php?id=<?= $a['id'] ?>" class="btn btn-sm btn-primary">👁️ Detay</a>
+                    <a href="vehicle_detail.php?id=<?= $a['id'] ?>" class="btn btn-sm btn-primary">👁️ Detay</a>
                     <button class="btn btn-sm btn-secondary"
                         onclick="aracDuzenleModal(<?= $a['id'] ?>, <?= $a['arac_turu_id'] ?>, '<?= htmlspecialchars($a['plaka'], ENT_QUOTES) ?>', '<?= htmlspecialchars($a['marka_model'], ENT_QUOTES) ?>')">
                         ✏️ Düzenle
@@ -227,4 +227,4 @@ document.getElementById('aracDuzenleModal').addEventListener('click', function(e
 });
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

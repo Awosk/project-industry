@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/log.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/log.php';
 girisKontrol();
 
 $sayfa_basligi = 'İşlemler';
@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle']))
         flash('Açıklama güncellendi.');
     }
     $qs = $_GET;
-    header('Location: islemler.php?' . http_build_query($qs)); exit;
+    header('Location: transactions.php?' . http_build_query($qs)); exit;
 }
 
 if (isset($_GET['islendi_toggle'])) {
@@ -55,7 +55,7 @@ if (isset($_GET['islendi_toggle'])) {
         logYaz($pdo,'guncelle','islendi','İşlendi işareti geri alındı: '.$hedef.' — '.$urun.', '.($kd['miktar']??'?').'L', $toggle_id, ['islendi'=>1], ['islendi'=>0], 'lite');
     }
     $qs = $_GET; unset($qs['islendi_toggle']);
-    header('Location: islemler.php?' . http_build_query($qs)); exit;
+    header('Location: transactions.php?' . http_build_query($qs)); exit;
 }
 
 $f_tarih_bas  = $_GET['tarih_bas']  ?? '';
@@ -121,7 +121,7 @@ $tum_urunler  = $pdo->query("SELECT id, urun_kodu, urun_adi FROM lite_urunler WH
 
 $filtre_aktif = $f_tarih_bas || $f_tarih_bit || $f_arac_id || $f_tesis_id || $f_urun_id || $f_tur !== 'tumu' || $f_islendi !== 'tumu';
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
@@ -129,27 +129,27 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <div class="stat-grid">
-    <a href="islemler.php" class="stat-card <?= $f_tur==='tumu' && $f_islendi==='tumu' && !$f_tarih_bas && !$f_arac_id && !$f_tesis_id && !$f_urun_id ? 'active' : '' ?>" style="text-decoration:none;">
+    <a href="transactions.php" class="stat-card <?= $f_tur==='tumu' && $f_islendi==='tumu' && !$f_tarih_bas && !$f_arac_id && !$f_tesis_id && !$f_urun_id ? 'active' : '' ?>" style="text-decoration:none;">
         <div class="stat-label">Tüm Kayıtlar</div>
         <div class="stat-value"><?= $toplam_islem ?></div>
         <div class="stat-sub">Kayıt</div>
     </a>
-    <a href="islemler.php?tur=arac" class="stat-card <?= $f_tur==='arac' ? 'active' : '' ?>" style="text-decoration:none;">
+    <a href="transactions.php?tur=arac" class="stat-card <?= $f_tur==='arac' ? 'active' : '' ?>" style="text-decoration:none;">
         <div class="stat-label">🚗 Araç</div>
         <div class="stat-value"><?= $arac_islem ?></div>
         <div class="stat-sub">Kayıt</div>
     </a>
-    <a href="islemler.php?tur=tesis" class="stat-card <?= $f_tur==='tesis' ? 'active' : '' ?>" style="text-decoration:none;">
+    <a href="transactions.php?tur=tesis" class="stat-card <?= $f_tur==='tesis' ? 'active' : '' ?>" style="text-decoration:none;">
         <div class="stat-label">🏭 Tesis</div>
         <div class="stat-value"><?= $tesis_islem ?></div>
         <div class="stat-sub">Kayıt</div>
     </a>
-    <a href="islemler.php?islendi=islenmedi" class="stat-card <?= $bekleyen_sayisi > 0 ? 'warning' : 'success' ?> <?= $f_islendi==='islenmedi' ? 'active' : '' ?>" style="text-decoration:none;">
+    <a href="transactions.php?islendi=islenmedi" class="stat-card <?= $bekleyen_sayisi > 0 ? 'warning' : 'success' ?> <?= $f_islendi==='islenmedi' ? 'active' : '' ?>" style="text-decoration:none;">
         <div class="stat-label">⏳ Bekleyen</div>
         <div class="stat-value"><?= $bekleyen_sayisi ?></div>
         <div class="stat-sub"><?= $bekleyen_sayisi > 0 ? 'İşlenmedi' : 'Hepsi tamam' ?></div>
     </a>
-    <a href="islemler.php?islendi=islendi" class="stat-card success <?= $f_islendi==='islendi' ? 'active' : '' ?>" style="text-decoration:none;">
+    <a href="transactions.php?islendi=islendi" class="stat-card success <?= $f_islendi==='islendi' ? 'active' : '' ?>" style="text-decoration:none;">
         <div class="stat-label">✅ İşlendi</div>
         <div class="stat-value"><?= (int)$pdo->query("SELECT COUNT(*) FROM lite_kayitlar WHERE aktif=1 AND islendi=1")->fetchColumn() ?></div>
         <div class="stat-sub">Kayıt</div>
@@ -165,7 +165,7 @@ require_once __DIR__ . '/../includes/header.php';
             <?php endif; ?>
         </span>
         <?php if ($filtre_aktif): ?>
-        <a href="islemler.php" class="btn btn-sm btn-danger" onclick="event.stopPropagation();" style="flex-shrink:0;">✕ Temizle</a>
+        <a href="transactions.php" class="btn btn-sm btn-danger" onclick="event.stopPropagation();" style="flex-shrink:0;">✕ Temizle</a>
         <?php endif; ?>
     </div>
     <div id="filtre_panel" style="<?= $filtre_aktif ? '' : 'display:none;' ?>">
@@ -263,10 +263,10 @@ require_once __DIR__ . '/../includes/header.php';
              onclick="window.location='<?= $detay_url ?>'" style="cursor:pointer;">
             <div class="islem-hedef">
                 <?php if ($k['kayit_turu'] === 'arac'): ?>
-                <a href="arac_detay.php?id=<?= $k['arac_id'] ?>" class="islem-plaka">🚗 <?= htmlspecialchars($k['plaka']) ?></a>
+                <a href="vehicle_detail.php?id=<?= $k['arac_id'] ?>" class="islem-plaka">🚗 <?= htmlspecialchars($k['plaka']) ?></a>
                 <div class="islem-alt"><?= htmlspecialchars($k['marka_model']) ?></div>
                 <?php else: ?>
-                <a href="tesis_detay.php?id=<?= $k['tesis_id'] ?>" class="islem-plaka">🏭 <?= htmlspecialchars($k['firma_adi']) ?></a>
+                <a href="facility_detail.php?id=<?= $k['tesis_id'] ?>" class="islem-plaka">🏭 <?= htmlspecialchars($k['firma_adi']) ?></a>
                 <div class="islem-alt">Tesis / Şantiye</div>
                 <?php endif; ?>
             </div>
@@ -320,7 +320,7 @@ require_once __DIR__ . '/../includes/header.php';
 
     <?php if ($toplam_sayfa > 1):
         $sayfa_params = array_diff_key($_GET, ['sayfa' => '']);
-        function sayfaUrl($n, $base) { return 'islemler.php?' . http_build_query(array_merge($base, ['sayfa' => $n])); }
+        function sayfaUrl($n, $base) { return 'transactions.php??' . http_build_query(array_merge($base, ['sayfa' => $n])); }
         $goster_bas  = max(1, $sayfa - 2);
         $goster_bit  = min($toplam_sayfa, $sayfa + 2);
     ?>
@@ -407,4 +407,4 @@ document.getElementById('aciklamaModal').addEventListener('click', function(e) {
 });
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

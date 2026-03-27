@@ -9,8 +9,8 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
 girisKontrol();
 
 $sayfa_basligi = 'Tesisler';
@@ -34,12 +34,12 @@ if ($arama) {
     });
 }
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
     <h1><span>🏭</span> Tesisler</h1>
-    <a href="tesisler_yonetim.php" class="btn btn-primary btn-sm">➕ Tesis Ekle</a>
+    <a href="facilities_management.php" class="btn btn-primary btn-sm">➕ Tesis Ekle</a>
 </div>
 
 <!-- Arama -->
@@ -47,17 +47,17 @@ require_once __DIR__ . '/../includes/header.php';
     <form method="get" style="display:flex; gap:8px;">
         <input type="text" name="q" value="<?= htmlspecialchars($arama) ?>" placeholder="🔍  Tesis veya adres ara..." style="flex:1;">
         <?php if ($arama): ?>
-        <a href="tesisler.php" class="btn btn-secondary btn-sm">✕</a>
+        <a href="facilities.php" class="btn btn-secondary btn-sm">✕</a>
         <?php endif; ?>
     </form>
 </div>
 
 <?php if (empty($tesisler)): ?>
-<div class="alert alert-info">Henüz tesis kaydı yok. <a href="tesisler_yonetim.php" class="btn btn-sm btn-primary" style="margin-left:8px">➕ Ekle</a></div>
+<div class="alert alert-info">Henüz tesis kaydı yok. <a href="facilities_management.php" class="btn btn-sm btn-primary" style="margin-left:8px">➕ Ekle</a></div>
 <?php else: ?>
 <div class="arac-grid">
     <?php foreach ($tesisler as $t): ?>
-    <a href="tesis_detay.php?id=<?= $t['id'] ?>" class="arac-card">
+    <a href="facility_detail.php?id=<?= $t['id'] ?>" class="arac-card">
         <div class="arac-card-plaka" style="font-size:16px;"><?= htmlspecialchars($t['firma_adi']) ?></div>
         <div class="arac-card-model"><?= htmlspecialchars($t['firma_adresi']) ?></div>
         <div class="arac-card-meta">
@@ -76,4 +76,4 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 <?php endif; ?>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

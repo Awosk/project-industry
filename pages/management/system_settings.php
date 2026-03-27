@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/mail.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/mail.php';
 adminKontrol();
 
 $sayfa_basligi = 'Sistem Ayarları';
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['smtp_kaydet'])) {
         $stmt->execute([$k, $v]);
     }
     flash('SMTP ayarları kaydedildi.');
-    header('Location: sistem_ayarlar.php'); exit;
+    header('Location: system_settings.php'); exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rate_limit_kaydet'])) {
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rate_limit_kaydet']))
     $stmt->execute(['mail_rate_limit_dakika', $rl_dakika]);
     $stmt->execute(['mail_cooldown_dakika',   $cl_dakika]);
     flash('Rate limit ayarları kaydedildi.');
-    header('Location: sistem_ayarlar.php'); exit;
+    header('Location: system_settings.php'); exit;
 }
 
 // ── COOLDOWN İPTAL ──
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cooldown_iptal'])) {
     $pdo->prepare("UPDATE sistem_ayarlar SET deger = '' WHERE anahtar = 'mail_cooldown_bitis'")->execute();
     $pdo->exec("UPDATE mail_queue SET status = 'cancelled' WHERE status = 'paused'");
     flash('Cooldown iptal edildi. Paused mailler iptal edildi.');
-    header('Location: sistem_ayarlar.php'); exit;
+    header('Location: system_settings.php'); exit;
 }
 
 // ── TEST MAILI GÖNDER ──
@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['test_mail'])) {
     } else {
         flash('Geçerli bir e-posta adresi girin.', 'danger');
     }
-    header('Location: sistem_ayarlar.php'); exit;
+    header('Location: system_settings.php'); exit;
 }
 
 // ── BİLDİRİM FİLTRELERİNİ KAYDET ──
@@ -107,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['bildirim_kaydet'])) {
         }
         flash('Bildirim filtreleri ve aktiflik durumu kaydedildi.');
     }
-    header('Location: sistem_ayarlar.php'); exit;
+    header('Location: system_settings.php'); exit;
 }
 
 // Mevcut SMTP ayarlarını çek
@@ -172,7 +172,7 @@ $bildirim_secenekleri = [
     ],
 ];
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
@@ -430,4 +430,4 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

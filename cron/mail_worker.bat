@@ -10,8 +10,8 @@
 :: =====================================================
 
 set PHP_PATH=E:\xampp\php\php.exe
-set WORKER_PATH=E:\xampp\htdocs\project-oil\cron\mail_worker.php
-set LOG_PATH=E:\xampp\htdocs\project-oil\cron\mail_worker.log
+set WORKER_PATH=E:\xampp\htdocs\project-oil-new-design-updated\cron\mail_worker.php
+set LOG_PATH=E:\xampp\htdocs\project-oil-new-design-updated\cron\mail_worker.log
 
 :loop
     %PHP_PATH% %WORKER_PATH% >> %LOG_PATH% 2>&1

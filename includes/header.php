@@ -69,27 +69,27 @@
     <!-- Desktop linkler -->
     <ul class="nav-links-desktop">
         <li><a href="<?= ROOT_URL ?>index.php" <?= $curr=='index.php'?'class="active"':'' ?>>🚗 Araçlar</a></li>
-        <li><a href="<?= ROOT_URL ?>pages/tesisler.php" <?= $curr=='tesisler.php'?'class="active"':'' ?>>🏭 Tesisler</a></li>
+        <li><a href="<?= ROOT_URL ?>pages/operations/facilities.php" <?= $curr=='facilities.php'?'class="active"':'' ?>>🏭 Tesisler</a></li>
         <li class="dropdown">
             <a href="#">📁 Yönet ▾</a>
             <ul class="dropdown-menu">
-                <li><a href="<?= ROOT_URL ?>pages/urunler.php">🛢️ Ürün Yönetimi</a></li>
-                <li><a href="<?= ROOT_URL ?>pages/araclar.php">🚗 Araç Yönetimi</a></li>
-                <li><a href="<?= ROOT_URL ?>pages/arac_turleri.php">🚗 Araç Türü Yönetimi</a></li>
-                <li><a href="<?= ROOT_URL ?>pages/tesisler_yonetim.php">🏭 Tesis Yönetimi</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/operations/products.php">🛢️ Ürün Yönetimi</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/operations/vehicles.php">🚗 Araç Yönetimi</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/operations/vehicle_types.php">🚗 Araç Türü Yönetimi</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/operations/facilities_management.php">🏭 Tesis Yönetimi</a></li>
             </ul>
         </li>
-        <li><a href="<?= ROOT_URL ?>pages/islemler.php" <?= $curr=='islemler.php'?'class="active"':'' ?>>📋 İşlemler</a></li>
-        <li><a href="<?= ROOT_URL ?>pages/raporlar.php" <?= $curr=='raporlar.php'?'class="active"':'' ?>>📊 Raporlar</a></li>
+        <li><a href="<?= ROOT_URL ?>pages/operations/transactions.php" <?= $curr=='transactions.php'?'class="active"':'' ?>>📋 İşlemler</a></li>
+        <li><a href="<?= ROOT_URL ?>pages/operations/reports.php" <?= $curr=='reports.php'?'class="active"':'' ?>>📊 Raporlar</a></li>
         <?php if (isAdmin()): ?>
-        <li class="dropdown <?= in_array($curr, ['kullanicilar.php','loglar.php','backup.php']) ? 'active' : '' ?>">
-            <a href="#" <?= in_array($curr, ['kullanicilar.php','loglar.php','backup.php']) ? 'class="active"' : '' ?>>⚙️ Yönetim ▾</a>
+        <li class="dropdown <?= in_array($curr, ['users.php','logs.php','backup.php']) ? 'active' : '' ?>">
+            <a href="#" <?= in_array($curr, ['users.php','logs.php','backup.php']) ? 'class="active"' : '' ?>>⚙️ Yönetim ▾</a>
             <ul class="dropdown-menu">
-                <li><a href="<?= ROOT_URL ?>pages/kullanicilar.php">👥 Kullanıcı Yönetimi</a></li>
-                <li><a href="<?= ROOT_URL ?>pages/loglar.php">🔍 Sistem Kayıtları</a></li>
-                <li><a href="<?= ROOT_URL ?>pages/backup.php">💾 Veritabanı Yedekleme</a></li>
-                <li><a href="<?= ROOT_URL ?>pages/guncelleme.php">🔄 Sistem Güncelleme</a></li>
-                <li><a href="<?= ROOT_URL ?>pages/sistem_ayarlar.php">⚙️ Sistem Ayarları</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/management/users.php">👥 Kullanıcı Yönetimi</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/management/logs.php">🔍 Sistem Kayıtları</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/management/backup.php">💾 Veritabanı Yedekleme</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/management/update.php">🔄 Sistem Güncelleme</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/management/system_settings.php">⚙️ Sistem Ayarları</a></li>
             </ul>
         </li>
         <?php endif; ?>
@@ -99,8 +99,8 @@
         <span>👤 <?= htmlspecialchars($ku['ad_soyad']) ?></span>
         <?php if (isAdmin()): ?><span class="badge-admin">Admin</span><?php endif; ?>
         <button class="btn-tema-toggle" onclick="temaToggle()" title="Tema değiştir" id="temaBtn"><?= mevcutTema() === 'dark' ? '☀️' : '🌙' ?></button>
-        <a href="<?= ROOT_URL ?>pages/sifre.php" class="btn-logout-desktop" style="background:var(--border);color:var(--text);">🔑 Şifre</a>
-        <a href="<?= ROOT_URL ?>logout.php" class="btn-logout-desktop">Çıkış</a>
+        <a href="<?= ROOT_URL ?>pages/operations/profile_password.php" class="btn-logout-desktop" style="background:var(--border);color:var(--text);">🔑 Şifre</a>
+        <a href="<?= ROOT_URL ?>pages/auth/logout.php" class="btn-logout-desktop">Çıkış</a>
     </div>
 </nav>
 
@@ -111,21 +111,21 @@
         <ul class="nav-drawer-links">
             <li><span class="drawer-section">Ana Menü</span></li>
             <li><a href="<?= ROOT_URL ?>index.php" onclick="closeDrawer()">🚗 Araçlar</a></li>
-            <li><a href="<?= ROOT_URL ?>pages/tesisler.php" onclick="closeDrawer()">🏭 Tesisler</a></li>
-            <li><a href="<?= ROOT_URL ?>pages/islemler.php" onclick="closeDrawer()">📋 İşlemler</a></li>
-            <li><a href="<?= ROOT_URL ?>pages/raporlar.php" onclick="closeDrawer()">📊 Raporlar</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/operations/facilities.php" onclick="closeDrawer()">🏭 Tesisler</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/operations/transactions.php" onclick="closeDrawer()">📋 İşlemler</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/operations/reports.php" onclick="closeDrawer()">📊 Raporlar</a></li>
             <li><span class="drawer-section">Kayıtlar</span></li>
-            <li><a href="<?= ROOT_URL ?>pages/urunler.php" onclick="closeDrawer()">🛢️ Ürünler</a></li>
-            <li><a href="<?= ROOT_URL ?>pages/araclar.php" onclick="closeDrawer()">🚗 Araç Yönetimi</a></li>
-            <li><a href="<?= ROOT_URL ?>pages/arac_turleri.php" onclick="closeDrawer()">🚗 Araç Türü Yönetimi</a></li>
-            <li><a href="<?= ROOT_URL ?>pages/tesisler_yonetim.php" onclick="closeDrawer()">🏭 Tesis Yönetimi</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/operations/products.php" onclick="closeDrawer()">🛢️ Ürünler</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/operations/vehicles.php" onclick="closeDrawer()">🚗 Araç Yönetimi</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/operations/vehicle_types.php" onclick="closeDrawer()">🚗 Araç Türü Yönetimi</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/operations/facilities_management.php" onclick="closeDrawer()">🏭 Tesis Yönetimi</a></li>
             <?php if (isAdmin()): ?>
             <li><span class="drawer-section">Yönetim</span></li>
-            <li><a href="<?= ROOT_URL ?>pages/kullanicilar.php" onclick="closeDrawer()">👥 Kullanıcı Yönetimi</a></li>
-            <li><a href="<?= ROOT_URL ?>pages/loglar.php" onclick="closeDrawer()">🔍 Sistem Kayıtları</a></li>
-            <li><a href="<?= ROOT_URL ?>pages/backup.php" onclick="closeDrawer()">💾 Veritabanı Yedekleme</a></li>
-            <li><a href="<?= ROOT_URL ?>pages/guncelleme.php" onclick="closeDrawer()">🔄 Sistem Güncelleme</a></li>
-            <li><a href="<?= ROOT_URL ?>pages/sistem_ayarlar.php" onclick="closeDrawer()">⚙️ Sistem Ayarları</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/management/users.php" onclick="closeDrawer()">👥 Kullanıcı Yönetimi</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/management/logs.php" onclick="closeDrawer()">🔍 Sistem Kayıtları</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/management/backup.php" onclick="closeDrawer()">💾 Veritabanı Yedekleme</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/management/update.php" onclick="closeDrawer()">🔄 Sistem Güncelleme</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/management/system_settings.php" onclick="closeDrawer()">⚙️ Sistem Ayarları</a></li>
             <?php endif; ?>
         </ul>
         <div class="nav-drawer-footer">
@@ -133,8 +133,8 @@
                 <span id="temaDrawerIcon"><?= mevcutTema() === 'dark' ? '☀️' : '🌙' ?></span>
                 <span id="temaDrawerLabel"><?= mevcutTema() === 'dark' ? 'Açık Temaya Geç' : 'Koyu Temaya Geç' ?></span>
             </a>
-            <a href="<?= ROOT_URL ?>pages/sifre.php">🔑 Şifre Değiştir</a>
-            <a href="<?= ROOT_URL ?>logout.php">🚪 Çıkış — <?= htmlspecialchars($ku['ad_soyad']) ?></a>
+            <a href="<?= ROOT_URL ?>pages/operations/profile_password.php">🔑 Şifre Değiştir</a>
+            <a href="<?= ROOT_URL ?>pages/auth/logout.php">🚪 Çıkış — <?= htmlspecialchars($ku['ad_soyad']) ?></a>
         </div>
     </div>
 </div>
@@ -144,13 +144,13 @@
     <a href="<?= ROOT_URL ?>index.php" class="<?= $curr=='index.php'?'active':'' ?>">
         <span class="bn-icon">🚗</span>Araçlar
     </a>
-    <a href="<?= ROOT_URL ?>pages/tesisler.php" class="<?= $curr=='tesisler.php'?'active':'' ?>">
+    <a href="<?= ROOT_URL ?>pages/operations/facilities.php" class="<?= $curr=='facilities.php'?'active':'' ?>">
         <span class="bn-icon">🏭</span>Tesisler
     </a>
-    <a href="<?= ROOT_URL ?>pages/islemler.php" class="<?= $curr=='islemler.php'?'active':'' ?>">
+    <a href="<?= ROOT_URL ?>pages/operations/transactions.php" class="<?= $curr=='transactions.php'?'active':'' ?>">
         <span class="bn-icon">📋</span>İşlemler
     </a>
-    <a href="<?= ROOT_URL ?>pages/raporlar.php" class="<?= $curr=='raporlar.php'?'active':'' ?>">
+    <a href="<?= ROOT_URL ?>pages/operations/reports.php" class="<?= $curr=='reports.php'?'active':'' ?>">
         <span class="bn-icon">📊</span>Raporlar
     </a>
     <a href="#" onclick="toggleDrawer();return false;">
@@ -200,7 +200,7 @@ async function temaToggle() {
     if (drawerLabel) drawerLabel.textContent = label;
 
     try {
-        await fetch(base + 'pages/tema.php', {
+        await fetch(base + 'pages/operations/theme.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
             body: 'tema=' + encodeURIComponent(yeni)

@@ -220,7 +220,7 @@ function adminBildirimGonder($pdo, string $aksiyon, string $modul, string $acikl
  */
 function sifreSifirlamaMailiGonder($pdo, array $kullanici, string $token): bool {
     $site_adi = defined('SITE_ADI') ? SITE_ADI : 'Project Oil';
-    $link     = ROOT_URL . 'sifre_sifirlama.php?token=' . $token;
+    $link     = ROOT_URL . 'pages/auth/reset_password.php?token=' . $token;
     $icerik   = mailSablonu('🔑 Şifre Sıfırlama', '
         <p>Merhaba <strong>' . htmlspecialchars($kullanici['ad_soyad']) . '</strong>,</p>
         <p>' . $site_adi . ' hesabınız için şifre sıfırlama talebinde bulunuldu.</p>

@@ -208,7 +208,7 @@ function renderEngel(): string {
         <div style="font-size:48px;margin-bottom:16px;">🔒</div>
         <h2>Kurulum Zaten Tamamlandı</h2>
         <p>Sistem kurulu. Kurulumu yeniden çalıştırmak için <code>.env</code> dosyasını silin.</p>
-        <p style="margin-top:16px;"><a href="../login.php">→ Giriş sayfasına git</a></p>
+        <p style="margin-top:16px;"><a href="../pages/auth/login.php">→ Giriş sayfasına git</a></p>
     </div></body></html>';
 }
 
@@ -596,7 +596,7 @@ function renderEngel(): string {
         <p>Veritabanı oluşturuldu, admin hesabı kaydedildi<br>ve <code>.env</code> dosyası başarıyla yazıldı.</p>
         <p style="margin-top:8px;">Güvenlik için <strong>install/</strong> klasörünü<br>sunucudan silebilirsiniz.</p>
         <hr class="divider">
-        <a href="../login.php" class="btn btn-success" style="margin: 0 auto;">
+        <a href="../pages/auth/login.php" class="btn btn-success" style="margin: 0 auto;">
             🔐 Giriş Sayfasına Git →
         </a>
     </div>

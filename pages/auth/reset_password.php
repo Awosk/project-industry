@@ -9,8 +9,8 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/config/database.php';
-require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
 
 if (girisYapildi()) { header('Location: ' . ROOT_URL . 'index.php'); exit; }
 
@@ -22,7 +22,7 @@ $tamamlandi = false;
 $kullanici  = null;
 
 if (!$token) {
-    header('Location: ' . ROOT_URL . 'login.php');
+    header('Location: ' . ROOT_URL . 'pages/auth/login.php');
     exit;
 }
 
@@ -91,11 +91,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $gecerli) {
 
         <?php if ($tamamlandi): ?>
         <div class="alert alert-success">✅ Şifreniz başarıyla güncellendi.</div>
-        <a href="<?= ROOT_URL ?>login.php" class="btn btn-primary" style="width:100%;margin-top:8px;">🔐 Giriş Yap</a>
+        <a href="<?= ROOT_URL ?>pages/auth/login.php" class="btn btn-primary" style="width:100%;margin-top:8px;">🔐 Giriş Yap</a>
 
         <?php elseif (!$gecerli): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($mesaj) ?></div>
-        <a href="<?= ROOT_URL ?>sifre_unut.php" class="btn btn-secondary" style="width:100%;margin-top:8px;">🔄 Yeni Talep Oluştur</a>
+        <a href="<?= ROOT_URL ?>pages/auth/forgot_password.php" class="btn btn-secondary" style="width:100%;margin-top:8px;">🔄 Yeni Talep Oluştur</a>
 
         <?php else: ?>
         <p style="font-size:13px;color:var(--muted);margin-bottom:20px;">

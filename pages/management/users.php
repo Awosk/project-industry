@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/log.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/log.php';
 adminKontrol();
 
 $sayfa_basligi = 'Kullanıcı Yönetimi';
@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
             } catch (PDOException $e) { flash('Bir hata oluştu.', 'danger'); }
         }
     } else { flash('Tüm alanlar zorunludur, şifre min. 6 karakter.', 'danger'); }
-    header('Location: kullanicilar.php'); exit;
+    header('Location: users.php'); exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rol_degistir'])) {
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['rol_degistir'])) {
             flash($sr['ad_soyad'] . ' kullanıcısının rolü ' . $yeni_rol . ' olarak güncellendi.');
         } else { flash('Kullanıcı bulunamadı.', 'danger'); }
     }
-    header('Location: kullanicilar.php'); exit;
+    header('Location: users.php'); exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sifre_reset'])) {
@@ -74,7 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['sifre_reset'])) {
             flash($sr['ad_soyad'] . ' kullanıcısının şifresi güncellendi.');
         } else { flash('Kullanıcı bulunamadı.', 'danger'); }
     } else { flash('Şifre en az 6 karakter olmalıdır.', 'danger'); }
-    header('Location: kullanicilar.php'); exit;
+    header('Location: users.php'); exit;
 }
 
 if (isset($_GET['sil'])) {
@@ -86,7 +86,7 @@ if (isset($_GET['sil'])) {
         if ($sr) logYaz($pdo,'sil','kullanici','Kullanıcı silindi: '.$sr['kullanici_adi'].' ('.$sr['rol'].')', $sil_id, ['kullanici_adi'=>$sr['kullanici_adi'],'ad_soyad'=>$sr['ad_soyad'],'rol'=>$sr['rol']], null, 'lite');
         flash('Kullanıcı silindi.');
     }
-    header('Location: kullanicilar.php'); exit;
+    header('Location: users.php'); exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email_guncelle'])) {
@@ -103,12 +103,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email_guncelle'])) {
             flash('E-posta güncellendi.');
         }
     }
-    header('Location: kullanicilar.php'); exit;
+    header('Location: users.php'); exit;
 }
 
 $kullanicilar = $pdo->query("SELECT * FROM kullanicilar WHERE aktif=1 ORDER BY ad_soyad")->fetchAll();
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
@@ -277,4 +277,4 @@ document.getElementById('emailModal').addEventListener('click', function(e) {
     if (e.target === this) emailModalKapat();
 });
 </script>
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

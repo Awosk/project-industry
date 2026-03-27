@@ -48,7 +48,7 @@ require_once __DIR__ . '/includes/header.php';
 
 <div class="page-header">
     <h1><span>🚗</span> Araçlar</h1>
-    <a href="pages/araclar.php" class="btn btn-primary btn-sm">➕ Araç Ekle</a>
+    <a href="pages/operations/vehicles.php" class="btn btn-primary btn-sm">➕ Araç Ekle</a>
 </div>
 
 <div class="card" style="padding:12px 16px; margin-bottom:14px;">
@@ -61,11 +61,11 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 
 <?php if (empty($araclar)): ?>
-<div class="alert alert-info">Henüz araç kaydı yok. <a href="pages/araclar.php" class="btn btn-sm btn-primary" style="margin-left:8px">➕ Ekle</a></div>
+<div class="alert alert-info">Henüz araç kaydı yok. <a href="pages/operations/vehicles.php" class="btn btn-sm btn-primary" style="margin-left:8px">➕ Ekle</a></div>
 <?php else: ?>
 <div class="arac-grid">
     <?php foreach ($araclar as $a): ?>
-    <a href="pages/arac_detay.php?id=<?= $a['id'] ?>" class="arac-card">
+    <a href="pages/operations/vehicle_detail.php?id=<?= $a['id'] ?>" class="arac-card">
         <div class="arac-card-plaka"><?= htmlspecialchars($a['plaka']) ?></div>
         <div class="arac-card-model"><?= htmlspecialchars($a['marka_model']) ?></div>
         <div class="arac-card-meta">

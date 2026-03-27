@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/log.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/log.php';
 girisKontrol();
 
 $sayfa_basligi = 'Şifre Değiştir';
@@ -41,13 +41,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([password_hash($yeni, PASSWORD_DEFAULT), $ku['id']]);
             logYaz($pdo, 'guncelle', 'kullanici', 'Kendi şifresini değiştirdi: ' . $ku['adi'], $ku['id'], null, null, 'lite');
             flash('Şifreniz başarıyla güncellendi.');
-            header('Location: sifre.php'); exit;
+            header('Location: profile_password.php'); exit;
         }
     }
-    header('Location: sifre.php'); exit;
+    header('Location: profile_password.php'); exit;
 }
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
@@ -77,4 +77,4 @@ require_once __DIR__ . '/../includes/header.php';
     </form>
 </div>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/log.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/log.php';
 adminKontrol();
 
 $sayfa_basligi = 'Sistem Logları';
@@ -23,7 +23,7 @@ if (isset($_GET['log_sil']) && is_numeric($_GET['log_sil'])) {
     $pdo->prepare("DELETE FROM sistem_loglari WHERE id=?")->execute([$log_id]);
     flash('Log kaydı silindi.');
     $qs = $_GET; unset($qs['log_sil']);
-    header('Location: loglar.php?' . http_build_query($qs)); exit;
+    header('Location: logs.php?' . http_build_query($qs)); exit;
 }
 
 // ── TOPLU SİL ──
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             flash($stmt->rowCount() . ' log kaydı silindi.');
         }
     }
-    header('Location: loglar.php'); exit;
+    header('Location: logs.php'); exit;
 }
 
 // Filtreler
@@ -140,7 +140,7 @@ if (!empty($kayit_id_listesi)) {
     }
 }
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
@@ -222,7 +222,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
             <div class="btn-group" style="margin-top:14px;">
                 <button type="submit" class="btn btn-primary">🔍 Filtrele</button>
-                <a href="loglar.php" class="btn btn-secondary">✕ Temizle</a>
+                <a href="logs.php" class="btn btn-secondary">✕ Temizle</a>
             </div>
         </form>
     </div>
@@ -263,33 +263,33 @@ require_once __DIR__ . '/../includes/header.php';
             if ($kid) {
                 switch ($log['modul']) {
                     case 'arac':
-                        $hedef_url = ROOT_URL . 'pages/arac_detay.php?id=' . $kid;
+                        $hedef_url = ROOT_URL . 'pages/operations/vehicle_detail.php?id=' . $kid;
                         break;
                     case 'arac_kayit':
                     case 'islendi':
                         if (isset($kayit_hedef_map[$kid])) {
                             $km = $kayit_hedef_map[$kid];
                             if ($km['turu'] === 'arac' && $km['hedef_id'])
-                                $hedef_url = ROOT_URL . 'pages/arac_detay.php?id=' . $km['hedef_id'] . '#kayit-' . $kid;
+                                $hedef_url = ROOT_URL . 'pages/operations/vehicle_detail.php?id=' . $km['hedef_id'] . '#kayit-' . $kid;
                             elseif ($km['turu'] === 'tesis' && $km['hedef_id'])
-                                $hedef_url = ROOT_URL . 'pages/tesis_detay.php?id=' . $km['hedef_id'] . '#kayit-' . $kid;
+                                $hedef_url = ROOT_URL . 'pages/operations/facility_detail.php?id=' . $km['hedef_id'] . '#kayit-' . $kid;
                         }
                         break;
                     case 'tesis_kayit':
                         if (isset($kayit_hedef_map[$kid])) {
                             $km = $kayit_hedef_map[$kid];
                             if ($km['hedef_id'])
-                                $hedef_url = ROOT_URL . 'pages/tesis_detay.php?id=' . $km['hedef_id'] . '#kayit-' . $kid;
+                                $hedef_url = ROOT_URL . 'pages/operations/facility_detail.php?id=' . $km['hedef_id'] . '#kayit-' . $kid;
                         }
                         break;
                     case 'tesis':
-                        $hedef_url = ROOT_URL . 'pages/tesis_detay.php?id=' . $kid;
+                        $hedef_url = ROOT_URL . 'pages/operations/facility_detail.php?id=' . $kid;
                         break;
                     case 'urun':
-                        $hedef_url = ROOT_URL . 'pages/urunler.php';
+                        $hedef_url = ROOT_URL . 'pages/operations/products.php';
                         break;
                     case 'kullanici':
-                        $hedef_url = ROOT_URL . 'pages/kullanicilar.php';
+                        $hedef_url = ROOT_URL . 'pages/management/users.php';
                         break;
                 }
             }
@@ -380,7 +380,7 @@ require_once __DIR__ . '/../includes/header.php';
 <div id="temizleModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
     <div class="modal-box" style="max-width:420px;">
         <div style="font-weight:700;font-size:16px;margin-bottom:16px;">🗑️ Logları Temizle</div>
-        <form method="post" action="loglar.php" onsubmit="return onayTemizle()">
+        <form method="post" action="logs.php" onsubmit="return onayTemizle()">
             <div class="form-group">
                 <label>Silme Yöntemi</label>
                 <select name="toplu_sil_mod" id="sil_mod" onchange="silModDegisti(this.value)">
@@ -404,7 +404,7 @@ require_once __DIR__ . '/../includes/header.php';
 </div>
 
 <!-- Seçili Sil Formu -->
-<form id="seciliSilForm" method="post" action="loglar.php" style="display:none;">
+<form id="seciliSilForm" method="post" action="logs.php" style="display:none;">
     <input type="hidden" name="toplu_sil_mod" value="secili">
     <div id="secili_ids"></div>
 </form>
@@ -573,4 +573,4 @@ document.getElementById('temizleModal').addEventListener('click', function(e) {
 });
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

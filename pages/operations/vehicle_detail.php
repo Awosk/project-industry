@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/log.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/log.php';
 girisKontrol();
 
 $id = (int)($_GET['id'] ?? 0);
@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['yag_ekle'])) {
     } else {
         flash('Ürün, miktar ve tarih zorunludur.', 'danger');
     }
-    header('Location: arac_detay.php?id='.$id); exit;
+    header('Location: vehicle_detail.php?id='.$id); exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle'])) {
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle']))
         logYaz($pdo,'guncelle','arac_kayit', $arac['plaka'].' Plakalı Aracın '.$sr['urun_kodu'].' kaydının açıklaması güncellendi', $kayit_id, ['aciklama'=>$sr['aciklama']], ['aciklama'=>$yeni_aciklama], 'lite');
         flash('Açıklama güncellendi.');
     }
-    header('Location: arac_detay.php?id='.$id); exit;
+    header('Location: vehicle_detail.php?id='.$id); exit;
 }
 
 if (isset($_GET['yag_sil'])) {
@@ -82,7 +82,7 @@ if (isset($_GET['yag_sil'])) {
         logYaz($pdo,'sil','arac_kayit',$log_msg,$sil_id,$sr,null,'lite');
     }
     flash('Yağ kaydı silindi.');
-    header('Location: arac_detay.php?id='.$id); exit;
+    header('Location: vehicle_detail.php?id='.$id); exit;
 }
 
 $urunler = $pdo->query("SELECT * FROM lite_urunler WHERE aktif=1 ORDER BY urun_adi")->fetchAll();
@@ -98,7 +98,7 @@ $yag_kayitlari = $pdo->prepare("
 $yag_kayitlari->execute([$id]);
 $yag_kayitlari = $yag_kayitlari->fetchAll();
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
@@ -216,7 +216,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="kayit-miktar"><?= formatliMiktar($k['miktar']) ?></div>
             <button class="btn btn-sm btn-secondary" style="flex-shrink:0;font-size:11px;padding:4px 8px;"
                 onclick="aciklamaModal(<?= $k['id'] ?>, '<?= htmlspecialchars($k['aciklama'] ?? '', ENT_QUOTES) ?>')" title="Açıklama düzenle">✏️</button>
-            <button class="kayit-sil" onclick="if(confirm('Bu kaydı silmek istiyor musunuz?')) location.href='arac_detay.php?id=<?= $id ?>&yag_sil=<?= $k['id'] ?>'" title="Sil">🗑️</button>
+            <button class="kayit-sil" onclick="if(confirm('Bu kaydı silmek istiyor musunuz?')) location.href='vehicle_detail.php?id=<?= $id ?>&yag_sil=<?= $k['id'] ?>'" title="Sil">🗑️</button>
         </div>
         <?php endforeach; ?>
     </div>
@@ -285,4 +285,4 @@ document.getElementById('aciklamaModal').addEventListener('click', function(e) {
 .kayit-parlat { animation: parlat 2.5s ease-out forwards; border-radius: 8px; }
 </style>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/log.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/log.php';
 girisKontrol();
 
 $sayfa_basligi = 'Ürün Yönetimi';
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
             } catch (PDOException $e) { flash('Bir hata oluştu.', 'danger'); }
         }
     } else { flash('Tüm alanlar zorunludur.', 'danger'); }
-    header('Location: urunler.php'); exit;
+    header('Location: products.php'); exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
             flash('Ürün güncellendi.');
         }
     } else { flash('Tüm alanlar zorunludur.', 'danger'); }
-    header('Location: urunler.php'); exit;
+    header('Location: products.php'); exit;
 }
 
 if (isset($_GET['sil'])) {
@@ -70,12 +70,12 @@ if (isset($_GET['sil'])) {
     $pdo->prepare("UPDATE lite_urunler SET aktif=0 WHERE id=?")->execute([$sil_id]);
     if ($sr) logYaz($pdo,'sil','urun','Ürün silindi: '.$sr['urun_kodu'].' - '.$sr['urun_adi'], $sil_id, $sr, null, 'lite');
     flash('Ürün silindi.');
-    header('Location: urunler.php'); exit;
+    header('Location: products.php'); exit;
 }
 
 $urunler = $pdo->query("SELECT u.*, k.ad_soyad FROM lite_urunler u LEFT JOIN kullanicilar k ON u.olusturan_id=k.id WHERE u.aktif=1 ORDER BY u.urun_adi")->fetchAll();
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
@@ -167,4 +167,4 @@ document.getElementById('urunDuzenleModal').addEventListener('click', function(e
 });
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

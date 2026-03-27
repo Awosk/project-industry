@@ -9,19 +9,19 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/log.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/log.php';
 girisKontrol();
 
 $id = (int)($_GET['id'] ?? 0);
-if (!$id) { header('Location: tesisler.php'); exit; }
+if (!$id) { header('Location: facilities.php'); exit; }
 $ku = mevcutKullanici();
 
 $tesis = $pdo->prepare("SELECT * FROM lite_tesisler WHERE id=? AND aktif=1");
 $tesis->execute([$id]);
 $tesis = $tesis->fetch();
-if (!$tesis) { flash('Tesis bulunamadı.', 'danger'); header('Location: tesisler.php'); exit; }
+if (!$tesis) { flash('Tesis bulunamadı.', 'danger'); header('Location: facilities.php'); exit; }
 
 $sayfa_basligi = $tesis['firma_adi'];
 
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
     } else {
         flash('Ürün, miktar ve tarih zorunludur.', 'danger');
     }
-    header('Location: tesis_detay.php?id=' . $id); exit;
+    header('Location: facility_detail.php?id=' . $id); exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle'])) {
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle']))
         logYaz($pdo,'guncelle','tesis_kayit', $tesis['firma_adi'].' Adlı Firmanın '.$sr['urun_kodu'].' kaydının açıklaması güncellendi', $kayit_id, ['aciklama'=>$sr['aciklama']], ['aciklama'=>$yeni_aciklama], 'lite');
         flash('Açıklama güncellendi.');
     }
-    header('Location: tesis_detay.php?id='.$id); exit;
+    header('Location: facility_detail.php?id='.$id); exit;
 }
 
 if (isset($_GET['sil'])) {
@@ -75,7 +75,7 @@ if (isset($_GET['sil'])) {
         $tesis['firma_adi'].' tesisinden yağ kaydı silindi: '.$sr['urun_kodu'].' - '.$sr['urun_adi'].', '.$sr['miktar'].'L, tarih:'.$sr['tarih'].'. Açıklama: '.($sr['aciklama'] ?? 'Yok'),
         $sil_id, $sr, null, 'lite');
     flash('Kayıt silindi.');
-    header('Location: tesis_detay.php?id=' . $id); exit;
+    header('Location: facility_detail.php?id=' . $id); exit;
 }
 
 $urunler  = $pdo->query("SELECT * FROM lite_urunler WHERE aktif=1 ORDER BY urun_adi")->fetchAll();
@@ -90,12 +90,12 @@ $kayitlar = $pdo->prepare("
 $kayitlar->execute([$id]);
 $kayitlar = $kayitlar->fetchAll();
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
     <h1><span>🏭</span> <?= htmlspecialchars($tesis['firma_adi']) ?></h1>
-    <a href="tesisler.php" class="btn btn-secondary btn-sm">← Geri</a>
+    <a href="facilities.php" class="btn btn-secondary btn-sm">← Geri</a>
 </div>
 
 <div class="card" style="padding:14px 16px; margin-bottom:14px;">
@@ -232,4 +232,4 @@ document.getElementById('aciklamaModal').addEventListener('click', function(e) {
 .kayit-parlat { animation: parlat 2.5s ease-out forwards; border-radius: 8px; }
 </style>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

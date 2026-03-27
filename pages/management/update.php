@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/log.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/log.php';
 adminKontrol();
 
 $sayfa_basligi = 'Sistem Güncelleme';
@@ -300,7 +300,7 @@ if (isset($_GET['guncelle']) && $_SERVER['REQUEST_METHOD'] === 'POST') {
 // ════════════════════════════════════════════════
 // SAYFA
 // ════════════════════════════════════════════════
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
@@ -530,4 +530,4 @@ function logEkle(mesaj) {
 }
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

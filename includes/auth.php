@@ -120,7 +120,7 @@ function aktifKullaniciKontrol($pdo): void {
         // Kullanıcı silinmiş veya pasife alınmış
         session_destroy();
         session_start();
-        header('Location: ' . ROOT_URL . 'login.php?oturum=sonlandi');
+        header('Location: ' . ROOT_URL . 'pages/auth/login.php?oturum=sonlandi');
         exit;
     }
 }
@@ -183,7 +183,7 @@ function bfSifirla(string $ip): void {
 
 function girisKontrol() {
     if (!isset($_SESSION['kullanici_id'])) {
-        header('Location: ' . ROOT_URL . 'login.php');
+        header('Location: ' . ROOT_URL . 'pages/auth/login.php');
         exit;
     }
 }

@@ -9,10 +9,10 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/includes/auth.php';
-require_once __DIR__ . '/config/database.php';
-require_once __DIR__ . '/includes/log.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/log.php';
 logCikis($pdo, 'lite');
 session_destroy();
-header('Location: ' . ROOT_URL . 'login.php');
+header('Location: ' . ROOT_URL . 'pages/auth/login.php');
 exit;

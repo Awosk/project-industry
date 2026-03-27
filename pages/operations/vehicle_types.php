@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/log.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/log.php';
 girisKontrol();
 
 $sayfa_basligi = 'Araç Türü Yönetimi';
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
     } else {
         flash('Tür adı zorunludur.', 'danger');
     }
-    header('Location: arac_turleri.php'); exit;
+    header('Location: vehicle_types.php'); exit;
 }
 
 // ── DÜZENLE ──
@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
     } else {
         flash('Tür adı zorunludur.', 'danger');
     }
-    header('Location: arac_turleri.php'); exit;
+    header('Location: vehicle_types.php'); exit;
 }
 
 // ── SİL ──
@@ -81,7 +81,7 @@ if (isset($_GET['sil'])) {
         if ($sr) logYaz($pdo,'sil','arac_tur','Araç türü silindi: '.$sr['tur_adi'], $sil_id, $sr, null, 'lite');
         flash('Araç türü silindi.');
     }
-    header('Location: arac_turleri.php'); exit;
+    header('Location: vehicle_types.php'); exit;
 }
 
 $turler = $pdo->query("
@@ -93,7 +93,7 @@ $turler = $pdo->query("
     ORDER BY t.tur_adi
 ")->fetchAll();
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
@@ -196,4 +196,4 @@ document.getElementById('turDuzenleModal').addEventListener('click', function(e)
 });
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/config/database.php';
-require_once __DIR__ . '/includes/auth.php';
-require_once __DIR__ . '/includes/mail.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/mail.php';
 
 if (girisYapildi()) { header('Location: ' . ROOT_URL . 'index.php'); exit; }
 
@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="alert alert-success">
             ✅ Eğer bu e-posta adresiyle kayıtlı bir hesap varsa, şifre sıfırlama bağlantısı gönderildi. Gelen kutunuzu kontrol edin.
         </div>
-        <a href="<?= ROOT_URL ?>login.php" class="btn btn-secondary" style="width:100%;margin-top:8px;">← Giriş Sayfasına Dön</a>
+        <a href="<?= ROOT_URL ?>pages/auth/login.php" class="btn btn-secondary" style="width:100%;margin-top:8px;">← Giriş Sayfasına Dön</a>
 
         <?php else: ?>
 
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
 
         <div style="text-align:center;margin-top:16px;">
-            <a href="<?= ROOT_URL ?>login.php" style="font-size:13px;color:var(--muted);">← Giriş sayfasına dön</a>
+            <a href="<?= ROOT_URL ?>pages/auth/login.php" style="font-size:13px;color:var(--muted);">← Giriş sayfasına dön</a>
         </div>
         <?php endif; ?>
     </div>

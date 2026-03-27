@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/log.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/log.php';
 adminKontrol();
 
 $sayfa_basligi = 'Veritabanı Yedekleme';
@@ -244,7 +244,7 @@ foreach (glob($backup_dir . DIRECTORY_SEPARATOR . '*.sql') ?: [] as $f) {
 }
 usort($yedekler, fn($a, $b) => $b['zaman'] - $a['zaman']);
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
@@ -373,4 +373,4 @@ document.querySelectorAll('input[name="tablolar[]"]').forEach(cb => bLabelGuncel
 </script>
 <?php endif; ?>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

@@ -9,8 +9,8 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
 girisKontrol();
 
 $sayfa_basligi = 'Raporlar';
@@ -129,7 +129,7 @@ $tum_urunler      = $pdo->query("SELECT id, urun_kodu, urun_adi FROM lite_urunle
 $tum_kullanicilar = $pdo->query("SELECT id, ad_soyad FROM kullanicilar WHERE aktif=1 ORDER BY ad_soyad")->fetchAll();
 
 if ($pdf_mod) { ob_start(); }
-if (!$pdf_mod) require_once __DIR__ . '/../includes/header.php';
+if (!$pdf_mod) require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <?php if ($pdf_mod): ?>
@@ -214,7 +214,7 @@ if (!$pdf_mod) require_once __DIR__ . '/../includes/header.php';
         </div>
         <div class="btn-group" style="margin-top:14px;">
             <button type="submit" class="btn btn-primary">📊 Raporu Getir</button>
-            <a href="raporlar.php" class="btn btn-secondary">✕ Temizle</a>
+            <a href="reports.php" class="btn btn-secondary">✕ Temizle</a>
         </div>
     </form>
 </div>
@@ -361,7 +361,7 @@ if (!empty($f_urun_ids)) {
     <!-- Sayfalama -->
     <?php if ($toplam_sayfa > 1):
         $sayfa_params = array_diff_key($_GET, ['sayfa'=>'']);
-        function raporSayfaUrl($n, $base) { return 'raporlar.php?' . http_build_query(array_merge($base, ['sayfa'=>$n])); }
+        function raporSayfaUrl($n, $base) { return 'reports.php??' . http_build_query(array_merge($base, ['sayfa'=>$n])); }
         $goster_bas = max(1, $sayfa - 2);
         $goster_bit = min($toplam_sayfa, $sayfa + 2);
     ?>
@@ -401,5 +401,5 @@ function donemDegisti(val) {
     document.getElementById('ozel_tarih_bit').style.display = ozel ? '' : 'none';
 }
 </script>
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>
 <?php endif; ?>

@@ -9,9 +9,9 @@
  * (at your option) any later version.
  */
 
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
-require_once __DIR__ . '/../includes/log.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/log.php';
 girisKontrol();
 
 $sayfa_basligi = 'Tesis Yönetimi';
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
             flash('Tesis eklendi.');
         }
     } else { flash('Tüm alanlar zorunludur.', 'danger'); }
-    header('Location: tesisler_yonetim.php'); exit;
+    header('Location: facilities_management.php'); exit;
 }
 
 if (isset($_GET['sil'])) {
@@ -47,7 +47,7 @@ if (isset($_GET['sil'])) {
     $pdo->prepare("UPDATE lite_tesisler SET aktif=0 WHERE id=?")->execute([$sil_id]);
     if ($sr) logYaz($pdo,'sil','tesis','Tesis silindi: '.$sr['firma_adi'], $sil_id, $sr, null, 'lite');
     flash('Tesis silindi.');
-    header('Location: tesisler_yonetim.php'); exit;
+    header('Location: facilities_management.php'); exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
@@ -69,12 +69,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
             flash('Tesis güncellendi.');
         }
     } else { flash('Tüm alanlar zorunludur.', 'danger'); }
-    header('Location: tesisler_yonetim.php'); exit;
+    header('Location: facilities_management.php'); exit;
 }
 
 $tesisler = $pdo->query("SELECT t.*, k.ad_soyad FROM lite_tesisler t LEFT JOIN kullanicilar k ON t.olusturan_id=k.id WHERE t.aktif=1 ORDER BY t.firma_adi")->fetchAll();
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="page-header">
@@ -116,7 +116,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <td><strong><?= htmlspecialchars($t['firma_adi']) ?></strong></td>
                 <td><?= htmlspecialchars($t['firma_adresi']) ?></td>
                 <td style="display:flex;gap:6px;flex-wrap:wrap;">
-                    <a href="tesis_detay.php?id=<?= $t['id'] ?>" class="btn btn-sm btn-primary">👁️ Detay</a>
+                    <a href="facility_detail.php?id=<?= $t['id'] ?>" class="btn btn-sm btn-primary">👁️ Detay</a>
                     <button class="btn btn-sm btn-secondary"
                         onclick="tesisDuzenleModal(<?= $t['id'] ?>, '<?= htmlspecialchars($t['firma_adi'], ENT_QUOTES) ?>', '<?= htmlspecialchars($t['firma_adresi'], ENT_QUOTES) ?>')">✏️ Düzenle</button>
                     <a href="?sil=<?= $t['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Silmek istediğinize emin misiniz?')">🗑️</a>
@@ -166,4 +166,4 @@ document.getElementById('tesisDuzenleModal').addEventListener('click', function(
 });
 </script>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>
