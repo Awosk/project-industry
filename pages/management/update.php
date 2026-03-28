@@ -18,7 +18,7 @@ $sayfa_basligi = 'Sistem Güncelleme';
 
 define('GITHUB_REPO',    'Awosk/project-oil');
 define('GITHUB_API',     'https://api.github.com/repos/' . GITHUB_REPO . '/releases/latest');
-define('ROOT_DIR',       dirname(__DIR__));
+define('ROOT_DIR',       dirname(__DIR__, 2));
 define('MIGRATIONS_DIR', ROOT_DIR . '/migrations');
 
 // Korunacak yol/dosyalar — güncelleme sırasında üzerine yazılmaz
