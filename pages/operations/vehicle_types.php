@@ -92,7 +92,7 @@ $turler = $pdo->query("
     LEFT JOIN lite_araclar a ON a.arac_turu_id = t.id AND a.aktif = 1
     WHERE t.aktif = 1
     GROUP BY t.id
-    ORDER BY t.oncelik ASC, t.tur_adi
+    ORDER BY t.oncelik DESC, t.tur_adi
 ")->fetchAll();
 
 require_once __DIR__ . '/../../includes/header.php';
@@ -112,7 +112,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <input type="text" name="tur_adi" required placeholder="Örn: Damper" maxlength="100" autofocus>
             </div>
             <div class="form-group">
-                <label>Öncelik <span style="font-weight:400;color:var(--muted);font-size:11px;">(küçük = üstte)</span></label>
+                <label>Öncelik <span style="font-weight:400;color:var(--muted);font-size:11px;">(büyük = üstte)</span></label>
                 <input type="number" name="oncelik" min="1" value="1" placeholder="1">
             </div>
         </div>

@@ -32,7 +32,7 @@ $araclar = $pdo->query("
     LEFT JOIN lite_kayitlar lk     ON lk.arac_id = a.id
     WHERE a.aktif = 1
     GROUP BY a.id
-    ORDER BY t.oncelik ASC, t.tur_adi, a.plaka
+    ORDER BY t.oncelik DESC, t.tur_adi, a.plaka
 ")->fetchAll();
 
 $arama = trim($_GET['q'] ?? '');
