@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS `kullanicilar` (
 CREATE TABLE IF NOT EXISTS `lite_arac_turleri` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `tur_adi` varchar(100) NOT NULL,
+  `oncelik` INT NOT NULL DEFAULT 1,
   `aktif` tinyint(1) NOT NULL DEFAULT 1,
   `olusturma_tarihi` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
