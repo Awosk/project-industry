@@ -72,6 +72,20 @@ function logGiris($pdo, $kullanici, $sistem = 'ana') {
             VALUES (?, ?, ?, ?, 'giris', 'auth', 'Sisteme giriş yapıldı', ?)
         ")->execute([$kullanici['id'], $kullanici['kullanici_adi'], $kullanici['ad_soyad'], $sistem, $ip]);
     } catch (Exception $e) { error_log('Log hatası: ' . $e->getMessage()); }
+
+    // Admin bildirimlerini tetikle (GİRİŞ)
+    if (file_exists(__DIR__ . '/mail.php') && !function_exists('adminBildirimGonder')) {
+        require_once __DIR__ . '/mail.php';
+    }
+    if (function_exists('adminBildirimGonder')) {
+        // Mevcut kullanıcı formatına uygun dizi oluştur
+        $ku = [
+            'id' => $kullanici['id'],
+            'adi' => $kullanici['kullanici_adi'],
+            'ad_soyad' => $kullanici['ad_soyad']
+        ];
+        adminBildirimGonder($pdo, 'giris', 'auth', 'Sisteme giriş yapıldı', $ku);
+    }
 }
 
 function logCikis($pdo, $sistem = 'ana') {
@@ -85,4 +99,12 @@ function logCikis($pdo, $sistem = 'ana') {
             VALUES (?, ?, ?, ?, 'cikis', 'auth', 'Sistemden çıkış yapıldı', ?)
         ")->execute([$ku['id'], $ku['adi'], $ku['ad_soyad'], $sistem, $ip]);
     } catch (Exception $e) { error_log('Log hatası: ' . $e->getMessage()); }
+
+    // Admin bildirimlerini tetikle (ÇIKIŞ)
+    if (file_exists(__DIR__ . '/mail.php') && !function_exists('adminBildirimGonder')) {
+        require_once __DIR__ . '/mail.php';
+    }
+    if (function_exists('adminBildirimGonder')) {
+        adminBildirimGonder($pdo, 'cikis', 'auth', 'Sistemden çıkış yapıldı', $ku);
+    }
 }
