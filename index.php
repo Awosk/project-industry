@@ -9,6 +9,12 @@
  * (at your option) any later version.
  */
 
+// Kurulum kontrolü: .env yoksa kurulum sihirbazına yönlendir
+if (!file_exists(__DIR__ . '/.env')) {
+    header('Location: install/');
+    exit;
+}
+
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/auth.php';
 girisKontrol();
