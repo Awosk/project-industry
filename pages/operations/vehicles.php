@@ -24,14 +24,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
     $plaka  = strtoupper(trim($_POST['plaka']));
     $model  = trim($_POST['marka_model']);
     if ($tur_id && $plaka && $model) {
-        $mevcut = $pdo->prepare("SELECT * FROM lite_araclar WHERE plaka=?");
+        $mevcut = $pdo->prepare("SELECT * FROM vehicles WHERE plaka=?");
         $mevcut->execute([$plaka]); $mevcut = $mevcut->fetch();
         // Tür adını log için çek
-        $tur_adi = $pdo->prepare("SELECT tur_adi FROM lite_arac_turleri WHERE id=?");
+        $tur_adi = $pdo->prepare("SELECT tur_adi FROM vehicles_type WHERE id=?");
         $tur_adi->execute([$tur_id]); $tur_adi = $tur_adi->fetchColumn();
 
         if ($mevcut && $mevcut['aktif'] == 0) {
-            $pdo->prepare("UPDATE lite_araclar SET arac_turu_id=?, marka_model=?, olusturan_id=?, aktif=1 WHERE id=?")
+            $pdo->prepare("UPDATE vehicles SET arac_turu_id=?, marka_model=?, olusturan_id=?, aktif=1 WHERE id=?")
                 ->execute([$tur_id, $model, $ku['id'], $mevcut['id']]);
             logYaz($pdo,'ekle','arac','Silinen araç reaktif edildi: '.$plaka.' ('.$tur_adi.') - '.$model, $mevcut['id'], null, ['tur_id'=>$tur_id,'plaka'=>$plaka,'model'=>$model], 'lite');
             flash('Daha önce silinmiş araç tekrar aktif edildi.');
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
             flash('Bu plaka zaten kayıtlı.', 'danger');
         } else {
             try {
-                $pdo->prepare("INSERT INTO lite_araclar (arac_turu_id, plaka, marka_model, olusturan_id) VALUES (?,?,?,?)")
+                $pdo->prepare("INSERT INTO vehicles (arac_turu_id, plaka, marka_model, olusturan_id) VALUES (?,?,?,?)")
                     ->execute([$tur_id, $plaka, $model, $ku['id']]);
                 $yeni_id = $pdo->lastInsertId();
                 logYaz($pdo,'ekle','arac','Araç eklendi: '.$plaka.' ('.$tur_adi.') - '.$model, $yeni_id, null, ['tur_id'=>$tur_id,'plaka'=>$plaka,'model'=>$model], 'lite');
@@ -58,15 +58,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
     $plaka  = strtoupper(trim($_POST['duzenle_plaka']));
     $model  = trim($_POST['duzenle_model']);
     if ($did && $tur_id && $plaka && $model) {
-        $sr = $pdo->prepare('SELECT * FROM lite_araclar WHERE id=?'); $sr->execute([$did]); $sr = $sr->fetch();
-        $cakisma = $pdo->prepare("SELECT id FROM lite_araclar WHERE plaka=? AND id!=? AND aktif=1");
+        $sr = $pdo->prepare('SELECT * FROM vehicles WHERE id=?'); $sr->execute([$did]); $sr = $sr->fetch();
+        $cakisma = $pdo->prepare("SELECT id FROM vehicles WHERE plaka=? AND id!=? AND aktif=1");
         $cakisma->execute([$plaka, $did]);
         if ($cakisma->fetch()) {
             flash('Bu plaka başka bir araçta kayıtlı.', 'danger');
         } else {
-            $tur_adi = $pdo->prepare("SELECT tur_adi FROM lite_arac_turleri WHERE id=?");
+            $tur_adi = $pdo->prepare("SELECT tur_adi FROM vehicles_type WHERE id=?");
             $tur_adi->execute([$tur_id]); $tur_adi = $tur_adi->fetchColumn();
-            $pdo->prepare("UPDATE lite_araclar SET arac_turu_id=?, plaka=?, marka_model=? WHERE id=?")
+            $pdo->prepare("UPDATE vehicles SET arac_turu_id=?, plaka=?, marka_model=? WHERE id=?")
                 ->execute([$tur_id, $plaka, $model, $did]);
             logYaz($pdo,'guncelle','arac','Araç güncellendi: '.$plaka, $did,
                 ['arac_turu_id'=>$sr['arac_turu_id'],'plaka'=>$sr['plaka'],'marka_model'=>$sr['marka_model']],
@@ -80,9 +80,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
 // ── SİL ──
 if (isset($_GET['sil'])) {
     $sil_id = (int)$_GET['sil'];
-    $sr = $pdo->prepare('SELECT a.*, t.tur_adi FROM lite_araclar a LEFT JOIN lite_arac_turleri t ON a.arac_turu_id=t.id WHERE a.id=?');
+    $sr = $pdo->prepare('SELECT a.*, t.tur_adi FROM vehicles a LEFT JOIN vehicles_type t ON a.arac_turu_id=t.id WHERE a.id=?');
     $sr->execute([$sil_id]); $sr = $sr->fetch();
-    $pdo->prepare("UPDATE lite_araclar SET aktif=0 WHERE id=?")->execute([$sil_id]);
+    $pdo->prepare("UPDATE vehicles SET aktif=0 WHERE id=?")->execute([$sil_id]);
     if ($sr) logYaz($pdo,'sil','arac','Araç silindi: '.$sr['plaka'].' - '.$sr['marka_model'], $sil_id, $sr, null, 'lite');
     flash('Araç silindi.');
     header('Location: vehicles.php'); exit;
@@ -90,14 +90,14 @@ if (isset($_GET['sil'])) {
 
 $araclar  = $pdo->query("
     SELECT a.*, t.tur_adi, k.ad_soyad
-    FROM lite_araclar a
-    LEFT JOIN lite_arac_turleri t ON a.arac_turu_id = t.id
-    LEFT JOIN kullanicilar k ON a.olusturan_id = k.id
+    FROM vehicles a
+    LEFT JOIN vehicles_type t ON a.arac_turu_id = t.id
+    LEFT JOIN users k ON a.olusturan_id = k.id
     WHERE a.aktif = 1
     ORDER BY t.tur_adi, a.plaka
 ")->fetchAll();
 
-$arac_turleri = $pdo->query("SELECT id, tur_adi FROM lite_arac_turleri WHERE aktif=1 ORDER BY tur_adi")->fetchAll();
+$arac_turleri = $pdo->query("SELECT id, tur_adi FROM vehicles_type WHERE aktif=1 ORDER BY tur_adi")->fetchAll();
 
 require_once __DIR__ . '/../../includes/header.php';
 ?>

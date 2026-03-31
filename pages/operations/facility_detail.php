@@ -18,7 +18,7 @@ $id = (int)($_GET['id'] ?? 0);
 if (!$id) { header('Location: facilities.php'); exit; }
 $ku = mevcutKullanici();
 
-$tesis = $pdo->prepare("SELECT * FROM lite_tesisler WHERE id=? AND aktif=1");
+$tesis = $pdo->prepare("SELECT * FROM facilities WHERE id=? AND aktif=1");
 $tesis->execute([$id]);
 $tesis = $tesis->fetch();
 if (!$tesis) { flash('Tesis bulunamadı.', 'danger'); header('Location: facilities.php'); exit; }
@@ -34,12 +34,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
 
     if ($urun_id && $miktar > 0 && $tarih) {
         $stmt = $pdo->prepare("
-            INSERT INTO lite_kayitlar (kayit_turu, tesis_id, urun_id, miktar, tarih, aciklama, olusturan_id)
+            INSERT INTO records (kayit_turu, tesis_id, urun_id, miktar, tarih, aciklama, olusturan_id)
             VALUES ('tesis', ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([$id, $urun_id, $miktar, $tarih, $aciklama ?: null, $ku['id']]);
         $yeni_id = $pdo->lastInsertId();
-        $urun_adi_log = $pdo->prepare('SELECT urun_kodu, urun_adi FROM lite_urunler WHERE id=?'); $urun_adi_log->execute([$urun_id]); $urun_adi_log = $urun_adi_log->fetch();
+        $urun_adi_log = $pdo->prepare('SELECT urun_kodu, urun_adi FROM products WHERE id=?'); $urun_adi_log->execute([$urun_id]); $urun_adi_log = $urun_adi_log->fetch();
         logYaz($pdo,'ekle','tesis_kayit',
             $tesis['firma_adi'].' tesisine yağ eklendi: '.($urun_adi_log['urun_kodu']??'').' - '.($urun_adi_log['urun_adi']??'').', '.$miktar.'L, tarih:'.$tarih.'. Açıklama: '.($aciklama ?? 'Yok'),
             $yeni_id, null,
@@ -56,10 +56,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle']))
     csrfDogrula();
     $kayit_id      = (int)$_POST['kayit_id'];
     $yeni_aciklama = trim($_POST['aciklama_yeni'] ?? '');
-    $sr = $pdo->prepare('SELECT lk.*,u.urun_kodu,u.urun_adi FROM lite_kayitlar lk JOIN lite_urunler u ON lk.urun_id=u.id WHERE lk.id=? AND lk.tesis_id=? AND lk.aktif=1');
+    $sr = $pdo->prepare('SELECT lk.*,u.urun_kodu,u.urun_adi FROM records lk JOIN products u ON lk.urun_id=u.id WHERE lk.id=? AND lk.tesis_id=? AND lk.aktif=1');
     $sr->execute([$kayit_id, $id]); $sr = $sr->fetch();
     if ($sr) {
-        $pdo->prepare("UPDATE lite_kayitlar SET aciklama=? WHERE id=?")->execute([$yeni_aciklama ?: null, $kayit_id]);
+        $pdo->prepare("UPDATE records SET aciklama=? WHERE id=?")->execute([$yeni_aciklama ?: null, $kayit_id]);
         logYaz($pdo,'guncelle','tesis_kayit', $tesis['firma_adi'].' Adlı Firmanın '.$sr['urun_kodu'].' kaydının açıklaması güncellendi', $kayit_id, ['aciklama'=>$sr['aciklama']], ['aciklama'=>$yeni_aciklama], 'lite');
         flash('Açıklama güncellendi.');
     }
@@ -68,9 +68,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle']))
 
 if (isset($_GET['sil'])) {
     $sil_id = (int)$_GET['sil'];
-    $sr = $pdo->prepare('SELECT lk.*, u.urun_kodu, u.urun_adi FROM lite_kayitlar lk JOIN lite_urunler u ON lk.urun_id=u.id WHERE lk.id=? AND lk.tesis_id=?');
+    $sr = $pdo->prepare('SELECT lk.*, u.urun_kodu, u.urun_adi FROM records lk JOIN products u ON lk.urun_id=u.id WHERE lk.id=? AND lk.tesis_id=?');
     $sr->execute([$sil_id, $id]); $sr = $sr->fetch();
-    $pdo->prepare("UPDATE lite_kayitlar SET aktif=0 WHERE id=? AND tesis_id=?")->execute([$sil_id, $id]);
+    $pdo->prepare("UPDATE records SET aktif=0 WHERE id=? AND tesis_id=?")->execute([$sil_id, $id]);
     if ($sr) logYaz($pdo,'sil','tesis_kayit',
         $tesis['firma_adi'].' tesisinden yağ kaydı silindi: '.$sr['urun_kodu'].' - '.$sr['urun_adi'].', '.$sr['miktar'].'L, tarih:'.$sr['tarih'].'. Açıklama: '.($sr['aciklama'] ?? 'Yok'),
         $sil_id, $sr, null, 'lite');
@@ -78,12 +78,12 @@ if (isset($_GET['sil'])) {
     header('Location: facility_detail.php?id=' . $id); exit;
 }
 
-$urunler  = $pdo->query("SELECT * FROM lite_urunler WHERE aktif=1 ORDER BY urun_adi")->fetchAll();
+$urunler  = $pdo->query("SELECT * FROM products WHERE aktif=1 ORDER BY urun_adi")->fetchAll();
 $kayitlar = $pdo->prepare("
     SELECT lk.*, u.urun_adi, u.urun_kodu, k.ad_soyad
-    FROM lite_kayitlar lk
-    JOIN lite_urunler u ON lk.urun_id = u.id
-    LEFT JOIN kullanicilar k ON lk.olusturan_id = k.id
+    FROM records lk
+    JOIN products u ON lk.urun_id = u.id
+    LEFT JOIN users k ON lk.olusturan_id = k.id
     WHERE lk.tesis_id = ? AND lk.aktif = 1
     ORDER BY lk.tarih DESC, lk.olusturma_tarihi DESC
 ");

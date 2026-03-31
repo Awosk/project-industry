@@ -23,16 +23,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
     $tur_adi  = trim($_POST['tur_adi']);
     $oncelik  = max(1, (int)($_POST['oncelik'] ?? 1));
     if ($tur_adi) {
-        $mevcut = $pdo->prepare("SELECT * FROM lite_arac_turleri WHERE tur_adi = ?");
+        $mevcut = $pdo->prepare("SELECT * FROM vehicles_type WHERE tur_adi = ?");
         $mevcut->execute([$tur_adi]); $mevcut = $mevcut->fetch();
         if ($mevcut && $mevcut['aktif'] == 0) {
-            $pdo->prepare("UPDATE lite_arac_turleri SET aktif=1, oncelik=? WHERE id=?")->execute([$oncelik, $mevcut['id']]);
+            $pdo->prepare("UPDATE vehicles_type SET aktif=1, oncelik=? WHERE id=?")->execute([$oncelik, $mevcut['id']]);
             logYaz($pdo,'ekle','arac_tur','Silinen araç türü reaktif edildi: '.$tur_adi, $mevcut['id'], null, ['tur_adi'=>$tur_adi,'oncelik'=>$oncelik], 'lite');
             flash('Daha önce silinmiş araç türü tekrar aktif edildi.');
         } elseif ($mevcut && $mevcut['aktif'] == 1) {
             flash('Bu araç türü zaten kayıtlı.', 'danger');
         } else {
-            $pdo->prepare("INSERT INTO lite_arac_turleri (tur_adi, oncelik) VALUES (?, ?)")->execute([$tur_adi, $oncelik]);
+            $pdo->prepare("INSERT INTO vehicles_type (tur_adi, oncelik) VALUES (?, ?)")->execute([$tur_adi, $oncelik]);
             $yeni_id = $pdo->lastInsertId();
             logYaz($pdo,'ekle','arac_tur','Araç türü eklendi: '.$tur_adi.' (öncelik:'.$oncelik.')', $yeni_id, null, ['tur_adi'=>$tur_adi,'oncelik'=>$oncelik], 'lite');
             flash('Araç türü eklendi.');
@@ -50,14 +50,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
     $tur_adi = trim($_POST['duzenle_tur_adi']);
     $oncelik = max(1, (int)($_POST['duzenle_oncelik'] ?? 1));
     if ($did && $tur_adi) {
-        $sr = $pdo->prepare('SELECT * FROM lite_arac_turleri WHERE id=?');
+        $sr = $pdo->prepare('SELECT * FROM vehicles_type WHERE id=?');
         $sr->execute([$did]); $sr = $sr->fetch();
-        $cakisma = $pdo->prepare("SELECT id FROM lite_arac_turleri WHERE tur_adi=? AND id!=? AND aktif=1");
+        $cakisma = $pdo->prepare("SELECT id FROM vehicles_type WHERE tur_adi=? AND id!=? AND aktif=1");
         $cakisma->execute([$tur_adi, $did]);
         if ($cakisma->fetch()) {
             flash('Bu araç türü adı zaten kullanımda.', 'danger');
         } else {
-            $pdo->prepare("UPDATE lite_arac_turleri SET tur_adi=?, oncelik=? WHERE id=?")->execute([$tur_adi, $oncelik, $did]);
+            $pdo->prepare("UPDATE vehicles_type SET tur_adi=?, oncelik=? WHERE id=?")->execute([$tur_adi, $oncelik, $did]);
             logYaz($pdo,'guncelle','arac_tur','Araç türü güncellendi: '.$tur_adi.' (öncelik:'.$oncelik.')', $did,
                 ['tur_adi' => $sr['tur_adi'], 'oncelik' => $sr['oncelik']],
                 ['tur_adi' => $tur_adi, 'oncelik' => $oncelik], 'lite');
@@ -72,14 +72,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
 // ── SİL ──
 if (isset($_GET['sil'])) {
     $sil_id = (int)$_GET['sil'];
-    $kullanimda = $pdo->prepare("SELECT COUNT(*) FROM lite_araclar WHERE arac_turu_id=? AND aktif=1");
+    $kullanimda = $pdo->prepare("SELECT COUNT(*) FROM vehicles WHERE arac_turu_id=? AND aktif=1");
     $kullanimda->execute([$sil_id]);
     if ((int)$kullanimda->fetchColumn() > 0) {
         flash('Bu araç türü aktif araçlarda kullanılıyor, silinemez.', 'danger');
     } else {
-        $sr = $pdo->prepare('SELECT * FROM lite_arac_turleri WHERE id=?');
+        $sr = $pdo->prepare('SELECT * FROM vehicles_type WHERE id=?');
         $sr->execute([$sil_id]); $sr = $sr->fetch();
-        $pdo->prepare("UPDATE lite_arac_turleri SET aktif=0 WHERE id=?")->execute([$sil_id]);
+        $pdo->prepare("UPDATE vehicles_type SET aktif=0 WHERE id=?")->execute([$sil_id]);
         if ($sr) logYaz($pdo,'sil','arac_tur','Araç türü silindi: '.$sr['tur_adi'], $sil_id, $sr, null, 'lite');
         flash('Araç türü silindi.');
     }
@@ -88,8 +88,8 @@ if (isset($_GET['sil'])) {
 
 $turler = $pdo->query("
     SELECT t.*, COUNT(a.id) AS arac_sayisi
-    FROM lite_arac_turleri t
-    LEFT JOIN lite_araclar a ON a.arac_turu_id = t.id AND a.aktif = 1
+    FROM vehicles_type t
+    LEFT JOIN vehicles a ON a.arac_turu_id = t.id AND a.aktif = 1
     WHERE t.aktif = 1
     GROUP BY t.id
     ORDER BY t.oncelik DESC, t.tur_adi

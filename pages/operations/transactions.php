@@ -20,10 +20,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle']))
     csrfDogrula();
     $kayit_id      = (int)$_POST['kayit_id'];
     $yeni_aciklama = trim($_POST['aciklama_yeni'] ?? '');
-    $sr = $pdo->prepare('SELECT lk.*,u.urun_kodu,a.plaka,t.firma_adi FROM lite_kayitlar lk JOIN lite_urunler u ON lk.urun_id=u.id LEFT JOIN lite_araclar a ON lk.arac_id=a.id LEFT JOIN lite_tesisler t ON lk.tesis_id=t.id WHERE lk.id=? AND lk.aktif=1');
+    $sr = $pdo->prepare('SELECT lk.*,u.urun_kodu,a.plaka,t.firma_adi FROM records lk JOIN products u ON lk.urun_id=u.id LEFT JOIN vehicles a ON lk.arac_id=a.id LEFT JOIN facilities t ON lk.tesis_id=t.id WHERE lk.id=? AND lk.aktif=1');
     $sr->execute([$kayit_id]); $sr = $sr->fetch();
     if ($sr) {
-        $pdo->prepare("UPDATE lite_kayitlar SET aciklama=? WHERE id=?")->execute([$yeni_aciklama ?: null, $kayit_id]);
+        $pdo->prepare("UPDATE records SET aciklama=? WHERE id=?")->execute([$yeni_aciklama ?: null, $kayit_id]);
         $hedef = $sr['plaka'] ?? $sr['firma_adi'] ?? '?';
         logYaz($pdo,'guncelle','arac_kayit', $hedef.' kaydına açıklama güncellendi: '.$sr['urun_kodu'], $kayit_id, ['aciklama'=>$sr['aciklama']], ['aciklama'=>$yeni_aciklama], 'lite');
         flash('Açıklama güncellendi.');
@@ -34,21 +34,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle']))
 
 if (isset($_GET['islendi_toggle'])) {
     $toggle_id = (int)$_GET['islendi_toggle'];
-    $mevcut = $pdo->prepare("SELECT islendi FROM lite_kayitlar WHERE id=?");
+    $mevcut = $pdo->prepare("SELECT islendi FROM records WHERE id=?");
     $mevcut->execute([$toggle_id]); $mevcut_val = $mevcut->fetchColumn();
     $ku = mevcutKullanici();
     if ($mevcut_val == 0) {
-        $pdo->prepare("UPDATE lite_kayitlar SET islendi=1, islendi_tarih=NOW(), islendi_kullanici_id=? WHERE id=?")
+        $pdo->prepare("UPDATE records SET islendi=1, islendi_tarih=NOW(), islendi_kullanici_id=? WHERE id=?")
             ->execute([$ku['id'], $toggle_id]);
-        $kd = $pdo->prepare("SELECT lk.*, u.urun_kodu, u.urun_adi, a.plaka, t.firma_adi FROM lite_kayitlar lk JOIN lite_urunler u ON lk.urun_id=u.id LEFT JOIN lite_araclar a ON lk.arac_id=a.id LEFT JOIN lite_tesisler t ON lk.tesis_id=t.id WHERE lk.id=?");
+        $kd = $pdo->prepare("SELECT lk.*, u.urun_kodu, u.urun_adi, a.plaka, t.firma_adi FROM records lk JOIN products u ON lk.urun_id=u.id LEFT JOIN vehicles a ON lk.arac_id=a.id LEFT JOIN facilities t ON lk.tesis_id=t.id WHERE lk.id=?");
         $kd->execute([$toggle_id]); $kd = $kd->fetch();
         $hedef = $kd ? ($kd['plaka'] ?? $kd['firma_adi'] ?? '?') : '?';
         $urun  = $kd ? ($kd['urun_kodu'].' '.$kd['urun_adi']) : '?';
         logYaz($pdo,'guncelle','islendi','Kayıt depoya işlendi: '.$hedef.' — '.$urun.', '.($kd['miktar']??'?').'L', $toggle_id, ['islendi'=>0], ['islendi'=>1,'islendi_kullanici_id'=>$ku['id']], 'lite');
     } else {
-        $pdo->prepare("UPDATE lite_kayitlar SET islendi=0, islendi_tarih=NULL, islendi_kullanici_id=NULL WHERE id=?")
+        $pdo->prepare("UPDATE records SET islendi=0, islendi_tarih=NULL, islendi_kullanici_id=NULL WHERE id=?")
             ->execute([$toggle_id]);
-        $kd = $pdo->prepare("SELECT lk.*, u.urun_kodu, u.urun_adi, a.plaka, t.firma_adi FROM lite_kayitlar lk JOIN lite_urunler u ON lk.urun_id=u.id LEFT JOIN lite_araclar a ON lk.arac_id=a.id LEFT JOIN lite_tesisler t ON lk.tesis_id=t.id WHERE lk.id=?");
+        $kd = $pdo->prepare("SELECT lk.*, u.urun_kodu, u.urun_adi, a.plaka, t.firma_adi FROM records lk JOIN products u ON lk.urun_id=u.id LEFT JOIN vehicles a ON lk.arac_id=a.id LEFT JOIN facilities t ON lk.tesis_id=t.id WHERE lk.id=?");
         $kd->execute([$toggle_id]); $kd = $kd->fetch();
         $hedef = $kd ? ($kd['plaka'] ?? $kd['firma_adi'] ?? '?') : '?';
         $urun  = $kd ? ($kd['urun_kodu'].' '.$kd['urun_adi']) : '?';
@@ -84,7 +84,7 @@ $where_sql = implode(" AND ", $where);
 $sayfa_basina = 50;
 $sayfa = max(1, (int)($_GET['sayfa'] ?? 1));
 
-$count_stmt = $pdo->prepare("SELECT COUNT(*), COUNT(CASE WHEN lk.kayit_turu='arac' THEN 1 END), COUNT(CASE WHEN lk.kayit_turu='tesis' THEN 1 END), COALESCE(SUM(lk.miktar),0) FROM lite_kayitlar lk LEFT JOIN lite_urunler u ON lk.urun_id=u.id WHERE $where_sql");
+$count_stmt = $pdo->prepare("SELECT COUNT(*), COUNT(CASE WHEN lk.kayit_turu='arac' THEN 1 END), COUNT(CASE WHEN lk.kayit_turu='tesis' THEN 1 END), COALESCE(SUM(lk.miktar),0) FROM records lk LEFT JOIN products u ON lk.urun_id=u.id WHERE $where_sql");
 $count_stmt->execute($params);
 $count_row = $count_stmt->fetch(PDO::FETCH_NUM);
 $toplam_islem  = (int)$count_row[0];
@@ -99,13 +99,13 @@ $offset = ($sayfa - 1) * $sayfa_basina;
 $kayitlar = $pdo->prepare("
     SELECT lk.*, u.urun_adi, u.urun_kodu, a.plaka, a.marka_model, at.tur_adi AS arac_turu,
            t.firma_adi, k.ad_soyad, ik.ad_soyad AS islendi_ad_soyad
-    FROM lite_kayitlar lk
-    LEFT JOIN lite_urunler u ON lk.urun_id = u.id
-    LEFT JOIN lite_araclar a ON lk.arac_id = a.id
-    LEFT JOIN lite_arac_turleri at ON a.arac_turu_id = at.id
-    LEFT JOIN lite_tesisler t ON lk.tesis_id = t.id
-    LEFT JOIN kullanicilar k ON lk.olusturan_id = k.id
-    LEFT JOIN kullanicilar ik ON lk.islendi_kullanici_id = ik.id
+    FROM records lk
+    LEFT JOIN products u ON lk.urun_id = u.id
+    LEFT JOIN vehicles a ON lk.arac_id = a.id
+    LEFT JOIN vehicles_type at ON a.arac_turu_id = at.id
+    LEFT JOIN facilities t ON lk.tesis_id = t.id
+    LEFT JOIN users k ON lk.olusturan_id = k.id
+    LEFT JOIN users ik ON lk.islendi_kullanici_id = ik.id
     WHERE $where_sql
     ORDER BY lk.tarih DESC, lk.olusturma_tarihi DESC
     LIMIT $sayfa_basina OFFSET $offset
@@ -113,11 +113,11 @@ $kayitlar = $pdo->prepare("
 $kayitlar->execute($params);
 $kayitlar = $kayitlar->fetchAll();
 
-$bekleyen_sayisi = (int)$pdo->query("SELECT COUNT(*) FROM lite_kayitlar WHERE aktif=1 AND islendi=0")->fetchColumn();
+$bekleyen_sayisi = (int)$pdo->query("SELECT COUNT(*) FROM records WHERE aktif=1 AND islendi=0")->fetchColumn();
 
-$tum_araclar  = $pdo->query("SELECT id, plaka, marka_model FROM lite_araclar WHERE aktif=1 ORDER BY plaka")->fetchAll();
-$tum_tesisler = $pdo->query("SELECT id, firma_adi FROM lite_tesisler WHERE aktif=1 ORDER BY firma_adi")->fetchAll();
-$tum_urunler  = $pdo->query("SELECT id, urun_kodu, urun_adi FROM lite_urunler WHERE aktif=1 ORDER BY urun_adi")->fetchAll();
+$tum_araclar  = $pdo->query("SELECT id, plaka, marka_model FROM vehicles WHERE aktif=1 ORDER BY plaka")->fetchAll();
+$tum_tesisler = $pdo->query("SELECT id, firma_adi FROM facilities WHERE aktif=1 ORDER BY firma_adi")->fetchAll();
+$tum_urunler  = $pdo->query("SELECT id, urun_kodu, urun_adi FROM products WHERE aktif=1 ORDER BY urun_adi")->fetchAll();
 
 $filtre_aktif = $f_tarih_bas || $f_tarih_bit || $f_arac_id || $f_tesis_id || $f_urun_id || $f_tur !== 'tumu' || $f_islendi !== 'tumu';
 
@@ -151,7 +151,7 @@ require_once __DIR__ . '/../../includes/header.php';
     </a>
     <a href="transactions.php?islendi=islendi" class="stat-card success <?= $f_islendi==='islendi' ? 'active' : '' ?>" style="text-decoration:none;">
         <div class="stat-label">✅ İşlendi</div>
-        <div class="stat-value"><?= (int)$pdo->query("SELECT COUNT(*) FROM lite_kayitlar WHERE aktif=1 AND islendi=1")->fetchColumn() ?></div>
+        <div class="stat-value"><?= (int)$pdo->query("SELECT COUNT(*) FROM records WHERE aktif=1 AND islendi=1")->fetchColumn() ?></div>
         <div class="stat-sub">Kayıt</div>
     </a>
 </div>

@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sifre = $_POST['sifre'] ?? '';
 
         if ($kadi && $sifre) {
-            $stmt = $pdo->prepare("SELECT * FROM kullanicilar WHERE kullanici_adi=? AND aktif=1");
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE kullanici_adi=? AND aktif=1");
             $stmt->execute([$kadi]);
             $k = $stmt->fetch();
 

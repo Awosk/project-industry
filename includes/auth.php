@@ -112,7 +112,7 @@ function aktifKullaniciKontrol($pdo): void {
 
     $_SESSION['aktif_kontrol_zaman'] = time();
 
-    $stmt = $pdo->prepare("SELECT aktif FROM kullanicilar WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT aktif FROM users WHERE id = ?");
     $stmt->execute([$_SESSION['kullanici_id']]);
     $sonuc = $stmt->fetchColumn();
 

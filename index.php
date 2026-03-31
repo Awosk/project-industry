@@ -32,10 +32,10 @@ $araclar = $pdo->query("
            k.ad_soyad AS olusturan_adi,
            COUNT(CASE WHEN lk.aktif = 1 THEN 1 END) AS kayit_sayisi,
            MAX(CASE WHEN lk.aktif = 1 THEN lk.tarih END) AS son_kayit
-    FROM lite_araclar a
-    LEFT JOIN lite_arac_turleri t  ON a.arac_turu_id = t.id
-    LEFT JOIN kullanicilar k       ON a.olusturan_id = k.id
-    LEFT JOIN lite_kayitlar lk     ON lk.arac_id = a.id
+    FROM vehicles a
+    LEFT JOIN vehicles_type t  ON a.arac_turu_id = t.id
+    LEFT JOIN users k       ON a.olusturan_id = k.id
+    LEFT JOIN records lk     ON lk.arac_id = a.id
     WHERE a.aktif = 1
     GROUP BY a.id
     ORDER BY t.oncelik DESC, t.tur_adi, a.plaka

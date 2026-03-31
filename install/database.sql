@@ -7,7 +7,7 @@ SET NAMES utf8mb4;
 SET foreign_key_checks = 0;
 SET sql_mode = 'NO_AUTO_VALUE_ON_ZERO';
 
-CREATE TABLE IF NOT EXISTS `kullanicilar` (
+CREATE TABLE IF NOT EXISTS `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `ad_soyad` varchar(100) NOT NULL,
   `kullanici_adi` varchar(50) NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `kullanicilar` (
   UNIQUE KEY `kullanici_adi` (`kullanici_adi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
-CREATE TABLE IF NOT EXISTS `lite_arac_turleri` (
+CREATE TABLE IF NOT EXISTS `vehicles_type` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `tur_adi` varchar(100) NOT NULL,
   `oncelik` INT NOT NULL DEFAULT 1,
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS `lite_arac_turleri` (
   UNIQUE KEY `tur_adi` (`tur_adi`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
-CREATE TABLE IF NOT EXISTS `lite_araclar` (
+CREATE TABLE IF NOT EXISTS `vehicles` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `arac_turu_id` int(11) NULL,
   `plaka` varchar(20) NOT NULL,
@@ -44,11 +44,11 @@ CREATE TABLE IF NOT EXISTS `lite_araclar` (
   UNIQUE KEY `plaka` (`plaka`),
   KEY `olusturan_id` (`olusturan_id`),
   KEY `arac_turu_id` (`arac_turu_id`),
-  CONSTRAINT `lite_araclar_ibfk_1` FOREIGN KEY (`olusturan_id`) REFERENCES `kullanicilar` (`id`),
-  CONSTRAINT `lite_araclar_ibfk_tur` FOREIGN KEY (`arac_turu_id`) REFERENCES `lite_arac_turleri` (`id`)
+  CONSTRAINT `lite_araclar_ibfk_1` FOREIGN KEY (`olusturan_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `lite_araclar_ibfk_tur` FOREIGN KEY (`arac_turu_id`) REFERENCES `vehicles_type` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
-CREATE TABLE IF NOT EXISTS `lite_tesisler` (
+CREATE TABLE IF NOT EXISTS `facilities` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `firma_adi` varchar(200) NOT NULL,
   `firma_adresi` text NOT NULL,
@@ -57,10 +57,10 @@ CREATE TABLE IF NOT EXISTS `lite_tesisler` (
   `olusturan_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `olusturan_id` (`olusturan_id`),
-  CONSTRAINT `lite_tesisler_ibfk_1` FOREIGN KEY (`olusturan_id`) REFERENCES `kullanicilar` (`id`)
+  CONSTRAINT `lite_tesisler_ibfk_1` FOREIGN KEY (`olusturan_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
-CREATE TABLE IF NOT EXISTS `lite_urunler` (
+CREATE TABLE IF NOT EXISTS `products` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `urun_kodu` varchar(50) NOT NULL,
   `urun_adi` varchar(200) NOT NULL,
@@ -70,10 +70,10 @@ CREATE TABLE IF NOT EXISTS `lite_urunler` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `urun_kodu` (`urun_kodu`),
   KEY `olusturan_id` (`olusturan_id`),
-  CONSTRAINT `lite_urunler_ibfk_1` FOREIGN KEY (`olusturan_id`) REFERENCES `kullanicilar` (`id`)
+  CONSTRAINT `lite_urunler_ibfk_1` FOREIGN KEY (`olusturan_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
-CREATE TABLE IF NOT EXISTS `lite_kayitlar` (
+CREATE TABLE IF NOT EXISTS `records` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `kayit_turu` enum('arac','tesis') NOT NULL,
   `arac_id` int(11) DEFAULT NULL,
@@ -96,14 +96,14 @@ CREATE TABLE IF NOT EXISTS `lite_kayitlar` (
   KEY `urun_id` (`urun_id`),
   KEY `olusturan_id` (`olusturan_id`),
   KEY `islendi_kullanici_id` (`islendi_kullanici_id`),
-  CONSTRAINT `fk_islendi_kullanici` FOREIGN KEY (`islendi_kullanici_id`) REFERENCES `kullanicilar` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `lite_kayitlar_ibfk_1` FOREIGN KEY (`arac_id`) REFERENCES `lite_araclar` (`id`),
-  CONSTRAINT `lite_kayitlar_ibfk_2` FOREIGN KEY (`tesis_id`) REFERENCES `lite_tesisler` (`id`),
-  CONSTRAINT `lite_kayitlar_ibfk_3` FOREIGN KEY (`urun_id`) REFERENCES `lite_urunler` (`id`),
-  CONSTRAINT `lite_kayitlar_ibfk_4` FOREIGN KEY (`olusturan_id`) REFERENCES `kullanicilar` (`id`)
+  CONSTRAINT `fk_islendi_kullanici` FOREIGN KEY (`islendi_kullanici_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `lite_kayitlar_ibfk_1` FOREIGN KEY (`arac_id`) REFERENCES `vehicles` (`id`),
+  CONSTRAINT `lite_kayitlar_ibfk_2` FOREIGN KEY (`tesis_id`) REFERENCES `facilities` (`id`),
+  CONSTRAINT `lite_kayitlar_ibfk_3` FOREIGN KEY (`urun_id`) REFERENCES `products` (`id`),
+  CONSTRAINT `lite_kayitlar_ibfk_4` FOREIGN KEY (`olusturan_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
-CREATE TABLE IF NOT EXISTS `sistem_loglari` (
+CREATE TABLE IF NOT EXISTS `system_logs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `kullanici_id` int(11) DEFAULT NULL,
   `kullanici_adi` varchar(50) DEFAULT NULL,
@@ -119,17 +119,17 @@ CREATE TABLE IF NOT EXISTS `sistem_loglari` (
   `olusturma_tarihi` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   KEY `kullanici_id` (`kullanici_id`),
-  CONSTRAINT `sistem_loglari_ibfk_1` FOREIGN KEY (`kullanici_id`) REFERENCES `kullanicilar` (`id`) ON DELETE SET NULL
+  CONSTRAINT `sistem_loglari_ibfk_1` FOREIGN KEY (`kullanici_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
-CREATE TABLE IF NOT EXISTS `sistem_ayarlar` (
+CREATE TABLE IF NOT EXISTS `system_settings` (
   `anahtar` varchar(100) NOT NULL,
   `deger` text DEFAULT NULL,
   `guncelleme_tarihi` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (`anahtar`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
-INSERT IGNORE INTO `sistem_ayarlar` (`anahtar`, `deger`) VALUES
+INSERT IGNORE INTO `system_settings` (`anahtar`, `deger`) VALUES
 ('smtp_aktif',     '0'),
 ('smtp_host',      ''),
 ('smtp_port',      '587'),
@@ -139,7 +139,7 @@ INSERT IGNORE INTO `sistem_ayarlar` (`anahtar`, `deger`) VALUES
 ('smtp_gonderen',  ''),
 ('smtp_ad',        '');
 
-CREATE TABLE IF NOT EXISTS `admin_bildirim_filtreler` (
+CREATE TABLE IF NOT EXISTS `users_notifications` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `kullanici_id` int(11) NOT NULL,
   `aktif` tinyint(1) NOT NULL DEFAULT 0,
@@ -148,10 +148,10 @@ CREATE TABLE IF NOT EXISTS `admin_bildirim_filtreler` (
   `olusturma_tarihi` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`),
   UNIQUE KEY `kullanici_modul_aksiyon` (`kullanici_id`, `modul`, `aksiyon`),
-  CONSTRAINT `fk_bildirim_kullanici` FOREIGN KEY (`kullanici_id`) REFERENCES `kullanicilar` (`id`) ON DELETE CASCADE
+  CONSTRAINT `fk_bildirim_kullanici` FOREIGN KEY (`kullanici_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
-CREATE TABLE IF NOT EXISTS `sifre_sifirlama` (
+CREATE TABLE IF NOT EXISTS `users_reset_password` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `kullanici_id` int(11) NOT NULL,
   `token` varchar(100) NOT NULL,
@@ -161,7 +161,7 @@ CREATE TABLE IF NOT EXISTS `sifre_sifirlama` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `token` (`token`),
   KEY `kullanici_id` (`kullanici_id`),
-  CONSTRAINT `fk_sifre_sifirlama_kullanici` FOREIGN KEY (`kullanici_id`) REFERENCES `kullanicilar` (`id`) ON DELETE CASCADE
+  CONSTRAINT `fk_sifre_sifirlama_kullanici` FOREIGN KEY (`kullanici_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
 CREATE TABLE IF NOT EXISTS `mail_queue` (
@@ -180,14 +180,14 @@ CREATE TABLE IF NOT EXISTS `mail_queue` (
   KEY `created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
  
--- sistem_ayarlar INSERT bloğuna şunları da ekle:
-INSERT IGNORE INTO `sistem_ayarlar` (`anahtar`, `deger`) VALUES
+-- system_settings INSERT bloğuna şunları da ekle:
+INSERT IGNORE INTO `system_settings` (`anahtar`, `deger`) VALUES
 ('mail_rate_limit_adet',   '10'),
 ('mail_rate_limit_dakika', '5'),
 ('mail_cooldown_dakika',   '15'),
 ('mail_cooldown_bitis',    '');
 
-CREATE TABLE IF NOT EXISTS `sistem_migrations` (
+CREATE TABLE IF NOT EXISTS `system_migrations` (
   `versiyon` varchar(20) NOT NULL,
   `uygulandi_tarih` datetime NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`versiyon`)

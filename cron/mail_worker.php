@@ -36,7 +36,7 @@ if ($cooldown_bitis && strtotime($cooldown_bitis) <= time()) {
     if ($iptal > 0) {
         _workerLog("Cooldown bitti. $iptal adet paused mail iptal edildi.");
     }
-    $pdo->prepare("UPDATE sistem_ayarlar SET deger = '' WHERE anahtar = 'mail_cooldown_bitis'")->execute();
+    $pdo->prepare("UPDATE system_settings SET deger = '' WHERE anahtar = 'mail_cooldown_bitis'")->execute();
 }
 
 $cooldown_aktif = cooldownAktifMi($pdo);

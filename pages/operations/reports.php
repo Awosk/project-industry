@@ -65,8 +65,8 @@ $where_sql = implode(" AND ", $where);
 $ozet_stmt = $pdo->prepare("
     SELECT lk.urun_id, u.urun_kodu, u.urun_adi,
            COUNT(*) AS adet, COALESCE(SUM(lk.miktar), 0) AS toplam
-    FROM lite_kayitlar lk
-    JOIN lite_urunler u ON lk.urun_id = u.id
+    FROM records lk
+    JOIN products u ON lk.urun_id = u.id
     WHERE $where_sql
     GROUP BY lk.urun_id, u.urun_kodu, u.urun_adi
     ORDER BY toplam DESC
@@ -83,7 +83,7 @@ $sayfa_basina = 100;
 $sayfa        = max(1, (int)($_GET['sayfa'] ?? 1));
 
 // Toplam kayıt sayısı
-$count_stmt = $pdo->prepare("SELECT COUNT(*) FROM lite_kayitlar lk WHERE $where_sql");
+$count_stmt = $pdo->prepare("SELECT COUNT(*) FROM records lk WHERE $where_sql");
 $count_stmt->execute($params);
 $toplam_kayit = (int)$count_stmt->fetchColumn();
 
@@ -96,12 +96,12 @@ if ($pdf_mod) {
     $kayitlar_stmt = $pdo->prepare("
         SELECT lk.*, u.urun_adi, u.urun_kodu, a.plaka, a.marka_model, at.tur_adi AS arac_turu,
            t.firma_adi, k.ad_soyad
-        FROM lite_kayitlar lk
-        JOIN lite_urunler u  ON lk.urun_id    = u.id
-        LEFT JOIN lite_araclar  a  ON lk.arac_id    = a.id
-        LEFT JOIN lite_arac_turleri at ON a.arac_turu_id = at.id
-        LEFT JOIN lite_tesisler t  ON lk.tesis_id   = t.id
-        LEFT JOIN kullanicilar  k  ON lk.olusturan_id = k.id
+        FROM records lk
+        JOIN products u  ON lk.urun_id    = u.id
+        LEFT JOIN vehicles  a  ON lk.arac_id    = a.id
+        LEFT JOIN vehicles_type at ON a.arac_turu_id = at.id
+        LEFT JOIN facilities t  ON lk.tesis_id   = t.id
+        LEFT JOIN users  k  ON lk.olusturan_id = k.id
         WHERE $where_sql
         ORDER BY lk.tarih DESC, lk.olusturma_tarihi DESC
     ");
@@ -110,12 +110,12 @@ if ($pdf_mod) {
     $kayitlar_stmt = $pdo->prepare("
         SELECT lk.*, u.urun_adi, u.urun_kodu, a.plaka, a.marka_model, at.tur_adi AS arac_turu,
            t.firma_adi, k.ad_soyad
-        FROM lite_kayitlar lk
-        JOIN lite_urunler u  ON lk.urun_id    = u.id
-        LEFT JOIN lite_araclar  a  ON lk.arac_id    = a.id
-        LEFT JOIN lite_arac_turleri at ON a.arac_turu_id = at.id
-        LEFT JOIN lite_tesisler t  ON lk.tesis_id   = t.id
-        LEFT JOIN kullanicilar  k  ON lk.olusturan_id = k.id
+        FROM records lk
+        JOIN products u  ON lk.urun_id    = u.id
+        LEFT JOIN vehicles  a  ON lk.arac_id    = a.id
+        LEFT JOIN vehicles_type at ON a.arac_turu_id = at.id
+        LEFT JOIN facilities t  ON lk.tesis_id   = t.id
+        LEFT JOIN users  k  ON lk.olusturan_id = k.id
         WHERE $where_sql
         ORDER BY lk.tarih DESC, lk.olusturma_tarihi DESC
         LIMIT $sayfa_basina OFFSET $offset
@@ -125,8 +125,8 @@ if ($pdf_mod) {
 $kayitlar = $kayitlar_stmt->fetchAll();
 
 // ── Filtre listeleri ──
-$tum_urunler      = $pdo->query("SELECT id, urun_kodu, urun_adi FROM lite_urunler WHERE aktif=1 ORDER BY urun_adi")->fetchAll();
-$tum_kullanicilar = $pdo->query("SELECT id, ad_soyad FROM kullanicilar WHERE aktif=1 ORDER BY ad_soyad")->fetchAll();
+$tum_urunler      = $pdo->query("SELECT id, urun_kodu, urun_adi FROM products WHERE aktif=1 ORDER BY urun_adi")->fetchAll();
+$tum_kullanicilar = $pdo->query("SELECT id, ad_soyad FROM users WHERE aktif=1 ORDER BY ad_soyad")->fetchAll();
 
 if ($pdf_mod) { ob_start(); }
 if (!$pdf_mod) require_once __DIR__ . '/../../includes/header.php';

@@ -19,8 +19,8 @@ $tesisler = $pdo->query("
     SELECT t.*,
            COUNT(CASE WHEN lk.aktif = 1 THEN 1 END) AS kayit_sayisi,
            MAX(CASE WHEN lk.aktif = 1 THEN lk.tarih END) AS son_kayit
-    FROM lite_tesisler t
-    LEFT JOIN lite_kayitlar lk ON lk.tesis_id = t.id
+    FROM facilities t
+    LEFT JOIN records lk ON lk.tesis_id = t.id
     WHERE t.aktif = 1
     GROUP BY t.id
     ORDER BY t.firma_adi

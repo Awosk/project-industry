@@ -29,8 +29,8 @@ if (!$token) {
 // Token kontrolü
 $sifirlama = $pdo->prepare("
     SELECT s.*, k.ad_soyad, k.kullanici_adi
-    FROM sifre_sifirlama s
-    JOIN kullanicilar k ON s.kullanici_id = k.id
+    FROM users_reset_password s
+    JOIN users k ON s.kullanici_id = k.id
     WHERE s.token = ?
       AND s.kullanildi = 0
       AND s.son_kullanma > NOW()
@@ -60,11 +60,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $gecerli) {
         $mesaj_tur = 'danger';
     } else {
         // Şifreyi güncelle
-        $pdo->prepare("UPDATE kullanicilar SET sifre = ? WHERE id = ?")
+        $pdo->prepare("UPDATE users SET sifre = ? WHERE id = ?")
             ->execute([password_hash($yeni, PASSWORD_DEFAULT), $sifirlama['kullanici_id']]);
 
         // Token'ı iptal et
-        $pdo->prepare("UPDATE sifre_sifirlama SET kullanildi = 1 WHERE token = ?")
+        $pdo->prepare("UPDATE users_reset_password SET kullanildi = 1 WHERE token = ?")
             ->execute([$token]);
 
         $tamamlandi = true;

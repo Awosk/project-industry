@@ -26,7 +26,7 @@ require_once __DIR__ . '/phpmailer/Exception.php';
 
 function smtpAyarlariGetir($pdo): array {
     try {
-        $rows = $pdo->query("SELECT anahtar, deger FROM sistem_ayarlar WHERE anahtar LIKE 'smtp_%'")->fetchAll();
+        $rows = $pdo->query("SELECT anahtar, deger FROM system_settings WHERE anahtar LIKE 'smtp_%'")->fetchAll();
         $ayarlar = [];
         foreach ($rows as $row) {
             $ayarlar[$row['anahtar']] = $row['deger'];
@@ -39,7 +39,7 @@ function smtpAyarlariGetir($pdo): array {
 
 function sistemAyarGetir($pdo, string $anahtar, string $varsayilan = ''): string {
     try {
-        $stmt = $pdo->prepare("SELECT deger FROM sistem_ayarlar WHERE anahtar = ?");
+        $stmt = $pdo->prepare("SELECT deger FROM system_settings WHERE anahtar = ?");
         $stmt->execute([$anahtar]);
         $deger = $stmt->fetchColumn();
         return $deger !== false ? (string)$deger : $varsayilan;
@@ -139,8 +139,8 @@ function adminBildirimGonder($pdo, string $aksiyon, string $modul, string $acikl
     try {
         $stmt = $pdo->prepare("
             SELECT k.email, k.ad_soyad
-            FROM admin_bildirim_filtreler f
-            JOIN kullanicilar k ON f.kullanici_id = k.id
+            FROM users_notifications f
+            JOIN users k ON f.kullanici_id = k.id
             WHERE f.aktif = 1
             AND f.modul = ?
             AND f.aksiyon = ?
@@ -181,7 +181,7 @@ function adminBildirimGonder($pdo, string $aksiyon, string $modul, string $acikl
         if ($son_mail_sayisi >= $limit_adet) {
             $cooldown_bitis = date('Y-m-d H:i:s', time() + ($cooldown_dk * 60));
             $pdo->prepare("
-                INSERT INTO sistem_ayarlar (anahtar, deger) VALUES ('mail_cooldown_bitis', ?)
+                INSERT INTO system_settings (anahtar, deger) VALUES ('mail_cooldown_bitis', ?)
                 ON DUPLICATE KEY UPDATE deger = VALUES(deger)
             ")->execute([$cooldown_bitis]);
 

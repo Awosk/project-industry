@@ -20,8 +20,8 @@ $ku = mevcutKullanici();
 
 $arac = $pdo->prepare("
     SELECT a.*, t.tur_adi
-    FROM lite_araclar a
-    LEFT JOIN lite_arac_turleri t ON a.arac_turu_id = t.id
+    FROM vehicles a
+    LEFT JOIN vehicles_type t ON a.arac_turu_id = t.id
     WHERE a.id=? AND a.aktif=1
 ");
 $arac->execute([$id]);
@@ -40,10 +40,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['yag_ekle'])) {
     $mevcut_km  = ($yag_bakimi && !empty($_POST['mevcut_km'])) ? (int)$_POST['mevcut_km'] : null;
 
     if ($urun_id && $miktar > 0 && $tarih) {
-        $stmt = $pdo->prepare("INSERT INTO lite_kayitlar (kayit_turu,arac_id,urun_id,miktar,tarih,aciklama,yag_bakimi,mevcut_km,olusturan_id) VALUES ('arac',?,?,?,?,?,?,?,?)");
+        $stmt = $pdo->prepare("INSERT INTO records (kayit_turu,arac_id,urun_id,miktar,tarih,aciklama,yag_bakimi,mevcut_km,olusturan_id) VALUES ('arac',?,?,?,?,?,?,?,?)");
         $stmt->execute([$id,$urun_id,$miktar,$tarih,$aciklama?:null,$yag_bakimi,$mevcut_km,$ku['id']]);
         $yeni_id = $pdo->lastInsertId();
-        $ul = $pdo->prepare('SELECT urun_kodu,urun_adi FROM lite_urunler WHERE id=?');
+        $ul = $pdo->prepare('SELECT urun_kodu,urun_adi FROM products WHERE id=?');
         $ul->execute([$urun_id]); $ul = $ul->fetch();
         $log_msg = $arac['plaka'].' aracına yağ eklendi: '.($ul['urun_kodu']??'').' '.($ul['urun_adi']??'').', '.$miktar.'L';
         if ($yag_bakimi) $log_msg .= ' [YAĞ BAKIMI - '.($mevcut_km ? number_format($mevcut_km).' KM' : 'KM girilmedi').']';
@@ -60,10 +60,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle']))
     csrfDogrula();
     $kayit_id  = (int)$_POST['kayit_id'];
     $yeni_aciklama = trim($_POST['aciklama_yeni'] ?? '');
-    $sr = $pdo->prepare('SELECT lk.*,u.urun_kodu,u.urun_adi FROM lite_kayitlar lk JOIN lite_urunler u ON lk.urun_id=u.id WHERE lk.id=? AND lk.arac_id=? AND lk.aktif=1');
+    $sr = $pdo->prepare('SELECT lk.*,u.urun_kodu,u.urun_adi FROM records lk JOIN products u ON lk.urun_id=u.id WHERE lk.id=? AND lk.arac_id=? AND lk.aktif=1');
     $sr->execute([$kayit_id, $id]); $sr = $sr->fetch();
     if ($sr) {
-        $pdo->prepare("UPDATE lite_kayitlar SET aciklama=? WHERE id=?")->execute([$yeni_aciklama ?: null, $kayit_id]);
+        $pdo->prepare("UPDATE records SET aciklama=? WHERE id=?")->execute([$yeni_aciklama ?: null, $kayit_id]);
         logYaz($pdo,'guncelle','arac_kayit', $arac['plaka'].' Plakalı Aracın '.$sr['urun_kodu'].' kaydının açıklaması güncellendi', $kayit_id, ['aciklama'=>$sr['aciklama']], ['aciklama'=>$yeni_aciklama], 'lite');
         flash('Açıklama güncellendi.');
     }
@@ -72,10 +72,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle']))
 
 if (isset($_GET['yag_sil'])) {
     $sil_id = (int)$_GET['yag_sil'];
-    $sr = $pdo->prepare('SELECT lk.*,u.urun_kodu,u.urun_adi FROM lite_kayitlar lk JOIN lite_urunler u ON lk.urun_id=u.id WHERE lk.id=? AND lk.arac_id=?');
+    $sr = $pdo->prepare('SELECT lk.*,u.urun_kodu,u.urun_adi FROM records lk JOIN products u ON lk.urun_id=u.id WHERE lk.id=? AND lk.arac_id=?');
     $sr->execute([$sil_id,$id]); $sr = $sr->fetch();
     if ($sr) {
-        $pdo->prepare("UPDATE lite_kayitlar SET aktif=0 WHERE id=? AND arac_id=?")->execute([$sil_id,$id]);
+        $pdo->prepare("UPDATE records SET aktif=0 WHERE id=? AND arac_id=?")->execute([$sil_id,$id]);
         $log_msg = $arac['plaka'].' aracından yağ kaydı silindi: '.$sr['urun_kodu'].' '.$sr['urun_adi'].', '.$sr['miktar'].'L';
         if ($sr['yag_bakimi']) $log_msg .= ' [YAĞ BAKIMI]';
         if ($sr['aciklama'])   $log_msg .= '. Açıklama: '.$sr['aciklama'];
@@ -85,13 +85,13 @@ if (isset($_GET['yag_sil'])) {
     header('Location: vehicle_detail.php?id='.$id); exit;
 }
 
-$urunler = $pdo->query("SELECT * FROM lite_urunler WHERE aktif=1 ORDER BY urun_adi")->fetchAll();
+$urunler = $pdo->query("SELECT * FROM products WHERE aktif=1 ORDER BY urun_adi")->fetchAll();
 
 $yag_kayitlari = $pdo->prepare("
     SELECT lk.*,u.urun_adi,u.urun_kodu,k.ad_soyad
-    FROM lite_kayitlar lk
-    JOIN lite_urunler u ON lk.urun_id=u.id
-    LEFT JOIN kullanicilar k ON lk.olusturan_id=k.id
+    FROM records lk
+    JOIN products u ON lk.urun_id=u.id
+    LEFT JOIN users k ON lk.olusturan_id=k.id
     WHERE lk.arac_id=? AND lk.aktif=1
     ORDER BY lk.tarih DESC, lk.olusturma_tarihi DESC
 ");
