@@ -128,8 +128,8 @@ require_once __DIR__ . '/../../includes/header.php';
     <form method="post">
         <?= csrfInput() ?>
         <div id="urun-satirlari">
-            <div class="urun-satir form-grid" style="align-items:center; border:1px solid var(--border); padding:12px; border-radius:var(--r-sm); margin-bottom:12px; background:var(--bg);">
-                <div class="form-group">
+            <div class="urun-satir" style="display:flex; flex-wrap:wrap; gap:14px; border:1px solid var(--border); padding:16px; border-radius:var(--r-sm); margin-bottom:12px; background:var(--bg);">
+                <div class="form-group" style="flex: 3; min-width:200px; margin:0;">
                     <label>Ürün *</label>
                     <select name="urun_id[]" required>
                         <option value="">-- Ürün Seçin --</option>
@@ -138,7 +138,7 @@ require_once __DIR__ . '/../../includes/header.php';
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="flex: 1; min-width:140px; margin:0;">
                     <label>Miktar *</label>
                     <div style="display:flex;gap:8px;">
                         <input type="number" name="miktar[]" required min="0.01" step="0.01" placeholder="Örn: 5.00" style="flex:1;">
