@@ -25,7 +25,7 @@ define('DB_USER',    $_ENV['DB_USER']    ?? '');
 define('DB_PASS',    $_ENV['DB_PASS']    ?? '');
 define('DB_CHARSET', $_ENV['DB_CHARSET'] ?? 'utf8mb4');
 
-define('SITE_ADI', $_ENV['SITE_ADI'] ?? 'Yag Yonetim Sistemi');
+define('SITE_ADI', $_ENV['SITE_ADI'] ?? 'Endüstriyel Araç/Tesis Takip Sistemi');
 
 // Versiyon bilgisi .env'den değil, version.php'den gelir.
 // Bu dosya her release'de güncellenir; .env kişisel ayarlara dokunulmaz.

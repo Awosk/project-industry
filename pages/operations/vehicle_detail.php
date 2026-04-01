@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['yag_ekle'])) {
         $yeni_id = Islem::aracYagEkle($pdo, $id, $urun_id, $miktar, $tarih, $aciklama, $yag_bakimi, $mevcut_km, $ku['id']);
         $ul = Urun::bulId($pdo, $urun_id);
         
-        $log_msg = $arac['plaka'].' aracına yağ eklendi: '.($ul['urun_kodu']??'').' '.($ul['urun_adi']??'').', '.$miktar.'L';
+        $log_msg = $arac['plaka'].' aracına ürün eklendi: '.($ul['urun_kodu']??'').' '.($ul['urun_adi']??'').', '.$miktar.'L';
         if ($yag_bakimi) $log_msg .= ' [YAĞ BAKIMI - '.($mevcut_km ? number_format($mevcut_km).' KM' : 'KM girilmedi').']';
         if ($aciklama)   $log_msg .= '. Açıklama: '.$aciklama;
         
@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['kayit_guncelle'])) {
         $sr = Islem::aracKayitBul($pdo, $kayit_id, $id);
         if ($sr) {
             Islem::kayitGuncelle($pdo, $kayit_id, $urun_id, $miktar, $tarih, $aciklama, $yag_bakimi, $mevcut_km);
-            logYaz($pdo,'guncelle','arac_kayit', $arac['plaka'].' Plakalı Aracın yağ kaydı güncellendi', $kayit_id, 
+            logYaz($pdo,'guncelle','arac_kayit', $arac['plaka'].' Plakalı Aracın ürün kaydı güncellendi', $kayit_id, 
                    ['urun_id'=>$sr['urun_id'], 'miktar'=>$sr['miktar'], 'tarih'=>$sr['tarih'], 'aciklama'=>$sr['aciklama'], 'yag_bakimi'=>$sr['yag_bakimi'], 'mevcut_km'=>$sr['mevcut_km']], 
                    ['urun_id'=>$urun_id, 'miktar'=>$miktar, 'tarih'=>$tarih, 'aciklama'=>$aciklama, 'yag_bakimi'=>$yag_bakimi, 'mevcut_km'=>$mevcut_km], 'lite');
             flash('Kayıt güncellendi.');
@@ -83,7 +83,7 @@ if (isset($_GET['yag_sil'])) {
     
     if ($sr) {
         Islem::kayitSil($pdo, $sil_id, $id);
-        $log_msg = $arac['plaka'].' aracından yağ kaydı silindi: '.$sr['urun_kodu'].' '.$sr['urun_adi'].', '.$sr['miktar'].'L';
+        $log_msg = $arac['plaka'].' aracından ürün kaydı silindi: '.$sr['urun_kodu'].' '.$sr['urun_adi'].', '.$sr['miktar'].'L';
         if ($sr['yag_bakimi']) $log_msg .= ' [YAĞ BAKIMI]';
         if ($sr['aciklama'])   $log_msg .= '. Açıklama: '.$sr['aciklama'];
         logYaz($pdo,'sil','arac_kayit',$log_msg,$sil_id,$sr,null,'lite');
@@ -187,7 +187,7 @@ require_once __DIR__ . '/../../includes/header.php';
 <div class="card">
     <div class="card-title">📋 Ürün Geçmişi (<?= count($yag_kayitlari) ?>)</div>
     <?php if (empty($yag_kayitlari)): ?>
-    <div style="text-align:center;padding:28px;color:var(--muted);">Henüz yağ kaydı yok.</div>
+    <div style="text-align:center;padding:28px;color:var(--muted);">Henüz ürün kaydı yok.</div>
     <?php else: ?>
     <div class="kayit-list">
         <?php foreach ($yag_kayitlari as $k): ?>

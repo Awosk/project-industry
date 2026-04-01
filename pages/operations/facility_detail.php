@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
         $urun_adi_log = Urun::bulId($pdo, $urun_id);
         
         logYaz($pdo,'ekle','tesis_kayit',
-            $tesis['firma_adi'].' tesisine yağ eklendi: '.($urun_adi_log['urun_kodu']??'').' - '.($urun_adi_log['urun_adi']??'').', '.$miktar.'L, tarih:'.$tarih.'. Açıklama: '.($aciklama ?? 'Yok'),
+            $tesis['firma_adi'].' tesisine ürün eklendi: '.($urun_adi_log['urun_kodu']??'').' - '.($urun_adi_log['urun_adi']??'').', '.$miktar.'L, tarih:'.$tarih.'. Açıklama: '.($aciklama ?? 'Yok'),
             $yeni_id, null,
             ['tesis_id'=>$id,'firma'=>$tesis['firma_adi'],'urun_id'=>$urun_id,'miktar'=>$miktar,'tarih'=>$tarih,'aciklama'=>$aciklama],
             'lite');
@@ -62,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['kayit_guncelle'])) {
         $sr = Islem::tesisKayitBul($pdo, $kayit_id, $id);
         if ($sr) {
             Islem::kayitGuncelle($pdo, $kayit_id, $urun_id, $miktar, $tarih, $aciklama);
-            logYaz($pdo,'guncelle','tesis_kayit', $tesis['firma_adi'].' tesisinin yağ kaydı güncellendi', $kayit_id, 
+            logYaz($pdo,'guncelle','tesis_kayit', $tesis['firma_adi'].' tesisinin ürün kaydı güncellendi', $kayit_id, 
                    ['urun_id'=>$sr['urun_id'], 'miktar'=>$sr['miktar'], 'tarih'=>$sr['tarih'], 'aciklama'=>$sr['aciklama']], 
                    ['urun_id'=>$urun_id, 'miktar'=>$miktar, 'tarih'=>$tarih, 'aciklama'=>$aciklama], 'lite');
             flash('Kayıt güncellendi.');
@@ -80,7 +80,7 @@ if (isset($_GET['sil'])) {
     if ($sr) {
         Islem::tesisKayitSil($pdo, $sil_id, $id);
         logYaz($pdo,'sil','tesis_kayit',
-            $tesis['firma_adi'].' tesisinden yağ kaydı silindi: '.$sr['urun_kodu'].' - '.$sr['urun_adi'].', '.$sr['miktar'].'L, tarih:'.$sr['tarih'].'. Açıklama: '.($sr['aciklama'] ?? 'Yok'),
+            $tesis['firma_adi'].' tesisinden ürün kaydı silindi: '.$sr['urun_kodu'].' - '.$sr['urun_adi'].', '.$sr['miktar'].'L, tarih:'.$sr['tarih'].'. Açıklama: '.($sr['aciklama'] ?? 'Yok'),
             $sil_id, $sr, null, 'lite');
     }
     flash('Kayıt silindi.');

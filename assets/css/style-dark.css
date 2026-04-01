@@ -1,43 +1,43 @@
 /* =====================================================
-   YAĞ TAKİP LİTE — Koyu Tema
+   ürün TAKİP LİTE — Koyu Tema
    Sadece CSS değişkenlerini override eder.
    Tüm diğer stiller style.css'den gelir.
    ===================================================== */
 
 :root {
-    --primary:       #e8820c;
-    --primary-l:     #f5a132;
-    --success:       #22c55e;
-    --success-l:     rgba(34,197,94,.15);
-    --danger:        #ef4444;
-    --danger-l:      rgba(239,68,68,.15);
-    --warning:       #f59e0b;
-    --warning-l:     rgba(245,158,11,.15);
-    --info:          #38bdf8;
-    --info-l:        rgba(56,189,248,.15);
-    --bg:            #0f1117;
-    --card:          #1a1d27;
-    --border:        #2a2d3a;
-    --text:          #e8eaf0;
-    --muted:         #6b7280;
-    --shadow:        0 1px 6px rgba(0,0,0,.4);
-    --shadow-md:     0 4px 24px rgba(0,0,0,.5);
-    --r:             12px;
-    --r-sm:          8px;
-    --nav-h:         58px;
-    --bn-h:          62px;
+    --primary: #e8820c;
+    --primary-l: #f5a132;
+    --success: #22c55e;
+    --success-l: rgba(34, 197, 94, .15);
+    --danger: #ef4444;
+    --danger-l: rgba(239, 68, 68, .15);
+    --warning: #f59e0b;
+    --warning-l: rgba(245, 158, 11, .15);
+    --info: #38bdf8;
+    --info-l: rgba(56, 189, 248, .15);
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --shadow: 0 1px 6px rgba(0, 0, 0, .4);
+    --shadow-md: 0 4px 24px rgba(0, 0, 0, .5);
+    --r: 12px;
+    --r-sm: 8px;
+    --nav-h: 58px;
+    --bn-h: 62px;
     /* Türev renk değişkenleri */
-    --success-text:  #4ade80;
-    --success-dark:  #4ade80;
-    --danger-text:   #f87171;
-    --danger-dark:   #f87171;
-    --warning-text:  #fbbf24;
-    --warning-dark:  #fbbf24;
-    --info-text:     #7dd3fc;
-    --primary-text:  #93c5fd;
-    --primary-bg-l:  rgba(147,197,253,.15);
-    --muted-alt:     #4b5563;
-    --hover-bg:      #1e2130;
+    --success-text: #4ade80;
+    --success-dark: #4ade80;
+    --danger-text: #f87171;
+    --danger-dark: #f87171;
+    --warning-text: #fbbf24;
+    --warning-dark: #fbbf24;
+    --info-text: #7dd3fc;
+    --primary-text: #93c5fd;
+    --primary-bg-l: rgba(147, 197, 253, .15);
+    --muted-alt: #4b5563;
+    --hover-bg: #1e2130;
     --hover-bg-blue: #1a2035;
-    --modal-shadow:  0 8px 32px rgba(0,0,0,.6);
+    --modal-shadow: 0 8px 32px rgba(0, 0, 0, .6);
 }
