@@ -179,7 +179,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Tesis / Şantiye</label>
+                    <label>Tesis</label>
                     <select name="tesis_id">
                         <option value="">Tüm Tesisler</option>
                         <?php foreach ($tum_tesisler as $t): ?>
@@ -249,7 +249,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <div class="islem-alt"><?= htmlspecialchars($k['marka_model']) ?></div>
                 <?php else: ?>
                 <a href="facility_detail.php?id=<?= $k['tesis_id'] ?>" class="islem-plaka">🏭 <?= htmlspecialchars($k['firma_adi']) ?></a>
-                <div class="islem-alt">Tesis / Şantiye</div>
+                <div class="islem-alt">Tesis</div>
                 <?php endif; ?>
             </div>
 

@@ -84,13 +84,13 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <div class="card">
-    <div class="card-title">➕ Yeni Tesis / Şantiye Ekle</div>
+    <div class="card-title">➕ Yeni Tesis Ekle</div>
     <form method="post">
         <?= csrfInput() ?>
         <div class="form-grid">
             <div class="form-group">
-                <label>Firma / Şantiye Adı *</label>
-                <input type="text" name="firma_adi" required placeholder="Örn: ABC Şantiyesi" maxlength="200">
+                <label>Tesis Adı *</label>
+                <input type="text" name="firma_adi" required placeholder="Örn: ABC Firması" maxlength="200">
             </div>
             <div class="form-group">
                 <label>Adres *</label>
@@ -110,7 +110,7 @@ require_once __DIR__ . '/../../includes/header.php';
     <?php else: ?>
     <div class="table-wrap">
         <table>
-            <thead><tr><th>#</th><th>Firma Adı</th><th>Adres</th><th>İşlem</th></tr></thead>
+            <thead><tr><th>#</th><th>Tesis Adı</th><th>Adres</th><th>İşlem</th></tr></thead>
             <tbody>
             <?php foreach ($tesisler as $i => $t): ?>
             <tr>
@@ -139,7 +139,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <?= csrfInput() ?>
             <input type="hidden" name="duzenle_id" id="duzenle_tesis_id">
             <div class="form-group">
-                <label>Firma / Şantiye Adı *</label>
+                <label>Tesis Adı *</label>
                 <input type="text" name="duzenle_firma" id="duzenle_tesis_firma" required maxlength="200">
             </div>
             <div class="form-group">
