@@ -1,6 +1,6 @@
 <?php
 /*
- * Project Oil - Vehicle and Facility Industrial Oil Tracking System
+ * Project Industry - Vehicle and Facility product tracking management system
  * Copyright (C) 2026 Awosk
  *
  * This program is free software: you can redistribute it and/or modify
@@ -259,7 +259,7 @@ class SistemGuncelleme {
             if ($migration_yapildi === 0) $log[] = 'ℹ️ Uygulanacak SQL migrasyonu yok';
 
             // ── 5. version.php güncelle ──
-            file_put_contents($rootDir . '/version.php', "<?php\n/*\n * Project Oil - Vehicle and Facility Industrial Oil Tracking System\n * Copyright (C) 2026 Awosk\n *\n * This program is free software: you can redistribute it and/or modify\n * it under the terms of the GNU General Public License as published by\n * the Free Software Foundation, either version 3 of the License, or\n * (at your option) any later version.\n */\n\ndefine('SITE_VERSIYONU', '$uzak_versiyon');\n");
+            file_put_contents($rootDir . '/version.php', "<?php\n/*\n * Project Industry - Vehicle and Facility product tracking management system\n * Copyright (C) 2026 Awosk\n *\n * This program is free software: you can redistribute it and/or modify\n * it under the terms of the GNU General Public License as published by\n * the Free Software Foundation, either version 3 of the License, or\n * (at your option) any later version.\n */\n\ndefine('SITE_VERSIYONU', '$uzak_versiyon');\n");
             $log[] = "✓ Versiyon $uzak_versiyon olarak güncellendi";
 
             // ── 6. Temp temizle ──

@@ -1,6 +1,6 @@
 <?php
 /*
- * Project Oil - Vehicle and Facility Industrial Oil Tracking System
+ * Project Industry - Vehicle and Facility product tracking management system
  * Copyright (C) 2026 Awosk
  */
 
