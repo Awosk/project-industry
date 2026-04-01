@@ -29,25 +29,37 @@ $sayfa_basligi = $arac['plaka'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['yag_ekle'])) {
     csrfDogrula();
-    $urun_id    = (int)$_POST['urun_id'];
-    $miktar     = (float)str_replace(',', '.', $_POST['miktar']);
+    $urunler    = $_POST['urun_id'] ?? [];
+    $miktarlar  = $_POST['miktar'] ?? [];
     $tarih      = $_POST['tarih'];
     $aciklama   = trim($_POST['aciklama'] ?? '');
     $yag_bakimi = isset($_POST['yag_bakimi']) ? 1 : 0;
     $mevcut_km  = ($yag_bakimi && !empty($_POST['mevcut_km'])) ? (int)$_POST['mevcut_km'] : null;
 
-    if ($urun_id && $miktar > 0 && $tarih) {
-        $yeni_id = Islem::aracYagEkle($pdo, $id, $urun_id, $miktar, $tarih, $aciklama, $yag_bakimi, $mevcut_km, $ku['id']);
-        $ul = Urun::bulId($pdo, $urun_id);
-        
-        $log_msg = $arac['plaka'].' aracına ürün eklendi: '.($ul['urun_kodu']??'').' '.($ul['urun_adi']??'').', '.$miktar.' '.($ul['birim']??'LT');
-        if ($yag_bakimi) $log_msg .= ' [YAĞ BAKIMI - '.($mevcut_km ? number_format($mevcut_km).' KM' : 'KM girilmedi').']';
-        if ($aciklama)   $log_msg .= '. Açıklama: '.$aciklama;
-        
-        logYaz($pdo,'ekle','arac_kayit',$log_msg,$yeni_id,null,['plaka'=>$arac['plaka'],'urun_id'=>$urun_id,'miktar'=>$miktar,'tarih'=>$tarih,'yag_bakimi'=>$yag_bakimi,'mevcut_km'=>$mevcut_km,'aciklama'=>$aciklama],'lite');
-        flash('Ürün kaydı eklendi.');
+    $eklenen_sayisi = 0;
+    if (is_array($urunler) && is_array($miktarlar) && count($urunler) === count($miktarlar) && $tarih) {
+        foreach ($urunler as $index => $u_id) {
+            $urun_id = (int)$u_id;
+            $miktar  = (float)str_replace(',', '.', $miktarlar[$index] ?? '0');
+            
+            if ($urun_id > 0 && $miktar > 0) {
+                $yeni_id = Islem::aracYagEkle($pdo, $id, $urun_id, $miktar, $tarih, $aciklama, $yag_bakimi, $mevcut_km, $ku['id']);
+                $ul = Urun::bulId($pdo, $urun_id);
+                
+                $log_msg = $arac['plaka'].' aracına ürün eklendi: '.($ul['urun_kodu']??'').' '.($ul['urun_adi']??'').', '.$miktar.' '.($ul['birim']??'LT');
+                if ($yag_bakimi) $log_msg .= ' [YAĞ BAKIMI - '.($mevcut_km ? number_format($mevcut_km).' KM' : 'KM girilmedi').']';
+                if ($aciklama)   $log_msg .= '. Açıklama: '.$aciklama;
+                
+                logYaz($pdo,'ekle','arac_kayit',$log_msg,$yeni_id,null,['plaka'=>$arac['plaka'],'urun_id'=>$urun_id,'miktar'=>$miktar,'tarih'=>$tarih,'yag_bakimi'=>$yag_bakimi,'mevcut_km'=>$mevcut_km,'aciklama'=>$aciklama],'lite');
+                $eklenen_sayisi++;
+            }
+        }
+    }
+    
+    if ($eklenen_sayisi > 0) {
+        flash($eklenen_sayisi . ' adet ürün kaydı eklendi.');
     } else {
-        flash('Ürün, miktar ve tarih zorunludur.', 'danger');
+        flash('Lütfen en az bir ürün ve miktar belirtin.', 'danger');
     }
     header('Location: vehicle_detail.php?id='.$id); exit;
 }
@@ -145,20 +157,32 @@ require_once __DIR__ . '/../../includes/header.php';
     <div class="card-title">➕ Ürün Kaydı Ekle</div>
     <form method="post">
         <?= csrfInput() ?>
+        <div id="urun-satirlari">
+            <div class="urun-satir form-grid" style="align-items:center; border:1px solid var(--border); padding:12px; border-radius:var(--r-sm); margin-bottom:12px; background:var(--bg);">
+                <div class="form-group">
+                    <label>Ürün *</label>
+                    <select name="urun_id[]" required>
+                        <option value="">-- Ürün Seçin --</option>
+                        <?php foreach ($urunler as $u): ?>
+                        <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['urun_kodu'].' - '.$u['urun_adi']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Miktar *</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="number" name="miktar[]" required min="0.01" step="0.01" placeholder="Örn: 2.00" style="flex:1;">
+                        <button type="button" class="btn btn-danger btn-sm urun-sil-btn" onclick="this.closest('.urun-satir').remove()" style="display:none;padding:0 14px;" tabindex="-1" title="Satırı Sil">🗑️</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-bottom:20px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="yeniUrunSatiriEkle()" style="width:100%;border-style:dashed;">➕ Başka Ürün Ekle</button>
+        </div>
+
         <div class="form-grid">
-            <div class="form-group">
-                <label>Ürün *</label>
-                <select name="urun_id" required>
-                    <option value="">-- Ürün Seçin --</option>
-                    <?php foreach ($urunler as $u): ?>
-                    <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['urun_kodu'].' - '.$u['urun_adi']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Miktar *</label>
-                <input type="number" name="miktar" required min="0.01" step="0.01" placeholder="Örn: 2.00">
-            </div>
             <div class="form-group">
                 <label>Tarih *</label>
                 <input type="date" name="tarih" value="<?= date('Y-m-d') ?>" required>
@@ -174,8 +198,8 @@ require_once __DIR__ . '/../../includes/header.php';
                 <input type="number" name="mevcut_km" id="mevcut_km" min="0" placeholder="Örn: 125000">
             </div>
             <div class="form-group">
-                <label>Açıklama</label>
-                <input type="text" name="aciklama" placeholder="İsteğe bağlı...">
+                <label>Genel Açıklama</label>
+                <input type="text" name="aciklama" placeholder="Tüm ürünler için isteğe bağlı not...">
             </div>
         </div>
         <div style="margin-top:14px;">
@@ -272,6 +296,15 @@ function kmToggle() {
     var cb  = document.getElementById('yag_bakimi');
     var grp = document.getElementById('km_grup');
     grp.style.display = cb.checked ? '' : 'none';
+}
+function yeniUrunSatiriEkle() {
+    var container = document.getElementById('urun-satirlari');
+    var ilkSatir = container.querySelector('.urun-satir');
+    var yeniSatir = ilkSatir.cloneNode(true);
+    yeniSatir.querySelector('input[type="number"]').value = '';
+    yeniSatir.querySelector('select').value = '';
+    yeniSatir.querySelector('.urun-sil-btn').style.display = 'block';
+    container.appendChild(yeniSatir);
 }
 function guncelleKmToggle() {
     var cb  = document.getElementById('guncelle_yag_bakimi');

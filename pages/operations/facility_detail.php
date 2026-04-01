@@ -29,23 +29,35 @@ $sayfa_basligi = $tesis['firma_adi'];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
     csrfDogrula();
-    $urun_id  = (int)$_POST['urun_id'];
-    $miktar   = (float)str_replace(',', '.', $_POST['miktar']);
-    $tarih    = $_POST['tarih'];
-    $aciklama = trim($_POST['aciklama'] ?? '');
+    $urunler   = $_POST['urun_id'] ?? [];
+    $miktarlar = $_POST['miktar'] ?? [];
+    $tarih     = $_POST['tarih'];
+    $aciklama  = trim($_POST['aciklama'] ?? '');
 
-    if ($urun_id && $miktar > 0 && $tarih) {
-        $yeni_id = Islem::tesisYagEkle($pdo, $id, $urun_id, $miktar, $tarih, $aciklama, $ku['id']);
-        $urun_adi_log = Urun::bulId($pdo, $urun_id);
-        
-        logYaz($pdo,'ekle','tesis_kayit',
-            $tesis['firma_adi'].' tesisine ürün eklendi: '.($urun_adi_log['urun_kodu']??'').' - '.($urun_adi_log['urun_adi']??'').', '.$miktar.' '.($urun_adi_log['birim']??'LT').', tarih:'.$tarih.'. Açıklama: '.($aciklama ?? 'Yok'),
-            $yeni_id, null,
-            ['tesis_id'=>$id,'firma'=>$tesis['firma_adi'],'urun_id'=>$urun_id,'miktar'=>$miktar,'tarih'=>$tarih,'aciklama'=>$aciklama],
-            'lite');
-        flash('Kayıt eklendi.');
+    $eklenen_sayisi = 0;
+    if (is_array($urunler) && is_array($miktarlar) && count($urunler) === count($miktarlar) && $tarih) {
+        foreach ($urunler as $index => $u_id) {
+            $urun_id = (int)$u_id;
+            $miktar  = (float)str_replace(',', '.', $miktarlar[$index] ?? '0');
+            
+            if ($urun_id > 0 && $miktar > 0) {
+                $yeni_id = Islem::tesisYagEkle($pdo, $id, $urun_id, $miktar, $tarih, $aciklama, $ku['id']);
+                $urun_adi_log = Urun::bulId($pdo, $urun_id);
+                
+                logYaz($pdo,'ekle','tesis_kayit',
+                    $tesis['firma_adi'].' tesisine ürün eklendi: '.($urun_adi_log['urun_kodu']??'').' - '.($urun_adi_log['urun_adi']??'').', '.$miktar.' '.($urun_adi_log['birim']??'LT').', tarih:'.$tarih.'. Açıklama: '.($aciklama ?? 'Yok'),
+                    $yeni_id, null,
+                    ['tesis_id'=>$id,'firma'=>$tesis['firma_adi'],'urun_id'=>$urun_id,'miktar'=>$miktar,'tarih'=>$tarih,'aciklama'=>$aciklama],
+                    'lite');
+                $eklenen_sayisi++;
+            }
+        }
+    }
+    
+    if ($eklenen_sayisi > 0) {
+        flash($eklenen_sayisi . ' adet kayıt eklendi.');
     } else {
-        flash('Ürün, miktar ve tarih zorunludur.', 'danger');
+        flash('Lütfen en az bir ürün ve miktar belirtin.', 'danger');
     }
     header('Location: facility_detail.php?id=' . $id); exit;
 }
@@ -115,27 +127,39 @@ require_once __DIR__ . '/../../includes/header.php';
     <div class="card-title">➕ Ürün Kaydı Ekle</div>
     <form method="post">
         <?= csrfInput() ?>
+        <div id="urun-satirlari">
+            <div class="urun-satir form-grid" style="align-items:center; border:1px solid var(--border); padding:12px; border-radius:var(--r-sm); margin-bottom:12px; background:var(--bg);">
+                <div class="form-group">
+                    <label>Ürün *</label>
+                    <select name="urun_id[]" required>
+                        <option value="">-- Ürün Seçin --</option>
+                        <?php foreach ($urunler as $u): ?>
+                        <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['urun_kodu'] . ' - ' . $u['urun_adi']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Miktar *</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="number" name="miktar[]" required min="0.01" step="0.01" placeholder="Örn: 5.00" style="flex:1;">
+                        <button type="button" class="btn btn-danger btn-sm urun-sil-btn" onclick="this.closest('.urun-satir').remove()" style="display:none;padding:0 14px;" tabindex="-1" title="Satırı Sil">🗑️</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom:20px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="yeniUrunSatiriEkle()" style="width:100%;border-style:dashed;">➕ Başka Ürün Ekle</button>
+        </div>
+
         <div class="form-grid">
-            <div class="form-group">
-                <label>Ürün *</label>
-                <select name="urun_id" required>
-                    <option value="">-- Ürün Seçin --</option>
-                    <?php foreach ($urunler as $u): ?>
-                    <option value="<?= $u['id'] ?>"><?= htmlspecialchars($u['urun_kodu'] . ' - ' . $u['urun_adi']) ?></option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Miktar *</label>
-                <input type="number" name="miktar" required min="0.01" step="0.01" placeholder="Örn: 5.00">
-            </div>
             <div class="form-group">
                 <label>Tarih *</label>
                 <input type="date" name="tarih" value="<?= date('Y-m-d') ?>" required>
             </div>
             <div class="form-group">
-                <label>Açıklama</label>
-                <input type="text" name="aciklama" placeholder="İsteğe bağlı not...">
+                <label>Genel Açıklama</label>
+                <input type="text" name="aciklama" placeholder="Tüm ürünler için isteğe bağlı not...">
             </div>
         </div>
         <div style="margin-top:14px;">
@@ -212,6 +236,15 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <script>
+function yeniUrunSatiriEkle() {
+    var container = document.getElementById('urun-satirlari');
+    var ilkSatir = container.querySelector('.urun-satir');
+    var yeniSatir = ilkSatir.cloneNode(true);
+    yeniSatir.querySelector('input[type="number"]').value = '';
+    yeniSatir.querySelector('select').value = '';
+    yeniSatir.querySelector('.urun-sil-btn').style.display = 'block';
+    container.appendChild(yeniSatir);
+}
 function kayitDuzenleModal(id, urun_id, miktar, tarih, aciklama) {
     document.getElementById('duzenle_kayit_id').value = id;
     document.getElementById('guncelle_urun_id').value = urun_id;
