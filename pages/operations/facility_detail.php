@@ -152,12 +152,12 @@ require_once __DIR__ . '/../../includes/header.php';
             <button type="button" class="btn btn-secondary btn-sm" onclick="yeniUrunSatiriEkle()" style="width:100%;border-style:dashed;">➕ Başka Ürün Ekle</button>
         </div>
 
-        <div class="form-grid">
-            <div class="form-group">
+        <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:end; margin-bottom:14px;">
+            <div class="form-group" style="flex:1; min-width:160px; margin:0;">
                 <label>Tarih *</label>
                 <input type="date" name="tarih" value="<?= date('Y-m-d') ?>" required>
             </div>
-            <div class="form-group">
+            <div class="form-group" style="flex:3; min-width:260px; margin:0;">
                 <label>Genel Açıklama</label>
                 <input type="text" name="aciklama" placeholder="Tüm ürünler için isteğe bağlı not...">
             </div>

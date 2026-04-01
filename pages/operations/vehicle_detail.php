@@ -182,25 +182,25 @@ require_once __DIR__ . '/../../includes/header.php';
             <button type="button" class="btn btn-secondary btn-sm" onclick="yeniUrunSatiriEkle()" style="width:100%;border-style:dashed;">➕ Başka Ürün Ekle</button>
         </div>
 
-        <div class="form-grid">
-            <div class="form-group">
+        <div style="display:flex; flex-wrap:wrap; gap:14px; align-items:end; margin-bottom:14px;">
+            <div class="form-group" style="flex:1; min-width:220px; margin:0;">
                 <label>Tarih *</label>
                 <input type="date" name="tarih" value="<?= date('Y-m-d') ?>" required>
             </div>
-            <div class="form-group full">
-                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none;font-size:14px;font-weight:600;color:var(--text);background:var(--warning-l);padding:12px 14px;border-radius:var(--r-sm);border:1.5px solid var(--warning);">
+            <div class="form-group" style="flex:2; min-width:260px; margin:0;">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none;font-size:14px;font-weight:600;color:var(--text);background:var(--warning-l);padding:11px 14px;border-radius:var(--r-sm);border:1.5px solid var(--warning);margin:0;">
                     <input type="checkbox" name="yag_bakimi" id="yag_bakimi" value="1" onchange="kmToggle()" style="width:20px;height:20px;accent-color:var(--warning);cursor:pointer;flex-shrink:0;">
                     🔧 Bu işlem yağ & filtre bakımıdır
                 </label>
             </div>
-            <div class="form-group" id="km_grup" style="display:none;">
+            <div class="form-group" id="km_grup" style="display:none; flex:1; min-width:220px; margin:0;">
                 <label>Mevcut KM</label>
                 <input type="number" name="mevcut_km" id="mevcut_km" min="0" placeholder="Örn: 125000">
             </div>
-            <div class="form-group">
-                <label>Genel Açıklama</label>
-                <input type="text" name="aciklama" placeholder="Tüm ürünler için isteğe bağlı not...">
-            </div>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+            <label>Genel Açıklama</label>
+            <input type="text" name="aciklama" placeholder="Tüm ürünler için isteğe bağlı not...">
         </div>
         <div style="margin-top:14px;">
             <button type="submit" name="yag_ekle" class="btn btn-success">💾 Kaydet</button>
