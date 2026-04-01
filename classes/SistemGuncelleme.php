@@ -10,7 +10,7 @@
  */
 
 class SistemGuncelleme {
-    public const GITHUB_REPO = 'Awosk/project-oil';
+    public const GITHUB_REPO = 'Awosk/project-industry';
     public const GITHUB_API  = 'https://api.github.com/repos/' . self::GITHUB_REPO . '/releases/latest';
     
     // Korunacak yol/dosyalar — güncelleme sırasında üzerine yazılmaz

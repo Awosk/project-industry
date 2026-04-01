@@ -1,9 +1,9 @@
 # 🛢️ Project Industry
 
-![GitHub repo size](https://img.shields.io/github/repo-size/Awosk/project-oil?style=for-the-badge)
-![GitHub stars](https://img.shields.io/github/stars/Awosk/project-oil?style=for-the-badge)
+![GitHub repo size](https://img.shields.io/github/repo-size/Awosk/project-industry?style=for-the-badge)
+![GitHub stars](https://img.shields.io/github/stars/Awosk/project-industry?style=for-the-badge)
 ![PHP Version](https://img.shields.io/badge/PHP-%E2%89%A5%208.0-777bb4?style=for-the-badge&logo=php)
-![License](https://img.shields.io/github/license/Awosk/project-oil?color=blue&style=for-the-badge)
+![License](https://img.shields.io/github/license/Awosk/project-industry?color=blue&style=for-the-badge)
 
 ---
 
@@ -61,7 +61,7 @@ Personeller görsel kartlar üzerinden saniyeler içinde anlık arama (live sear
 Uygulamanın çalışır duruma gelmesi için klasik `git clone` yöntemi yerine özel hazırladığımız **Downloader** sihirbazını kullanmanız şiddetle tavsiye edilir:
 
 1. Kurulum yapacağınız sunucu / hosting üzerinde projenin çalışacağı ve dışarıya açık olan boş bir klasör (örn. `htdocs/`) hazırlayın.
-2. Github **[Releases](https://github.com/Awosk/project-oil/releases)** sayfamızdan, indirmek istediğiniz son sürüme tıklayın. İndirilecekler arşivinden sadece **`downloader.php`** dosyasını ana dizininize atın.
+2. Github **[Releases](https://github.com/Awosk/project-industry/releases)** sayfamızdan, indirmek istediğiniz son sürüme tıklayın. İndirilecekler arşivinden sadece **`downloader.php`** dosyasını ana dizininize atın.
 3. Web tarayıcınızdan `http://siteniz.com/downloader.php` adresine gidin. Script, saniyeler içinde GitHub alt yapısından en güncel Project Industry sürümünü çekip sunucunuza kuracaktır.
 4. Dosyalar çıkarıldıktan sonra script sizi otomatik olarak **`/install`** (kurulum sihirbazı) dizinine yönlendirir.
 5. Veritabanı bilgilerinizi girin, Admin hesabınızı oluşturun ve bitirin!
