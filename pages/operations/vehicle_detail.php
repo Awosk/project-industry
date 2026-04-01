@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['yag_ekle'])) {
         if ($aciklama)   $log_msg .= '. Açıklama: '.$aciklama;
         
         logYaz($pdo,'ekle','arac_kayit',$log_msg,$yeni_id,null,['plaka'=>$arac['plaka'],'urun_id'=>$urun_id,'miktar'=>$miktar,'tarih'=>$tarih,'yag_bakimi'=>$yag_bakimi,'mevcut_km'=>$mevcut_km,'aciklama'=>$aciklama],'lite');
-        flash('Yağ kaydı eklendi.');
+        flash('Ürün kaydı eklendi.');
     } else {
         flash('Ürün, miktar ve tarih zorunludur.', 'danger');
     }
@@ -88,7 +88,7 @@ if (isset($_GET['yag_sil'])) {
         if ($sr['aciklama'])   $log_msg .= '. Açıklama: '.$sr['aciklama'];
         logYaz($pdo,'sil','arac_kayit',$log_msg,$sil_id,$sr,null,'lite');
     }
-    flash('Yağ kaydı silindi.');
+    flash('Ürün kaydı silindi.');
     header('Location: vehicle_detail.php?id='.$id); exit;
 }
 
@@ -131,7 +131,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <?php endif; ?>
         <?php if ($son_bakim): ?>
         <div>
-            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Son Yağ Bakımı</div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Son Ürün Bakımı</div>
             <div style="font-weight:600;color:var(--warning);">
                 🔧 <?= formatliTarih($son_bakim['tarih']) ?>
                 <?php if ($son_bakim['mevcut_km']): ?> · <?= number_format($son_bakim['mevcut_km']) ?> KM<?php endif; ?>
@@ -142,7 +142,7 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <div class="card">
-    <div class="card-title">➕ Yağ Kaydı Ekle</div>
+    <div class="card-title">➕ Ürün Kaydı Ekle</div>
     <form method="post">
         <?= csrfInput() ?>
         <div class="form-grid">
@@ -156,7 +156,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 </select>
             </div>
             <div class="form-group">
-                <label>Miktar (Litre) *</label>
+                <label>Miktar *</label>
                 <input type="number" name="miktar" required min="0.01" step="0.01" placeholder="Örn: 2.00">
             </div>
             <div class="form-group">
@@ -185,7 +185,7 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <div class="card">
-    <div class="card-title">📋 Yağ Geçmişi (<?= count($yag_kayitlari) ?>)</div>
+    <div class="card-title">📋 Ürün Geçmişi (<?= count($yag_kayitlari) ?>)</div>
     <?php if (empty($yag_kayitlari)): ?>
     <div style="text-align:center;padding:28px;color:var(--muted);">Henüz yağ kaydı yok.</div>
     <?php else: ?>
@@ -201,7 +201,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <?php endif; ?>
                 </div>
                 <div class="kayit-meta">
-                    🛢️ <strong title="Yağın verildiği tarih"><?= formatliTarih($k['tarih']) ?></strong>
+                    🛢️ <strong title="Ürünün verildiği tarih"><?= formatliTarih($k['tarih']) ?></strong>
                     <span class="kayit-giris-tarihi">· 🕐 <?= formatliTarih($k['olusturma_tarihi']) ?></span>
                     · 👤 <?= htmlspecialchars($k['ad_soyad'] ?? '-') ?>
                     <?php if ($k['yag_bakimi'] && $k['mevcut_km']): ?>
@@ -237,7 +237,7 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
             <div style="display:flex;gap:12px;">
                 <div class="form-group" style="flex:1;">
-                    <label>Miktar (Litre) *</label>
+                    <label>Miktar *</label>
                     <input type="number" name="guncelle_miktar" id="guncelle_miktar" required min="0.01" step="0.01">
                 </div>
                 <div class="form-group" style="flex:1;">

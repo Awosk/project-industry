@@ -1,6 +1,6 @@
 <?php
 /*
- * Project Oil - Vehicle and Facility Industrial Oil Tracking System
+ * Project Industry - Vehicle and Facility Industrial Oil Tracking System
  * Copyright (C) 2026 Awosk
  *
  * This program is free software: you can redistribute it and/or modify
@@ -10,7 +10,7 @@
  */
 
 /**
- * Project Oil — Kurulum Sihirbazı
+ * Project Industry — Kurulum Sihirbazı
  * install/index.php
  */
 
@@ -60,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['adim2'])) {
     $_SESSION['db_name']  = trim($_POST['db_name']);
     $_SESSION['db_user']  = trim($_POST['db_user']);
     $_SESSION['db_pass']  = $_POST['db_pass'];
-    $_SESSION['site_adi'] = trim($_POST['site_adi']) ?: 'Project Oil';
+    $_SESSION['site_adi'] = trim($_POST['site_adi']) ?: 'Project Industry';
     try {
         new PDO(
             "mysql:host={$_SESSION['db_host']};charset=utf8mb4",
@@ -217,7 +217,7 @@ if ($adim === 3) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Oil — Kurulum</title>
+    <title>Project Industry — Kurulum</title>
     <link rel="stylesheet" href="../assets/css/style.css">
     <style>
         .login-page {
@@ -340,7 +340,7 @@ if ($adim === 3) {
         <!-- Logo -->
         <div class="login-logo">
             <div class="logo-icon">🔩</div>
-            <h2>Project Oil</h2>
+            <h2>Project Industry</h2>
             <p>Kurulum Sihirbazı</p>
         </div>
 
@@ -456,8 +456,8 @@ if ($adim === 3) {
                 </div>
                 <div class="form-group full">
                     <label>Site Adı</label>
-                    <input type="text" name="site_adi" placeholder="Project Oil"
-                           value="<?= htmlspecialchars($_SESSION['site_adi'] ?? 'Project Oil') ?>">
+                    <input type="text" name="site_adi" placeholder="Project Industry"
+                           value="<?= htmlspecialchars($_SESSION['site_adi'] ?? 'Project Industry') ?>">
                 </div>
             </div>
             <div class="db-test-row">

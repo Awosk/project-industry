@@ -1,4 +1,4 @@
-// Yağ Takip Lite — JS
+// Ürün Takip Lite — JS
 
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.alert').forEach(function (el) {

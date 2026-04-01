@@ -89,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="login-logo">
             <div class="logo-icon">🔩</div>
             <h2><?= SITE_ADI ?></h2>
-            <p>Araç/Tesis Yağ Takip Sistemi</p>
+            <p>Araç/Tesis Ürün Takip Sistemi</p>
         </div>
         <?php if ($oturum_mesaj): ?>
         <div class="alert alert-warning"><?= htmlspecialchars($oturum_mesaj) ?></div>

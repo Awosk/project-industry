@@ -1,6 +1,6 @@
 <?php
 /*
- * Project Oil - Vehicle and Facility Industrial Oil Tracking System
+ * Project Industry - Vehicle and Facility Industrial Oil Tracking System
  * Copyright (C) 2026 Awosk
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
     <meta name="theme-color" content="#1e4d6b">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Yağ Takip">
+    <meta name="apple-mobile-web-app-title" content="Ürün Takip">
     <link rel="manifest" href="<?= ROOT_URL ?>manifest.php">
     <link rel="apple-touch-icon" href="<?= ROOT_URL ?>assets/icons/icon-192.png">
     <script>

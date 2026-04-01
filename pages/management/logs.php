@@ -163,8 +163,8 @@ require_once __DIR__ . '/../../includes/header.php';
                     <label>Modül</label>
                     <select name="modul">
                         <option value="">Tümü</option>
-                        <option value="arac_kayit"  <?= $f_modul=='arac_kayit' ?'selected':'' ?>>🚗 Araç Yağ Kaydı</option>
-                        <option value="tesis_kayit" <?= $f_modul=='tesis_kayit'?'selected':'' ?>>🏭 Tesis Yağ Kaydı</option>
+                        <option value="arac_kayit"  <?= $f_modul=='arac_kayit' ?'selected':'' ?>>🚗 Araç Ürün Kaydı</option>
+                        <option value="tesis_kayit" <?= $f_modul=='tesis_kayit'?'selected':'' ?>>🏭 Tesis Ürün Kaydı</option>
                         <option value="arac"        <?= $f_modul=='arac'       ?'selected':'' ?>>🚗 Araç</option>
                         <option value="tesis"       <?= $f_modul=='tesis'      ?'selected':'' ?>>🏭 Tesis</option>
                         <option value="urun"        <?= $f_modul=='urun'       ?'selected':'' ?>>🛢️ Ürün</option>

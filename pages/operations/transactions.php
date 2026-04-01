@@ -188,7 +188,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Yağ / Ürün</label>
+                    <label>Ürün</label>
                     <select name="urun_id">
                         <option value="">Tüm Ürünler</option>
                         <?php foreach ($tum_urunler as $u): ?>

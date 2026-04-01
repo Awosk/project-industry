@@ -1,4 +1,4 @@
--- Project Oil — Veritabanı Kurulum Dosyası
+-- Project Industry — Veritabanı Kurulum Dosyası
 -- Bu dosya kurulum sihirbazı tarafından otomatik olarak kullanılır.
 -- Tablolar yoksa oluşturulur, mevcutsa ve veri varsa dokunulmaz.
 -- Varsayılan kullanıcı yoktur; kurulum sırasında oluşturulur.

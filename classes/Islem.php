@@ -38,7 +38,7 @@ class Islem {
 
     public static function aracKayitlari($pdo, $arac_id) {
         $stmt = $pdo->prepare("
-            SELECT lk.*,u.urun_adi,u.urun_kodu,k.ad_soyad
+            SELECT lk.*,u.urun_adi,u.urun_kodu, u.birim, k.ad_soyad
             FROM records lk
             JOIN products u ON lk.urun_id=u.id
             LEFT JOIN users k ON lk.olusturan_id=k.id

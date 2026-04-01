@@ -112,7 +112,7 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <div class="card">
-    <div class="card-title">➕ Yağ Kaydı Ekle</div>
+    <div class="card-title">➕ Ürün Kaydı Ekle</div>
     <form method="post">
         <?= csrfInput() ?>
         <div class="form-grid">
@@ -126,7 +126,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 </select>
             </div>
             <div class="form-group">
-                <label>Miktar (Litre) *</label>
+                <label>Miktar *</label>
                 <input type="number" name="miktar" required min="0.01" step="0.01" placeholder="Örn: 5.00">
             </div>
             <div class="form-group">
@@ -145,7 +145,7 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <div class="card">
-    <div class="card-title">📋 Yağ Geçmişi (<?= count($kayitlar) ?> kayıt)</div>
+    <div class="card-title">📋 Ürün Geçmişi (<?= count($kayitlar) ?> kayıt)</div>
     <?php if (empty($kayitlar)): ?>
     <div style="text-align:center; padding:28px; color:var(--muted);">Henüz kayıt yok.</div>
     <?php else: ?>
@@ -158,7 +158,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <small><?= htmlspecialchars($k['urun_kodu']) ?></small>
                 </div>
                 <div class="kayit-meta">
-                    🛢️ <strong title="Yağın verildiği tarih"><?= formatliTarih($k['tarih']) ?></strong>
+                    🛢️ <strong title="Ürünün verildiği tarih"><?= formatliTarih($k['tarih']) ?></strong>
                     <span class="kayit-giris-tarihi">· 🕐 <?= formatliTarih($k['olusturma_tarihi']) ?></span>
                     · 👤 <?= htmlspecialchars($k['ad_soyad'] ?? '-') ?>
                     <?php if ($k['aciklama']): ?> · <?= htmlspecialchars($k['aciklama']) ?><?php endif; ?>
@@ -191,7 +191,7 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
             <div style="display:flex;gap:12px;">
                 <div class="form-group" style="flex:1;">
-                    <label>Miktar (Litre) *</label>
+                    <label>Miktar *</label>
                     <input type="number" name="guncelle_miktar" id="guncelle_miktar" required min="0.01" step="0.01">
                 </div>
                 <div class="form-group" style="flex:1;">

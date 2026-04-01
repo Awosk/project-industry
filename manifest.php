@@ -21,7 +21,7 @@ header('Cache-Control: public, max-age=3600');
 echo json_encode([
     'name'             => SITE_ADI,
     'short_name'       => SITE_ADI,
-    'description'      => SITE_ADI . ' Araç Yağ Takip Sistemi',
+    'description'      => SITE_ADI . ' Araç Ürün Takip Sistemi',
     'start_url'        => $root . '/index.php',
     'scope'            => $root . '/',
     'display'          => 'standalone',

@@ -110,13 +110,13 @@ $mevcut_filtreler = SistemAyarlari::getMevcutFiltreler($pdo);
 
 // Tanımlı modül/aksiyon çiftleri
 $bildirim_secenekleri = [
-    'Araç Yağ Kayıtları' => [
+    'Araç Ürün Kayıtları' => [
         ['arac_kayit', 'ekle',     '🛢️ Araç yağ kaydı eklendi'],
         ['arac_kayit', 'sil',      '🗑️ Araç yağ kaydı silindi'],
         ['arac_kayit', 'guncelle', '✏️ Araç yağ kaydı güncellendi'],
         ['islendi',    'guncelle', '✅ Kayıt depoya işlendi'],
     ],
-    'Tesis Yağ Kayıtları' => [
+    'Tesis Ürün Kayıtları' => [
         ['tesis_kayit', 'ekle',     '🛢️ Tesis yağ kaydı eklendi'],
         ['tesis_kayit', 'sil',      '🗑️ Tesis yağ kaydı silindi'],
         ['tesis_kayit', 'guncelle', '✏️ Tesis yağ kaydı güncellendi'],

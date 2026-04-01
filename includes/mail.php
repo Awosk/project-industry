@@ -1,6 +1,6 @@
 <?php
 /*
- * Project Oil - Vehicle and Facility Industrial Oil Tracking System
+ * Project Industry - Vehicle and Facility Industrial Oil Tracking System
  * Copyright (C) 2026 Awosk
  *
  * This program is free software: you can redistribute it and/or modify
@@ -108,7 +108,7 @@ function mailGonderSMTP($pdo, string $to_email, string $to_name, string $subject
         $mail->CharSet    = 'UTF-8';
         $mail->Timeout    = 5;
 
-        $gonderen_ad    = $ayarlar['smtp_ad']   ?: (defined('SITE_ADI') ? SITE_ADI : 'Project Oil');
+        $gonderen_ad    = $ayarlar['smtp_ad']   ?: (defined('SITE_ADI') ? SITE_ADI : 'Project Industry');
         $gonderen_email = $ayarlar['smtp_gonderen'] ?: $ayarlar['smtp_kullanici'];
 
         $mail->setFrom($gonderen_email, $gonderen_ad);
@@ -188,7 +188,7 @@ function adminBildirimGonder($pdo, string $aksiyon, string $modul, string $acikl
             $pdo->exec("UPDATE mail_queue SET status = 'paused' WHERE status = 'pending'");
 
             // UYARI MAİLİNİ 'force' OLARAK QUEUE'YE EKLİYORUZ
-            $site_adi     = defined('SITE_ADI') ? SITE_ADI : 'Project Oil';
+            $site_adi     = defined('SITE_ADI') ? SITE_ADI : 'Project Industry';
             $uyari_konu   = $site_adi . ' — ⚠️ Mail Rate Limit Aşıldı';
             $uyari_icerik = mailSablonu($uyari_konu, '
                 <p>Son <strong>' . $limit_dakika . ' dakika</strong> içinde <strong>' . $son_mail_sayisi . '</strong> mail gönderildi.</p>
@@ -219,7 +219,7 @@ function adminBildirimGonder($pdo, string $aksiyon, string $modul, string $acikl
  * Şifre sıfırlama maili — kuyruğa girmez, direkt gönderilir.
  */
 function sifreSifirlamaMailiGonder($pdo, array $kullanici, string $token): bool {
-    $site_adi = defined('SITE_ADI') ? SITE_ADI : 'Project Oil';
+    $site_adi = defined('SITE_ADI') ? SITE_ADI : 'Project Industry';
     $link     = ROOT_URL . 'pages/auth/reset_password.php?token=' . $token;
     $icerik   = mailSablonu('🔑 Şifre Sıfırlama', '
         <p>Merhaba <strong>' . htmlspecialchars($kullanici['ad_soyad']) . '</strong>,</p>
@@ -248,7 +248,7 @@ function testMailiGonder($pdo, string $email): array {
         <p style="color:#666;font-size:13px;">Gönderim zamanı: ' . date('d.m.Y H:i:s') . '</p>
     ');
     return mailGonderSMTP($pdo, $email, 'Test',
-        '🧪 SMTP Test — ' . (defined('SITE_ADI') ? SITE_ADI : 'Project Oil'),
+        '🧪 SMTP Test — ' . (defined('SITE_ADI') ? SITE_ADI : 'Project Industry'),
         $icerik
     );
 }
@@ -270,8 +270,8 @@ function _bildirimKonuOlustur(string $aksiyon, string $modul): string {
         'arac'        => '🚗 Araç',
         'arac_tur'    => '🚗 Araç Türü',
         'tesis'       => '🏭 Tesis',
-        'arac_kayit'  => '🛢️ Araç Yağ Kaydı',
-        'tesis_kayit' => '🛢️ Tesis Yağ Kaydı',
+        'arac_kayit'  => '🛢️ Araç Ürün Kaydı',
+        'tesis_kayit' => '🛢️ Tesis Ürün Kaydı',
         'urun'        => '📦 Ürün',
         'kullanici'   => '👤 Kullanıcı',
         'auth'        => '🔐 Oturum',
@@ -279,7 +279,7 @@ function _bildirimKonuOlustur(string $aksiyon, string $modul): string {
         'islendi'     => '✅ Depoya İşlendi',
     ][$modul] ?? $modul;
 
-    return '[' . (defined('SITE_ADI') ? SITE_ADI : 'Project Oil') . '] ' . $aksiyon_etiket . ' — ' . $modul_etiket;
+    return '[' . (defined('SITE_ADI') ? SITE_ADI : 'Project Industry') . '] ' . $aksiyon_etiket . ' — ' . $modul_etiket;
 }
 
 function _bildirimIcerikOlustur(string $aksiyon, string $modul, string $aciklama, ?array $kullanici_bilgi): string {
@@ -295,8 +295,8 @@ function _bildirimIcerikOlustur(string $aksiyon, string $modul, string $aciklama
         'arac'        => '🚗 Araç',
         'arac_tur'    => '🚗 Araç Türü',
         'tesis'       => '🏭 Tesis',
-        'arac_kayit'  => '🛢️ Araç Yağ Kaydı',
-        'tesis_kayit' => '🛢️ Tesis Yağ Kaydı',
+        'arac_kayit'  => '🛢️ Araç Ürün Kaydı',
+        'tesis_kayit' => '🛢️ Tesis Ürün Kaydı',
         'urun'        => '📦 Ürün',
         'kullanici'   => '👤 Kullanıcı',
         'auth'        => '🔐 Oturum',
@@ -341,7 +341,7 @@ function _bildirimIcerikOlustur(string $aksiyon, string $modul, string $aciklama
 // ─────────────────────────────────────────────
 
 function mailSablonu(string $baslik, string $icerik): string {
-    $site_adi = defined('SITE_ADI') ? SITE_ADI : 'Project Oil';
+    $site_adi = defined('SITE_ADI') ? SITE_ADI : 'Project Industry';
     return '<!DOCTYPE html>
 <html lang="tr">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
