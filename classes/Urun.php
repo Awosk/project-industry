@@ -31,9 +31,9 @@ class Urun {
         return $stmt->fetch() ? true : false;
     }
 
-    public static function ekle($pdo, $kod, $adi, $olusturan_id) {
-        $pdo->prepare("INSERT INTO products (urun_kodu, urun_adi, olusturan_id) VALUES (?,?,?)")
-            ->execute([$kod, $adi, $olusturan_id]);
+    public static function ekle($pdo, $kod, $adi, $birim, $olusturan_id) {
+        $pdo->prepare("INSERT INTO products (urun_kodu, urun_adi, birim, olusturan_id) VALUES (?,?,?,?)")
+            ->execute([$kod, $adi, $birim, $olusturan_id]);
         return $pdo->lastInsertId();
     }
 
@@ -42,9 +42,9 @@ class Urun {
             ->execute([$adi, $olusturan_id, $id]);
     }
 
-    public static function guncelle($pdo, $id, $kod, $adi) {
-        return $pdo->prepare("UPDATE products SET urun_kodu=?, urun_adi=? WHERE id=?")
-            ->execute([$kod, $adi, $id]);
+    public static function guncelle($pdo, $id, $kod, $adi, $birim) {
+        return $pdo->prepare("UPDATE products SET urun_kodu=?, urun_adi=?, birim=? WHERE id=?")
+            ->execute([$kod, $adi, $birim, $id]);
     }
 
     public static function sil($pdo, $id) {

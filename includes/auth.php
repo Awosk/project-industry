@@ -222,6 +222,6 @@ function formatliTarih($t) {
     if (strlen($t) > 10) return date('d.m.Y H:i', strtotime($t));
     return date('d.m.Y', strtotime($t));
 }
-function formatliMiktar($m) {
-    return number_format($m, 2, ',', '.') . ' L';
+function formatliMiktar($m, $birim = 'LT') {
+    return number_format($m, 2, ',', '.') . ' ' . $birim;
 }

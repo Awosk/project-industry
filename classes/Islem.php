@@ -12,7 +12,7 @@ class Islem {
     }
 
     public static function aracKayitBul($pdo, $kayit_id, $arac_id) {
-        $stmt = $pdo->prepare('SELECT lk.*,u.urun_kodu,u.urun_adi FROM records lk JOIN products u ON lk.urun_id=u.id WHERE lk.id=? AND lk.arac_id=? AND lk.aktif=1');
+        $stmt = $pdo->prepare('SELECT lk.*,u.urun_kodu, u.urun_adi, u.birim FROM records lk JOIN products u ON lk.urun_id=u.id WHERE lk.id=? AND lk.arac_id=? AND lk.aktif=1');
         $stmt->execute([$kayit_id, $arac_id]);
         return $stmt->fetch();
     }
@@ -27,7 +27,7 @@ class Islem {
     }
     
     public static function aracKayitSilBul($pdo, $kayit_id, $arac_id) {
-        $stmt = $pdo->prepare('SELECT lk.*,u.urun_kodu,u.urun_adi FROM records lk JOIN products u ON lk.urun_id=u.id WHERE lk.id=? AND lk.arac_id=?');
+        $stmt = $pdo->prepare('SELECT lk.*,u.urun_kodu, u.urun_adi, u.birim FROM records lk JOIN products u ON lk.urun_id=u.id WHERE lk.id=? AND lk.arac_id=?');
         $stmt->execute([$kayit_id, $arac_id]);
         return $stmt->fetch();
     }
@@ -56,13 +56,13 @@ class Islem {
     }
 
     public static function tesisKayitBul($pdo, $kayit_id, $tesis_id) {
-        $stmt = $pdo->prepare('SELECT lk.*,u.urun_kodu,u.urun_adi FROM records lk JOIN products u ON lk.urun_id=u.id WHERE lk.id=? AND lk.tesis_id=? AND lk.aktif=1');
+        $stmt = $pdo->prepare('SELECT lk.*,u.urun_kodu, u.urun_adi, u.birim FROM records lk JOIN products u ON lk.urun_id=u.id WHERE lk.id=? AND lk.tesis_id=? AND lk.aktif=1');
         $stmt->execute([$kayit_id, $tesis_id]);
         return $stmt->fetch();
     }
     
     public static function tesisKayitSilBul($pdo, $kayit_id, $tesis_id) {
-        $stmt = $pdo->prepare('SELECT lk.*,u.urun_kodu,u.urun_adi FROM records lk JOIN products u ON lk.urun_id=u.id WHERE lk.id=? AND lk.tesis_id=?');
+        $stmt = $pdo->prepare('SELECT lk.*,u.urun_kodu, u.urun_adi, u.birim FROM records lk JOIN products u ON lk.urun_id=u.id WHERE lk.id=? AND lk.tesis_id=?');
         $stmt->execute([$kayit_id, $tesis_id]);
         return $stmt->fetch();
     }
@@ -73,7 +73,7 @@ class Islem {
 
     public static function tesisKayitlari($pdo, $tesis_id) {
         $stmt = $pdo->prepare("
-            SELECT lk.*, u.urun_adi, u.urun_kodu, k.ad_soyad
+            SELECT lk.*, u.urun_adi, u.urun_kodu, u.birim, k.ad_soyad
             FROM records lk
             JOIN products u ON lk.urun_id = u.id
             LEFT JOIN users k ON lk.olusturan_id = k.id
@@ -92,7 +92,7 @@ class Islem {
 
     public static function genelKayitBul($pdo, $id) {
         $stmt = $pdo->prepare('
-            SELECT lk.*, u.urun_kodu, u.urun_adi, a.plaka, t.firma_adi
+            SELECT lk.*, u.urun_kodu, u.urun_adi, u.birim, a.plaka, t.firma_adi
             FROM records lk
             JOIN products u ON lk.urun_id=u.id
             LEFT JOIN vehicles a ON lk.arac_id=a.id
@@ -105,7 +105,7 @@ class Islem {
 
     public static function aktifGenelKayitBul($pdo, $id) {
         $stmt = $pdo->prepare('
-            SELECT lk.*, u.urun_kodu, u.urun_adi, a.plaka, t.firma_adi
+            SELECT lk.*, u.urun_kodu, u.urun_adi, u.birim, a.plaka, t.firma_adi
             FROM records lk
             JOIN products u ON lk.urun_id=u.id
             LEFT JOIN vehicles a ON lk.arac_id=a.id
@@ -157,7 +157,7 @@ class Islem {
 
     public static function listeSayfalamali($pdo, $sartlar, $offset, $limit) {
         $stmt = $pdo->prepare("
-            SELECT lk.*, u.urun_adi, u.urun_kodu, a.plaka, a.marka_model, at.tur_adi AS arac_turu,
+            SELECT lk.*, u.urun_adi, u.urun_kodu, u.birim, a.plaka, a.marka_model, at.tur_adi AS arac_turu,
                    t.firma_adi, k.ad_soyad, ik.ad_soyad AS islendi_ad_soyad
             FROM records lk
             LEFT JOIN products u ON lk.urun_id = u.id
@@ -184,7 +184,7 @@ class Islem {
 
     public static function raporOzetUrunBazli($pdo, $where_sql, $params) {
         $stmt = $pdo->prepare("
-            SELECT lk.urun_id, u.urun_kodu, u.urun_adi,
+            SELECT lk.urun_id, u.urun_kodu, u.urun_adi, u.birim,
                    COUNT(*) AS adet, COALESCE(SUM(lk.miktar), 0) AS toplam
             FROM records lk
             JOIN products u ON lk.urun_id = u.id
@@ -204,7 +204,7 @@ class Islem {
 
     public static function raporDetayliKayitlar($pdo, $where_sql, $params, $limit = null, $offset = null) {
         $sql = "
-            SELECT lk.*, u.urun_adi, u.urun_kodu, a.plaka, a.marka_model, at.tur_adi AS arac_turu,
+            SELECT lk.*, u.urun_adi, u.urun_kodu, u.birim, a.plaka, a.marka_model, at.tur_adi AS arac_turu,
                t.firma_adi, k.ad_soyad
             FROM records lk
             JOIN products u  ON lk.urun_id    = u.id

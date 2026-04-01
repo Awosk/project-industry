@@ -64,6 +64,7 @@ CREATE TABLE IF NOT EXISTS `products` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `urun_kodu` varchar(50) NOT NULL,
   `urun_adi` varchar(200) NOT NULL,
+  `birim` varchar(20) NOT NULL DEFAULT 'LT',
   `aktif` tinyint(1) NOT NULL DEFAULT 1,
   `olusturma_tarihi` datetime NOT NULL DEFAULT current_timestamp(),
   `olusturan_id` int(11) DEFAULT NULL,

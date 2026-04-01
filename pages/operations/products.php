@@ -23,6 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
     csrfDogrula();
     $kod = strtoupper(trim($_POST['urun_kodu']));
     $adi = trim($_POST['urun_adi']);
+    $birim = trim($_POST['birim'] ?? 'LT');
     
     if ($kod && $adi) {
         $mevcut = Urun::bulKod($pdo, $kod);
@@ -35,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
             flash('Bu ürün kodu zaten kayıtlı.', 'danger');
         } else {
             try {
-                $yeni_id = Urun::ekle($pdo, $kod, $adi, $ku['id']);
+                $yeni_id = Urun::ekle($pdo, $kod, $adi, $birim, $ku['id']);
                 logYaz($pdo,'ekle','urun','Ürün eklendi: '.$kod.' - '.$adi, $yeni_id, null, ['kod'=>$kod,'adi'=>$adi], 'lite');
                 flash('Ürün eklendi.');
             } catch (PDOException $e) { flash('Bir hata oluştu.', 'danger'); }
@@ -49,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
     $did = (int)$_POST['duzenle_id'];
     $kod = strtoupper(trim($_POST['duzenle_kod']));
     $adi = trim($_POST['duzenle_adi']);
+    $birim = trim($_POST['duzenle_birim'] ?? 'LT');
     
     if ($did && $kod && $adi) {
         $sr = Urun::bulId($pdo, $did);
@@ -57,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['duzenle'])) {
         if ($cakisma) {
             flash('Bu ürün kodu başka bir üründe kayıtlı.', 'danger');
         } else {
-            Urun::guncelle($pdo, $did, $kod, $adi);
+            Urun::guncelle($pdo, $did, $kod, $adi, $birim);
             logYaz($pdo,'guncelle','urun','Ürün güncellendi: '.$kod.' - '.$adi, $did,
                 ['urun_kodu'=>$sr['urun_kodu'],'urun_adi'=>$sr['urun_adi']],
                 ['urun_kodu'=>$kod,'urun_adi'=>$adi], 'lite');
@@ -98,6 +100,10 @@ require_once __DIR__ . '/../../includes/header.php';
                 <label>Ürün Adı *</label>
                 <input type="text" name="urun_adi" required placeholder="Örn: ATF Dexron III Şanzıman Yağı" maxlength="200">
             </div>
+            <div class="form-group">
+                <label>Birim (Örn: LT, KG, Adet) *</label>
+                <input type="text" name="birim" required placeholder="LT" value="LT" maxlength="20">
+            </div>
         </div>
         <div style="margin-top:14px;">
             <button type="submit" name="ekle" class="btn btn-primary">💾 Ekle</button>
@@ -112,17 +118,18 @@ require_once __DIR__ . '/../../includes/header.php';
     <?php else: ?>
     <div class="table-wrap">
         <table>
-            <thead><tr><th>#</th><th>Kod</th><th>Ürün Adı</th><th>Ekleyen</th><th>İşlem</th></tr></thead>
+            <thead><tr><th>#</th><th>Kod</th><th>Ürün Adı</th><th>Birim</th><th>Ekleyen</th><th>İşlem</th></tr></thead>
             <tbody>
             <?php foreach ($urunler as $i => $u): ?>
             <tr>
                 <td><?= $i+1 ?></td>
                 <td><strong><?= htmlspecialchars($u['urun_kodu']) ?></strong></td>
                 <td><?= htmlspecialchars($u['urun_adi']) ?></td>
+                <td><span class="badge badge-info"><?= htmlspecialchars($u['birim'] ?? 'LT') ?></span></td>
                 <td><?= htmlspecialchars($u['ad_soyad'] ?? '-') ?></td>
                 <td style="display:flex;gap:6px;flex-wrap:wrap;">
                     <button class="btn btn-sm btn-secondary"
-                        onclick="urunDuzenleModal(<?= $u['id'] ?>, '<?= htmlspecialchars($u['urun_kodu'], ENT_QUOTES) ?>', '<?= htmlspecialchars($u['urun_adi'], ENT_QUOTES) ?>')">✏️ Düzenle</button>
+                        onclick="urunDuzenleModal(<?= $u['id'] ?>, '<?= htmlspecialchars($u['urun_kodu'], ENT_QUOTES) ?>', '<?= htmlspecialchars($u['urun_adi'], ENT_QUOTES) ?>', '<?= htmlspecialchars($u['birim'] ?? 'LT', ENT_QUOTES) ?>')">✏️ Düzenle</button>
                     <a href="?sil=<?= $u['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Silmek istediğinize emin misiniz?')">🗑️ Sil</a>
                 </td>
             </tr>
@@ -148,6 +155,10 @@ require_once __DIR__ . '/../../includes/header.php';
                 <label>Ürün Adı *</label>
                 <input type="text" name="duzenle_adi" id="duzenle_urun_adi" required maxlength="200">
             </div>
+            <div class="form-group">
+                <label>Birim *</label>
+                <input type="text" name="duzenle_birim" id="duzenle_urun_birim" required maxlength="20">
+            </div>
             <div style="display:flex;gap:8px;margin-top:16px;">
                 <button type="submit" name="duzenle" class="btn btn-primary" style="flex:1;">💾 Kaydet</button>
                 <button type="button" class="btn btn-secondary" onclick="document.getElementById('urunDuzenleModal').style.display='none'">İptal</button>
@@ -157,10 +168,11 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <script>
-function urunDuzenleModal(id, kod, adi) {
+function urunDuzenleModal(id, kod, adi, birim) {
     document.getElementById('duzenle_urun_id').value = id;
     document.getElementById('duzenle_urun_kod').value = kod;
     document.getElementById('duzenle_urun_adi').value = adi;
+    document.getElementById('duzenle_urun_birim').value = birim || 'LT';
     var m = document.getElementById('urunDuzenleModal');
     m.style.display = 'flex';
     setTimeout(() => document.getElementById('duzenle_urun_adi').focus(), 50);

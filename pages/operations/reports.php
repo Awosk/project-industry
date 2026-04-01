@@ -204,7 +204,7 @@ if (!empty($f_urun_ids)) {
     Dönem: <strong><?= htmlspecialchars($tarih_bas) ?> – <?= htmlspecialchars($tarih_bit) ?></strong>
     &nbsp;|&nbsp; Tür: <strong><?= $tur_etiket ?></strong>
     <?php if (!empty($secili_urun_adlari)): ?>&nbsp;|&nbsp; Ürünler: <strong><?= htmlspecialchars(implode(', ', $secili_urun_adlari)) ?></strong><?php endif; ?>
-    &nbsp;|&nbsp; Toplam: <strong><?= number_format($genel_toplam, 2, ',', '.') ?> L</strong>
+    &nbsp;|&nbsp; Toplam: <strong><?= number_format($genel_toplam, 2, ',', '.') ?></strong>
     &nbsp;|&nbsp; <?= $genel_adet ?> kayıt
     &nbsp;|&nbsp; Oluşturulma: <?= date('d.m.Y H:i') ?>
 </div>
@@ -217,7 +217,7 @@ if (!empty($f_urun_ids)) {
         </div>
         <div>
             <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;">Toplam Miktar</div>
-            <div style="font-weight:700;font-size:20px;color:var(--primary-l);"><?= number_format($genel_toplam, 2, ',', '.') ?> L</div>
+            <div style="font-weight:700;font-size:16px;color:var(--primary-l);"><?= number_format($genel_toplam, 2, ',', '.') ?></div>
         </div>
         <div>
             <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;">Kayıt Sayısı</div>
@@ -239,12 +239,12 @@ if (!empty($f_urun_ids)) {
 <?php if ($pdf_mod): ?>
 <h3 style="margin:16px 0 8px;">Ürün Bazlı Özet</h3>
 <table class="ozet-tablo">
-    <thead><tr><th>Ürün Kodu</th><th>Ürün Adı</th><th>İşlem Sayısı</th><th>Toplam (L)</th></tr></thead>
+    <thead><tr><th>Ürün Kodu</th><th>Ürün Adı</th><th>İşlem Sayısı</th><th>Toplam Miktar</th></tr></thead>
     <tbody>
     <?php foreach ($urun_ozet as $o): ?>
-    <tr><td><?= htmlspecialchars($o['urun_kodu']) ?></td><td><?= htmlspecialchars($o['urun_adi']) ?></td><td><?= $o['adet'] ?></td><td><?= number_format($o['toplam'], 2, ',', '.') ?></td></tr>
+    <tr><td><?= htmlspecialchars($o['urun_kodu']) ?></td><td><?= htmlspecialchars($o['urun_adi']) ?></td><td><?= $o['adet'] ?></td><td><?= number_format($o['toplam'], 2, ',', '.') ?> <?= htmlspecialchars($o['birim'] ?? 'LT') ?></td></tr>
     <?php endforeach; ?>
-    <tr class="toplam-row"><td colspan="2"><strong>GENEL TOPLAM</strong></td><td><strong><?= $genel_adet ?></strong></td><td><strong><?= number_format($genel_toplam, 2, ',', '.') ?> L</strong></td></tr>
+    <tr class="toplam-row"><td colspan="2"><strong>GENEL TOPLAM</strong></td><td><strong><?= $genel_adet ?></strong></td><td><strong><?= number_format($genel_toplam, 2, ',', '.') ?></strong></td></tr>
     </tbody>
 </table>
 <?php else: ?>
@@ -259,13 +259,13 @@ if (!empty($f_urun_ids)) {
                 <td><code><?= htmlspecialchars($o['urun_kodu']) ?></code></td>
                 <td><?= htmlspecialchars($o['urun_adi']) ?></td>
                 <td><?= $o['adet'] ?></td>
-                <td><strong><?= number_format($o['toplam'], 2, ',', '.') ?> L</strong></td>
+                <td><strong><?= number_format($o['toplam'], 2, ',', '.') ?> <?= htmlspecialchars($o['birim'] ?? 'LT') ?></strong></td>
             </tr>
             <?php endforeach; ?>
             <tr style="background:var(--hover);font-weight:700;">
                 <td colspan="2">Genel Toplam</td>
                 <td><?= $genel_adet ?></td>
-                <td><?= number_format($genel_toplam, 2, ',', '.') ?> L</td>
+                <td><?= number_format($genel_toplam, 2, ',', '.') ?></td>
             </tr>
             </tbody>
         </table>
@@ -277,7 +277,7 @@ if (!empty($f_urun_ids)) {
 <?php if ($pdf_mod): ?>
 <h3 style="margin:16px 0 8px;">Detaylı Kayıtlar</h3>
 <table>
-    <thead><tr><th>Tarih</th><th>Tür</th><th>Araç / Tesis</th><th>Ürün</th><th>Miktar (L)</th><th>Kaydeden</th><th>Açıklama</th></tr></thead>
+    <thead><tr><th>Tarih</th><th>Sistem Türü</th><th>Plaka / Tesis</th><th>Ürün</th><th>Miktar</th><th>Kayıt Açan</th><th>Açıklama</th></tr></thead>
     <tbody>
     <?php foreach ($kayitlar as $r): ?>
     <tr>
@@ -285,7 +285,7 @@ if (!empty($f_urun_ids)) {
         <td><?= $r['kayit_turu'] === 'arac' ? 'Araç' : 'Tesis' ?></td>
         <td><?= $r['kayit_turu'] === 'arac' ? htmlspecialchars($r['plaka']).'<br><small>'.htmlspecialchars($r['marka_model']).'</small>' : htmlspecialchars($r['firma_adi']) ?></td>
         <td><?= htmlspecialchars($r['urun_kodu']) ?><br><small><?= htmlspecialchars($r['urun_adi']) ?></small></td>
-        <td><?= number_format($r['miktar'], 2, ',', '.') ?></td>
+        <td><?= number_format($r['miktar'], 2, ',', '.') ?> <?= htmlspecialchars($r['birim'] ?? 'LT') ?></td>
         <td><?= htmlspecialchars($r['ad_soyad'] ?? '-') ?></td>
         <td><?= $r['aciklama'] ? htmlspecialchars($r['aciklama']) : '—' ?><?php if ($r['yag_bakimi']): ?><br><strong>🔧 YAĞ BAKIMI<?= $r['mevcut_km'] ? ' — '.number_format($r['mevcut_km']).' KM' : '' ?></strong><?php endif; ?></td>
     </tr>
@@ -312,7 +312,7 @@ if (!empty($f_urun_ids)) {
                 <td><?= $r['kayit_turu']==='arac' ? '<span class="badge badge-info">🚗 Araç</span>' : '<span class="badge badge-success">🏭 Tesis</span>' ?></td>
                 <td><?php if ($r['kayit_turu']==='arac'): ?><strong><?= htmlspecialchars($r['plaka']) ?></strong><br><span style="font-size:11px;color:var(--muted);"><?= htmlspecialchars($r['marka_model']) ?></span><?php else: ?><strong><?= htmlspecialchars($r['firma_adi']) ?></strong><?php endif; ?></td>
                 <td><code><?= htmlspecialchars($r['urun_kodu']) ?></code><br><span style="font-size:11px;color:var(--muted);"><?= htmlspecialchars($r['urun_adi']) ?></span></td>
-                <td><strong><?= number_format($r['miktar'], 2, ',', '.') ?> L</strong></td>
+                <td><strong><?= number_format($r['miktar'], 2, ',', '.') ?> <?= htmlspecialchars($r['birim'] ?? 'LT') ?></strong></td>
                 <td><?= htmlspecialchars($r['ad_soyad'] ?? '-') ?></td>
                 <td style="font-size:12px;color:var(--muted);">
                     <?= $r['aciklama'] ? htmlspecialchars($r['aciklama']) : '—' ?>

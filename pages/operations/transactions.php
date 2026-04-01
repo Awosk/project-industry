@@ -268,7 +268,7 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
 
             <div class="islem-sag">
-                <div class="islem-miktar"><?= formatliMiktar($k['miktar']) ?></div>
+                <div class="islem-miktar"><?= formatliMiktar($k['miktar'], $k['birim'] ?? 'LT') ?></div>
                 <div class="islem-tarih">🛢️ <?= formatliTarih($k['tarih']) ?></div>
                 <div class="islem-giris-tarihi">🕐 <?= formatliTarih($k['olusturma_tarihi']) ?></div>
                 <div class="islem-kisi">👤 <?= htmlspecialchars($k['ad_soyad'] ?? '-') ?></div>

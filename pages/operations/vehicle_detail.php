@@ -210,7 +210,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <?php if ($k['aciklama']): ?> · <?= htmlspecialchars($k['aciklama']) ?><?php endif; ?>
                 </div>
             </div>
-            <div class="kayit-miktar"><?= formatliMiktar($k['miktar']) ?></div>
+            <div class="kayit-miktar"><?= formatliMiktar($k['miktar'], $k['birim'] ?? 'LT') ?></div>
             <button class="btn btn-sm btn-secondary" style="flex-shrink:0;font-size:11px;padding:4px 8px;"
                 onclick="kayitDuzenleModal(<?= $k['id'] ?>, <?= $k['urun_id'] ?>, '<?= $k['miktar'] ?>', '<?= $k['tarih'] ?>', '<?= htmlspecialchars($k['aciklama'] ?? '', ENT_QUOTES) ?>', <?= $k['yag_bakimi'] ? 'true' : 'false' ?>, '<?= $k['mevcut_km'] ?? '' ?>')" title="Kayıt düzenle">✏️ Düzenle</button>
             <button class="kayit-sil" onclick="if(confirm('Bu kaydı silmek istiyor musunuz?')) location.href='vehicle_detail.php?id=<?= $id ?>&yag_sil=<?= $k['id'] ?>'" title="Sil">🗑️</button>
