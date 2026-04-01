@@ -50,7 +50,7 @@ require_once __DIR__ . '/../../includes/header.php';
 <div class="arac-grid">
     <?php foreach ($tesisler as $t): ?>
     <a href="facility_detail.php?id=<?= $t['id'] ?>" class="arac-card">
-        <div class="arac-card-plaka" style="font-size:16px;"><?= htmlspecialchars($t['firma_adi']) ?></div>
+        <div class="arac-card-plaka"><?= htmlspecialchars($t['firma_adi']) ?></div>
         <div class="arac-card-model"><?= htmlspecialchars($t['firma_adresi']) ?></div>
         <div class="arac-card-meta">
             <span class="badge badge-primary">🏭 Tesis</span>
