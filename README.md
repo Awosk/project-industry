@@ -9,9 +9,9 @@
 
 ## 📌 Proje Hakkında
 
-`Project Industry`, endüstriyel tesislerde veya araç filolarında yağ tüketimini izlemek için geliştirilmiş, **modern arayüz tasarımı** ve **tamamen Nesne Yönelimli (OOP)** sağlam mimariye sahip hızlı bir web uygulamasıdır. Herhangi bir ağır framework (ör. Laravel, Symfony) kullanılmadan; **Saf (Vanilla) PHP 8.x** ve Vanilla JS ile geliştirilmiş MVC benzeri bir katmanlı servis mimarisi ile çalışır. 
+`Project Industry`, endüstriyel tesislerde veya araç filolarında ürün ve sarf malzeme tüketimini izlemek için geliştirilmiş, **modern arayüz tasarımı** ve **tamamen Nesne Yönelimli (OOP)** sağlam mimariye sahip hızlı bir web uygulamasıdır. Herhangi bir ağır framework (ör. Laravel, Symfony) kullanılmadan; **Saf (Vanilla) PHP 8.x** ve Vanilla JS ile geliştirilmiş MVC benzeri bir katmanlı servis mimarisi ile çalışır. 
 
-Personeller görsel kartlar üzerinden saniyeler içinde anlık arama (live search) yaparak araç bulabilir ve yağ çıkışı işleyebilir, yöneticiler ise geçmiş tüm çıkış kayıtlarını, sistem loglarını, asenkron mail kuyruğunu ve veritabanı yedeklerini denetleyebilir.
+Personeller görsel kartlar üzerinden saniyeler içinde anlık arama (live search) yaparak araç bulabilir ve ürün çıkışı işleyebilir, yöneticiler ise geçmiş tüm çıkış kayıtlarını, sistem loglarını, asenkron mail kuyruğunu ve veritabanı yedeklerini denetleyebilir.
 
 ---
 
@@ -23,7 +23,7 @@ Personeller görsel kartlar üzerinden saniyeler içinde anlık arama (live sear
 - **Kart İçi Geçmiş:** Hangi araca/tesise, ne zaman, hangi ürünün, ne kadar ve kim tarafından verildiği doğrudan takip edilebilir.
 
 ### 📋 Operasyon ve Yönetim
-- **Ürün Yönetimi:** Sistemde kullanılan endüstriyel yağların dinamik olarak eklenmesi, düzenlenmesi (Soft Delete desteği ile).
+- **Ürün Yönetimi:** Sistemde kullanılan endüstriyel ürünlerin dinamik olarak eklenmesi, düzenlenmesi (Soft Delete desteği ile).
 - **Araç Türleri (Öncelik Sistemi):** Araçları türlerine (Tır, Damper, Beko vb.) göre kategorize eder ve sıralama önceliği atar.
 
 ### 📨 Asenkron E-Posta Bildirim Sistemi
