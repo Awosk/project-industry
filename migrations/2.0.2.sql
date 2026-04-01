@@ -1,1 +1,0 @@
-ALTER TABLE `products` ADD COLUMN `birim` VARCHAR(20) NOT NULL DEFAULT 'LT' AFTER `urun_adi`;
