@@ -11,6 +11,7 @@
 
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../classes/Kullanici.php';
 girisKontrol();
 
 header('Content-Type: application/json; charset=utf-8');
@@ -22,8 +23,7 @@ if (!in_array($tema, ['light', 'dark'])) {
 }
 
 $ku = mevcutKullanici();
-$pdo->prepare("UPDATE users SET tema = ? WHERE id = ?")
-    ->execute([$tema, $ku['id']]);
+Kullanici::temaGuncelle($pdo, $ku['id'], $tema);
 
 $_SESSION['kullanici_tema'] = $tema;
 

@@ -12,6 +12,7 @@
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/log.php';
+require_once __DIR__ . '/../../classes/Kullanici.php';
 girisKontrol();
 
 $sayfa_basligi = 'Şifre Değiştir';
@@ -30,15 +31,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($yeni !== $tekrar) {
         flash('Yeni şifreler eşleşmiyor.', 'danger');
     } else {
-        $stmt = $pdo->prepare("SELECT sifre FROM users WHERE id=? AND aktif=1");
-        $stmt->execute([$ku['id']]);
-        $mevcut_hash = $stmt->fetchColumn();
+        $kullaniciData = Kullanici::bulAktif($pdo, $ku['id']);
+        $mevcut_hash   = $kullaniciData['sifre'] ?? null;
 
         if (!$mevcut_hash || !password_verify($eski, $mevcut_hash)) {
             flash('Mevcut şifreniz hatalı.', 'danger');
         } else {
-            $pdo->prepare("UPDATE users SET sifre=? WHERE id=?")
-                ->execute([password_hash($yeni, PASSWORD_DEFAULT), $ku['id']]);
+            Kullanici::sifreGuncelle($pdo, $ku['id'], password_hash($yeni, PASSWORD_DEFAULT));
             logYaz($pdo, 'guncelle', 'kullanici', 'Kendi şifresini değiştirdi: ' . $ku['adi'], $ku['id'], null, null, 'lite');
             flash('Şifreniz başarıyla güncellendi.');
             header('Location: profile_password.php'); exit;

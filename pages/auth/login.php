@@ -11,6 +11,7 @@
 
 require_once __DIR__ . '/../../config/database.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../classes/Kullanici.php';
 if (function_exists('smtpAktifMi') === false && file_exists(__DIR__ . '/../../includes/mail.php')) {
     require_once __DIR__ . '/../../includes/mail.php';
 }
@@ -39,11 +40,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sifre = $_POST['sifre'] ?? '';
 
         if ($kadi && $sifre) {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE kullanici_adi=? AND aktif=1");
-            $stmt->execute([$kadi]);
-            $k = $stmt->fetch();
+            $k = Kullanici::bulKullaniciAdi($pdo, $kadi);
 
-            if ($k && password_verify($sifre, $k['sifre'])) {
+            if ($k && $k['aktif'] == 1 && password_verify($sifre, $k['sifre'])) {
                 // Başarılı giriş — sayacı sıfırla, session güvenli yenile
                 bfSifirla($ip);
                 session_regenerate_id(true);
