@@ -178,7 +178,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <input type="text" name="duzenle_tur_adi" id="duzenle_tur_adi" required maxlength="100">
             </div>
             <div class="form-group">
-                <label>Öncelik <span style="font-weight:400;color:var(--muted);font-size:11px;">(küçük = üstte)</span></label>
+                <label>Öncelik <span style="font-weight:400;color:var(--muted);font-size:11px;">(büyük = üstte)</span></label>
                 <input type="number" name="duzenle_oncelik" id="duzenle_oncelik" min="1">
             </div>
             <div style="display:flex;gap:8px;margin-top:16px;">
