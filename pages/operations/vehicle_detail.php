@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['yag_ekle'])) {
         $yeni_id = Islem::aracYagEkle($pdo, $id, $urun_id, $miktar, $tarih, $aciklama, $yag_bakimi, $mevcut_km, $ku['id']);
         $ul = Urun::bulId($pdo, $urun_id);
         
-        $log_msg = $arac['plaka'].' aracına ürün eklendi: '.($ul['urun_kodu']??'').' '.($ul['urun_adi']??'').', '.$miktar.'L';
+        $log_msg = $arac['plaka'].' aracına ürün eklendi: '.($ul['urun_kodu']??'').' '.($ul['urun_adi']??'').', '.$miktar.' '.($ul['birim']??'LT');
         if ($yag_bakimi) $log_msg .= ' [YAĞ BAKIMI - '.($mevcut_km ? number_format($mevcut_km).' KM' : 'KM girilmedi').']';
         if ($aciklama)   $log_msg .= '. Açıklama: '.$aciklama;
         
@@ -83,7 +83,7 @@ if (isset($_GET['yag_sil'])) {
     
     if ($sr) {
         Islem::kayitSil($pdo, $sil_id, $id);
-        $log_msg = $arac['plaka'].' aracından ürün kaydı silindi: '.$sr['urun_kodu'].' '.$sr['urun_adi'].', '.$sr['miktar'].'L';
+        $log_msg = $arac['plaka'].' aracından ürün kaydı silindi: '.$sr['urun_kodu'].' '.$sr['urun_adi'].', '.$sr['miktar'].' '.($sr['birim']??'LT');
         if ($sr['yag_bakimi']) $log_msg .= ' [YAĞ BAKIMI]';
         if ($sr['aciklama'])   $log_msg .= '. Açıklama: '.$sr['aciklama'];
         logYaz($pdo,'sil','arac_kayit',$log_msg,$sil_id,$sr,null,'lite');

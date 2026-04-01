@@ -47,13 +47,13 @@ if (isset($_GET['islendi_toggle'])) {
         $kd = Islem::genelKayitBul($pdo, $toggle_id);
         $hedef = $kd ? ($kd['plaka'] ?? $kd['firma_adi'] ?? '?') : '?';
         $urun  = $kd ? ($kd['urun_kodu'].' '.$kd['urun_adi']) : '?';
-        logYaz($pdo,'guncelle','islendi','Kayıt depoya işlendi: '.$hedef.' — '.$urun.', '.($kd['miktar']??'?').'L', $toggle_id, ['islendi'=>0], ['islendi'=>1,'islendi_kullanici_id'=>$ku['id']], 'lite');
+        logYaz($pdo,'guncelle','islendi','Kayıt depoya işlendi: '.$hedef.' — '.$urun.', '.($kd['miktar']??'?').' '.($kd['birim']??'LT'), $toggle_id, ['islendi'=>0], ['islendi'=>1,'islendi_kullanici_id'=>$ku['id']], 'lite');
     } else {
         Islem::islendiIptal($pdo, $toggle_id);
         $kd = Islem::genelKayitBul($pdo, $toggle_id);
         $hedef = $kd ? ($kd['plaka'] ?? $kd['firma_adi'] ?? '?') : '?';
         $urun  = $kd ? ($kd['urun_kodu'].' '.$kd['urun_adi']) : '?';
-        logYaz($pdo,'guncelle','islendi','İşlendi işareti geri alındı: '.$hedef.' — '.$urun.', '.($kd['miktar']??'?').'L', $toggle_id, ['islendi'=>1], ['islendi'=>0], 'lite');
+        logYaz($pdo,'guncelle','islendi','İşlendi işareti geri alındı: '.$hedef.' — '.$urun.', '.($kd['miktar']??'?').' '.($kd['birim']??'LT'), $toggle_id, ['islendi'=>1], ['islendi'=>0], 'lite');
     }
     $qs = $_GET; unset($qs['islendi_toggle']);
     header('Location: transactions.php?' . http_build_query($qs)); exit;

@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ekle'])) {
         $urun_adi_log = Urun::bulId($pdo, $urun_id);
         
         logYaz($pdo,'ekle','tesis_kayit',
-            $tesis['firma_adi'].' tesisine ürün eklendi: '.($urun_adi_log['urun_kodu']??'').' - '.($urun_adi_log['urun_adi']??'').', '.$miktar.'L, tarih:'.$tarih.'. Açıklama: '.($aciklama ?? 'Yok'),
+            $tesis['firma_adi'].' tesisine ürün eklendi: '.($urun_adi_log['urun_kodu']??'').' - '.($urun_adi_log['urun_adi']??'').', '.$miktar.' '.($urun_adi_log['birim']??'LT').', tarih:'.$tarih.'. Açıklama: '.($aciklama ?? 'Yok'),
             $yeni_id, null,
             ['tesis_id'=>$id,'firma'=>$tesis['firma_adi'],'urun_id'=>$urun_id,'miktar'=>$miktar,'tarih'=>$tarih,'aciklama'=>$aciklama],
             'lite');
@@ -80,7 +80,7 @@ if (isset($_GET['sil'])) {
     if ($sr) {
         Islem::tesisKayitSil($pdo, $sil_id, $id);
         logYaz($pdo,'sil','tesis_kayit',
-            $tesis['firma_adi'].' tesisinden ürün kaydı silindi: '.$sr['urun_kodu'].' - '.$sr['urun_adi'].', '.$sr['miktar'].'L, tarih:'.$sr['tarih'].'. Açıklama: '.($sr['aciklama'] ?? 'Yok'),
+            $tesis['firma_adi'].' tesisinden ürün kaydı silindi: '.$sr['urun_kodu'].' - '.$sr['urun_adi'].', '.$sr['miktar'].' '.($sr['birim']??'LT').', tarih:'.$sr['tarih'].'. Açıklama: '.($sr['aciklama'] ?? 'Yok'),
             $sil_id, $sr, null, 'lite');
     }
     flash('Kayıt silindi.');
