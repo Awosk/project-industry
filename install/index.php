@@ -438,7 +438,7 @@ if ($adim === 3) {
                 </div>
                 <div class="form-group">
                     <label>Veritabanı Adı</label>
-                    <input type="text" name="db_name" id="db_name" placeholder="project_oil"
+                    <input type="text" name="db_name" id="db_name" placeholder="project_industry"
                            value="<?= htmlspecialchars($_SESSION['db_name'] ?? '') ?>">
                 </div>
                 <div class="form-group">

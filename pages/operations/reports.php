@@ -208,29 +208,6 @@ if (!empty($f_urun_ids)) {
     &nbsp;|&nbsp; <?= $genel_adet ?> kayıt
     &nbsp;|&nbsp; Oluşturulma: <?= date('d.m.Y H:i') ?>
 </div>
-<?php else: ?>
-<div class="card" style="padding:14px 16px;">
-    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:center;">
-        <div>
-            <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;">Dönem</div>
-            <div style="font-weight:700;"><?= $donem_etiket ?>: <?= date('d.m.Y', strtotime($tarih_bas)) ?> – <?= date('d.m.Y', strtotime($tarih_bit)) ?></div>
-        </div>
-        <div>
-            <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;">Toplam Miktar</div>
-            <div style="font-weight:700;font-size:16px;color:var(--primary-l);"><?= number_format($genel_toplam, 2, ',', '.') ?></div>
-        </div>
-        <div>
-            <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;">Kayıt Sayısı</div>
-            <div style="font-weight:700;"><?= $genel_adet ?></div>
-        </div>
-        <?php if (!empty($secili_urun_adlari)): ?>
-        <div>
-            <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;">Ürünler</div>
-            <div style="font-weight:600;"><?= htmlspecialchars(implode(', ', $secili_urun_adlari)) ?></div>
-        </div>
-        <?php endif; ?>
-    </div>
-</div>
 <?php endif; ?>
 
 <?php if (!empty($urun_ozet)): ?>
@@ -262,11 +239,6 @@ if (!empty($f_urun_ids)) {
                 <td><strong><?= number_format($o['toplam'], 2, ',', '.') ?> <?= htmlspecialchars($o['birim'] ?? 'LT') ?></strong></td>
             </tr>
             <?php endforeach; ?>
-            <tr style="background:var(--hover);font-weight:700;">
-                <td colspan="2">Genel Toplam</td>
-                <td><?= $genel_adet ?></td>
-                <td><?= number_format($genel_toplam, 2, ',', '.') ?></td>
-            </tr>
             </tbody>
         </table>
     </div>
