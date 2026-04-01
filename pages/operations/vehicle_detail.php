@@ -143,7 +143,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <?php endif; ?>
         <?php if ($son_bakim): ?>
         <div>
-            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Son Ürün Bakımı</div>
+            <div style="font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;">Son Yağ Bakımı</div>
             <div style="font-weight:600;color:var(--warning);">
                 🔧 <?= formatliTarih($son_bakim['tarih']) ?>
                 <?php if ($son_bakim['mevcut_km']): ?> · <?= number_format($son_bakim['mevcut_km']) ?> KM<?php endif; ?>
