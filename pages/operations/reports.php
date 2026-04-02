@@ -221,7 +221,6 @@ if (!empty($f_urun_ids)) {
     <?php foreach ($urun_ozet as $o): ?>
     <tr><td><?= htmlspecialchars($o['urun_kodu']) ?></td><td><?= htmlspecialchars($o['urun_adi']) ?></td><td><?= $o['adet'] ?></td><td><?= number_format($o['toplam'], 2, ',', '.') ?> <?= htmlspecialchars($o['birim'] ?? 'LT') ?></td></tr>
     <?php endforeach; ?>
-    <tr class="toplam-row"><td colspan="2"><strong>GENEL TOPLAM</strong></td><td><strong><?= $genel_adet ?></strong></td><td><strong><?= number_format($genel_toplam, 2, ',', '.') ?></strong></td></tr>
     </tbody>
 </table>
 <?php else: ?>
