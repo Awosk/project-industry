@@ -529,11 +529,15 @@ body {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     border-radius: var(--r-sm);
+    width: 100%;
+    margin-bottom: 10px;
+    border: 1px solid var(--border);
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 600px; /* Force desktop-like width on mobile to prevent squishing */
 }
 
 thead th {
@@ -573,6 +577,7 @@ tbody td {
     padding: 10px 12px;
     font-size: 13px;
     vertical-align: middle;
+    white-space: nowrap;
 }
 
 /* ── BADGES ── */

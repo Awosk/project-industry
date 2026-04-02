@@ -37,7 +37,7 @@ if (isset($_GET['db_test'])) {
     $host = trim($_POST['db_host'] ?? '');
     $user = trim($_POST['db_user'] ?? '');
     $pass = $_POST['db_pass']      ?? '';
-    $name = trim($_POST['db_name'] ?? '');
+    $name = trim($_POST['db_name'] ?? '') ?: 'project_industry';
     try {
         $pdo = new PDO("mysql:host=$host;charset=utf8mb4", $user, $pass, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
@@ -57,7 +57,7 @@ if (isset($_GET['db_test'])) {
 // Adım 2 → Form POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['adim2'])) {
     $_SESSION['db_host']  = trim($_POST['db_host']);
-    $_SESSION['db_name']  = trim($_POST['db_name']);
+    $_SESSION['db_name']  = trim($_POST['db_name']) ?: 'project_industry';
     $_SESSION['db_user']  = trim($_POST['db_user']);
     $_SESSION['db_pass']  = $_POST['db_pass'];
     $_SESSION['site_adi'] = trim($_POST['site_adi']) ?: 'Project Industry';
@@ -81,6 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['adim3']) || isset($_
     $k_adi      = trim($_POST['kullanici_adi']  ?? '');
     $sifre      = $_POST['sifre']               ?? '';
     $sifre2     = $_POST['sifre2']              ?? '';
+    $f_dashboard = isset($_POST['f_dashboard']) ? '1' : '0';
+    $f_stok      = isset($_POST['f_stok']) ? '1' : '0';
 
     if (!$skip_admin) {
         if (!$ad_soyad)         $hatalar[] = 'Ad Soyad zorunludur.';
@@ -133,6 +135,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['adim3']) || isset($_
                     }
                 }
                 $pdo->prepare("INSERT IGNORE INTO system_migrations (versiyon) VALUES (?)")->execute([$ilk_versiyon]);
+
+                // Özellikleri kaydet
+                $pdo->prepare("INSERT INTO system_settings (anahtar, deger) VALUES ('dashboard_aktif', ?) ON DUPLICATE KEY UPDATE deger=VALUES(deger)")->execute([$f_dashboard]);
+                $pdo->prepare("INSERT INTO system_settings (anahtar, deger) VALUES ('stok_yonetimi_aktif', ?) ON DUPLICATE KEY UPDATE deger=VALUES(deger)")->execute([$f_stok]);
 
                 $env = "DB_HOST={$_SESSION['db_host']}\n"
                      . "DB_NAME={$_SESSION['db_name']}\n"
@@ -416,6 +422,25 @@ if ($adim === 3) {
                     <div id="sifre_eslesme" style="font-size:11px;margin-top:4px;"></div>
                 </div>
             </div>
+            
+            <div style="margin-top: 20px; font-weight:700; font-size:15px; margin-bottom:14px; border-top: 1px solid var(--border); padding-top: 15px;">🧩 Sistem Özellikleri</div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--border);">
+                    <input type="checkbox" name="f_dashboard" value="1" style="width:18px;height:18px;accent-color:var(--primary);">
+                    <div>
+                        <div style="font-weight:600;font-size:14px;">Dashboard (Özet Ekranı)</div>
+                        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Araçlar/Tesisler ve İşlemlerle alakalı özetleri gösteren Ana Sayfadır.</div>
+                    </div>
+                </label>
+                <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--bg);padding:10px;border-radius:8px;border:1px solid var(--border);">
+                    <input type="checkbox" name="f_stok" value="1" style="width:18px;height:18px;accent-color:var(--primary);">
+                    <div>
+                        <div style="font-weight:600;font-size:14px;">Stok Yönetimi</div>
+                        <div style="font-size:11px;color:var(--muted);margin-top:2px;">Stok Yönetimi aktif olur. Ürün stoklarını yönetebilir, takibini yapabilirsiniz.</div>
+                    </div>
+                </label>
+            </div>
+
             <div style="display:flex;gap:8px;margin-top:14px;">
                 <a href="?adim=2" class="btn btn-secondary" style="flex:0 0 auto;width:auto;padding:12px 16px;">← Geri</a>
                 <?php if ($admin_var_mi): ?>

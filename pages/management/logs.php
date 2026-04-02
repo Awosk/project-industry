@@ -289,7 +289,27 @@ require_once __DIR__ . '/../../includes/header.php';
                     <span class="log-veri-baslik">🗂️ Silinen Veri:</span>
                     <?php foreach ($eski as $k => $v): ?>
                     <?php if (!in_array($k, ['sifre','aktif']) && $v !== null && $v !== ''): ?>
-                    <span class="log-veri-item"><em><?= htmlspecialchars($k) ?></em>: <?= htmlspecialchars((string)$v) ?></span>
+                    <span class="log-veri-item"><em><?= htmlspecialchars($k) ?></em>: 
+                        <?php if (is_scalar($v)): ?>
+                            <?= htmlspecialchars((string)$v) ?>
+                        <?php elseif (is_array($v)): ?>
+                            <div style="margin-left: 10px; padding-left: 5px; border-left: 2px solid var(--border);">
+                                <?php foreach ($v as $item_k => $item_v): ?>
+                                    <div style="margin-bottom: 2px;">
+                                        <?php if(is_array($item_v)): ?>
+                                            <?php foreach($item_v as $sub_k => $sub_v): ?>
+                                                <span style="color:var(--muted);"><?= htmlspecialchars($sub_k) ?>:</span> <?= htmlspecialchars((string)$sub_v) ?> 
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <span style="color:var(--muted);"><?= htmlspecialchars($item_k) ?>:</span> <?= htmlspecialchars((string)$item_v) ?>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <?= htmlspecialchars(json_encode($v, JSON_UNESCAPED_UNICODE)) ?>
+                        <?php endif; ?>
+                    </span>
                     <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
@@ -299,7 +319,27 @@ require_once __DIR__ . '/../../includes/header.php';
                     <span class="log-veri-baslik">📝 Eklenen Veri:</span>
                     <?php foreach ($yeni as $k => $v): ?>
                     <?php if (!in_array($k, ['sifre']) && $v !== null && $v !== ''): ?>
-                    <span class="log-veri-item"><em><?= htmlspecialchars($k) ?></em>: <?= htmlspecialchars((string)$v) ?></span>
+                    <span class="log-veri-item"><em><?= htmlspecialchars($k) ?></em>: 
+                        <?php if (is_scalar($v)): ?>
+                            <?= htmlspecialchars((string)$v) ?>
+                        <?php elseif (is_array($v)): ?>
+                            <div style="margin-left: 10px; padding-left: 5px; border-left: 2px solid var(--border);">
+                                <?php foreach ($v as $item_k => $item_v): ?>
+                                    <div style="margin-bottom: 2px;">
+                                        <?php if(is_array($item_v)): ?>
+                                            <?php foreach($item_v as $sub_k => $sub_v): ?>
+                                                <span style="color:var(--muted);"><?= htmlspecialchars($sub_k) ?>:</span> <?= htmlspecialchars((string)$sub_v) ?> 
+                                            <?php endforeach; ?>
+                                        <?php else: ?>
+                                            <span style="color:var(--muted);"><?= htmlspecialchars($item_k) ?>:</span> <?= htmlspecialchars((string)$item_v) ?>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <?= htmlspecialchars(json_encode($v, JSON_UNESCAPED_UNICODE)) ?>
+                        <?php endif; ?>
+                    </span>
                     <?php endif; ?>
                     <?php endforeach; ?>
                 </div>
@@ -307,18 +347,62 @@ require_once __DIR__ . '/../../includes/header.php';
                 <?php if ($log['aksiyon'] === 'guncelle' && ($eski || $yeni)): ?>
                 <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:11px;">
                     <?php if ($eski): foreach ($eski as $k => $v): if (in_array($k, ['sifre'])) continue; ?>
-                    <span class="log-veri-eski-span">
+                    <span class="log-veri-eski-span" style="display:block; margin-bottom:4px;">
                         <em><?= htmlspecialchars($k) ?></em>:
-                        <?= ($v !== null && $v !== '') ? htmlspecialchars((string)$v) : '<span class="text-empty">boş</span>' ?>
+                        <?php if ($v === null || $v === ''): ?>
+                            <span class="text-empty">boş</span>
+                        <?php elseif (is_scalar($v)): ?>
+                            <?= htmlspecialchars((string)$v) ?>
+                        <?php elseif (is_array($v)): ?>
+                            <div style="margin-left: 10px; padding-left: 5px; border-left: 2px solid var(--danger); margin-top:2px; font-size:10px;">
+                                <?php foreach ($v as $item_k => $item_v): ?>
+                                    <div style="margin-bottom: 2px;">
+                                        <?php if(is_array($item_v)): ?>
+                                            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                                            <?php foreach($item_v as $sub_k => $sub_v): ?>
+                                                <span><span style="color:var(--muted);"><?= htmlspecialchars($sub_k) ?>:</span> <?= htmlspecialchars((string)$sub_v) ?></span> 
+                                            <?php endforeach; ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <span style="color:var(--muted);"><?= htmlspecialchars($item_k) ?>:</span> <?= htmlspecialchars((string)$item_v) ?>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <?= htmlspecialchars(json_encode($v, JSON_UNESCAPED_UNICODE)) ?>
+                        <?php endif; ?>
                     </span>
                     <?php endforeach; endif; ?>
                     <?php if ($eski && $yeni): ?>
                     <span style="color:var(--muted);font-size:13px;">→</span>
                     <?php endif; ?>
                     <?php if ($yeni): foreach ($yeni as $k => $v): if (in_array($k, ['sifre'])) continue; ?>
-                    <span class="log-veri-yeni-span">
+                    <span class="<?= $eski && $yeni ? 'log-veri-yeni-span' : 'log-veri-item' ?>" style="display:block; margin-bottom:4px;">
                         <em><?= htmlspecialchars($k) ?></em>:
-                        <?= ($v !== null && $v !== '') ? htmlspecialchars((string)$v) : '<span class="text-empty">boş</span>' ?>
+                        <?php if ($v === null || $v === ''): ?>
+                            <span class="text-empty">boş</span>
+                        <?php elseif (is_scalar($v)): ?>
+                            <?= htmlspecialchars((string)$v) ?>
+                        <?php elseif (is_array($v)): ?>
+                            <div style="margin-left: 10px; padding-left: 5px; border-left: 2px solid var(--success); margin-top:2px; font-size:10px;">
+                                <?php foreach ($v as $item_k => $item_v): ?>
+                                    <div style="margin-bottom: 2px;">
+                                        <?php if(is_array($item_v)): ?>
+                                            <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                                            <?php foreach($item_v as $sub_k => $sub_v): ?>
+                                                <span><span style="color:var(--muted);"><?= htmlspecialchars($sub_k) ?>:</span> <?= htmlspecialchars((string)$sub_v) ?></span> 
+                                            <?php endforeach; ?>
+                                            </div>
+                                        <?php else: ?>
+                                            <span style="color:var(--muted);"><?= htmlspecialchars($item_k) ?>:</span> <?= htmlspecialchars((string)$item_v) ?>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php else: ?>
+                            <?= htmlspecialchars(json_encode($v, JSON_UNESCAPED_UNICODE)) ?>
+                        <?php endif; ?>
                     </span>
                     <?php endforeach; endif; ?>
                 </div>

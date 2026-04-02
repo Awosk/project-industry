@@ -41,6 +41,10 @@
     if (isset($pdo)) {
         aktifKullaniciKontrol($pdo);
     }
+    
+    require_once __DIR__ . '/../classes/SistemAyarlari.php';
+    $is_dashboard = SistemAyarlari::getir($pdo, 'dashboard_aktif', '0') === '1';
+    $is_stok = SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', '0') === '1';
 
     $ku = mevcutKullanici();
     $curr = basename($_SERVER['PHP_SELF']);
@@ -68,10 +72,17 @@
 
     <!-- Desktop linkler -->
     <ul class="nav-links-desktop">
-        <li><a href="<?= ROOT_URL ?>index.php" <?= $curr=='index.php'?'class="active"':'' ?>>🚗 Araçlar</a></li>
+        <?php if ($is_dashboard): ?>
+        <li><a href="<?= ROOT_URL ?>index.php" <?= $curr=='index.php'?'class="active"':'' ?>>📊 Dashboard</a></li>
+        <li><a href="<?= ROOT_URL ?>pages/operations/vehicles_cards.php" <?= $curr=='vehicles_cards.php'?'class="active"':'' ?>>🚗 Araçlar</a></li>
+        <?php else: ?>
+        <li><a href="<?= ROOT_URL ?>index.php" <?= in_array($curr, ['index.php', 'vehicles_cards.php'])?'class="active"':'' ?>>🚗 Araçlar</a></li>
+        <?php endif; ?>
+        
         <li><a href="<?= ROOT_URL ?>pages/operations/facilities.php" <?= $curr=='facilities.php'?'class="active"':'' ?>>🏭 Tesisler</a></li>
-        <li class="dropdown">
-            <a href="#">📁 Yönet ▾</a>
+        
+        <li class="dropdown <?= in_array($curr, ['products.php','vehicles.php','vehicle_types.php','facilities_management.php']) ? 'active' : '' ?>">
+            <a href="#" <?= in_array($curr, ['products.php','vehicles.php','vehicle_types.php','facilities_management.php']) ? 'class="active"' : '' ?>>📁 Yönet ▾</a>
             <ul class="dropdown-menu">
                 <li><a href="<?= ROOT_URL ?>pages/operations/products.php">🛢️ Ürün Yönetimi</a></li>
                 <li><a href="<?= ROOT_URL ?>pages/operations/vehicles.php">🚗 Araç Yönetimi</a></li>
@@ -79,11 +90,23 @@
                 <li><a href="<?= ROOT_URL ?>pages/operations/facilities_management.php">🏭 Tesis Yönetimi</a></li>
             </ul>
         </li>
+        
+        <?php if ($is_stok): ?>
+        <li class="dropdown <?= in_array($curr, ['stocks.php','suppliers.php','invoices.php','invoice_detail.php']) ? 'active' : '' ?>">
+            <a href="#" <?= in_array($curr, ['stocks.php','suppliers.php','invoices.php','invoice_detail.php']) ? 'class="active"' : '' ?>>📦 Stok ▾</a>
+            <ul class="dropdown-menu">
+                <li><a href="<?= ROOT_URL ?>pages/operations/stocks.php">📊 Stoklar</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/operations/suppliers.php">🤝 Tedarikçiler</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/operations/invoices.php">📄 Faturalar (Giriş)</a></li>
+            </ul>
+        </li>
+        <?php endif; ?>
+
         <li><a href="<?= ROOT_URL ?>pages/operations/transactions.php" <?= $curr=='transactions.php'?'class="active"':'' ?>>📋 İşlemler</a></li>
         <li><a href="<?= ROOT_URL ?>pages/operations/reports.php" <?= $curr=='reports.php'?'class="active"':'' ?>>📊 Raporlar</a></li>
         <?php if (isAdmin()): ?>
-        <li class="dropdown <?= in_array($curr, ['users.php','logs.php','backup.php']) ? 'active' : '' ?>">
-            <a href="#" <?= in_array($curr, ['users.php','logs.php','backup.php']) ? 'class="active"' : '' ?>>⚙️ Yönetim ▾</a>
+        <li class="dropdown <?= in_array($curr, ['users.php','logs.php','backup.php','update.php','system_settings.php','mail_queue.php']) ? 'active' : '' ?>">
+            <a href="#" <?= in_array($curr, ['users.php','logs.php','backup.php','update.php','system_settings.php','mail_queue.php']) ? 'class="active"' : '' ?>>⚙️ Yönetim ▾</a>
             <ul class="dropdown-menu">
                 <li><a href="<?= ROOT_URL ?>pages/management/users.php">👥 Kullanıcı Yönetimi</a></li>
                 <li><a href="<?= ROOT_URL ?>pages/management/logs.php">🔍 Sistem Kayıtları</a></li>
@@ -111,15 +134,29 @@
     <div class="nav-drawer-panel">
         <ul class="nav-drawer-links">
             <li><span class="drawer-section">Ana Menü</span></li>
+            <?php if ($is_dashboard): ?>
+            <li><a href="<?= ROOT_URL ?>pages/operations/dashboard.php" onclick="closeDrawer()">📊 Dashboard</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/operations/vehicles_cards.php" onclick="closeDrawer()">🚗 Araçlar</a></li>
+            <?php else: ?>
             <li><a href="<?= ROOT_URL ?>index.php" onclick="closeDrawer()">🚗 Araçlar</a></li>
+            <?php endif; ?>
             <li><a href="<?= ROOT_URL ?>pages/operations/facilities.php" onclick="closeDrawer()">🏭 Tesisler</a></li>
             <li><a href="<?= ROOT_URL ?>pages/operations/transactions.php" onclick="closeDrawer()">📋 İşlemler</a></li>
             <li><a href="<?= ROOT_URL ?>pages/operations/reports.php" onclick="closeDrawer()">📊 Raporlar</a></li>
+            
             <li><span class="drawer-section">Kayıtlar</span></li>
             <li><a href="<?= ROOT_URL ?>pages/operations/products.php" onclick="closeDrawer()">🛢️ Ürünler</a></li>
             <li><a href="<?= ROOT_URL ?>pages/operations/vehicles.php" onclick="closeDrawer()">🚗 Araç Yönetimi</a></li>
             <li><a href="<?= ROOT_URL ?>pages/operations/vehicle_types.php" onclick="closeDrawer()">🚗 Araç Türü Yönetimi</a></li>
             <li><a href="<?= ROOT_URL ?>pages/operations/facilities_management.php" onclick="closeDrawer()">🏭 Tesis Yönetimi</a></li>
+            
+            <?php if ($is_stok): ?>
+            <li><span class="drawer-section">Stok</span></li>
+            <li><a href="<?= ROOT_URL ?>pages/operations/stocks.php" onclick="closeDrawer()">📊 Stoklar</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/operations/suppliers.php" onclick="closeDrawer()">🤝 Tedarikçiler</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/operations/invoices.php" onclick="closeDrawer()">📄 Faturalar (Giriş)</a></li>
+            <?php endif; ?>
+
             <?php if (isAdmin()): ?>
             <li><span class="drawer-section">Yönetim</span></li>
             <li><a href="<?= ROOT_URL ?>pages/management/users.php" onclick="closeDrawer()">👥 Kullanıcı Yönetimi</a></li>
@@ -143,7 +180,7 @@
 
 <!-- Bottom Nav -->
 <nav class="bottom-nav">
-    <a href="<?= ROOT_URL ?>index.php" class="<?= $curr=='index.php'?'active':'' ?>">
+    <a href="<?= ROOT_URL ?>pages/operations/vehicles_cards.php" class="<?= in_array($curr, ['index.php', 'vehicles_cards.php'])?'active':'' ?>">
         <span class="bn-icon">🚗</span>Araçlar
     </a>
     <a href="<?= ROOT_URL ?>pages/operations/facilities.php" class="<?= $curr=='facilities.php'?'active':'' ?>">

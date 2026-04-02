@@ -80,6 +80,9 @@ if (isset($_GET['sil'])) {
 
 $urunler = Urun::listeleDetayli($pdo);
 
+require_once __DIR__ . '/../../classes/SistemAyarlari.php';
+$is_stok = SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', '0') === '1';
+
 require_once __DIR__ . '/../../includes/header.php';
 ?>
 
@@ -118,7 +121,17 @@ require_once __DIR__ . '/../../includes/header.php';
     <?php else: ?>
     <div class="table-wrap">
         <table>
-            <thead><tr><th>#</th><th>Kod</th><th>Ürün Adı</th><th>Birim</th><th>Ekleyen</th><th>İşlem</th></tr></thead>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Kod</th>
+                    <th>Ürün Adı</th>
+                    <th>Birim</th>
+                    <?php if($is_stok): ?><th>Mevcut Stok</th><?php endif; ?>
+                    <th>Ekleyen</th>
+                    <th>İşlem</th>
+                </tr>
+            </thead>
             <tbody>
             <?php foreach ($urunler as $i => $u): ?>
             <tr>
@@ -126,6 +139,9 @@ require_once __DIR__ . '/../../includes/header.php';
                 <td><strong><?= htmlspecialchars($u['urun_kodu']) ?></strong></td>
                 <td><?= htmlspecialchars($u['urun_adi']) ?></td>
                 <td><span class="badge badge-info"><?= htmlspecialchars($u['birim'] ?? 'LT') ?></span></td>
+                <?php if($is_stok): ?>
+                <td style="color:<?= $u['stok'] > 0 ? 'var(--success)' : 'var(--danger)' ?>;font-weight:bold;"><?= (float)$u['stok'] ?></td>
+                <?php endif; ?>
                 <td><?= htmlspecialchars($u['ad_soyad'] ?? '-') ?></td>
                 <td style="display:flex;gap:6px;flex-wrap:wrap;">
                     <button class="btn btn-sm btn-secondary"

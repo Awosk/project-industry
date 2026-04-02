@@ -15,33 +15,44 @@ Personeller görsel kartlar üzerinden saniyeler içinde anlık arama (live sear
 
 ---
 
-## ✨ Temel Özellikler
+## ✨ Temel Özellikler (v2.0.0 Yenilikleri)
+
+### 📊 Modern Dashboard & İstatistikler
+- **Sistem Özeti:** Aktif araç, tesis, ürün sayılarını ve bugünkü işlem trafiğini anlık takip edin.
+- **Son İşlemler:** Yapılan son 5 işlemi anasayfadan hızlıca görün.
+- **Mobil Uyumluluk:** Mobilde alt alta yığılmayan, kompakt 2x2 grid yapısı.
+
+### 📦 Gelişmiş Stok Yönetimi
+- **Tam Takip:** Ürünlerin giriş (fatura) ve çıkış (araç/tesis kaydı) hareketlerini otomatik izleyin.
+- **Tedarikçi Yönetimi:** Stok girişlerini tedarikçi bazlı faturalandırın.
+- **Manuel Müdahale:** Sayım farkları için hızlı giriş, çıkış ve stok eşitleme modülleri.
+- **Akıllı Dengeleme:** Kayıt düzenleme veya silme işlemlerinde stok bakiyeleri otomatik iade edilir/eşitlenir.
 
 ### 🪪 Görsel Kart Arayüzü & Anında (Live) Arama
-- **Modern Kart Arayüzü:** Araç ve tesisler ekran üzerinde temiz, duyarlı ve görsel kartlar halinde listelenir.
-- **Anında Dinamik Filtreleme:** Arama çubuğuna yazmaya başladığınız an (sayfa yenilenmeden) saniyesinde sonuçlar JavaScript ile filtrelenir.
-- **Kart İçi Geçmiş:** Hangi araca/tesise, ne zaman, hangi ürünün, ne kadar ve kim tarafından verildiği doğrudan takip edilebilir.
+- **Modern Kart Arayüzü:** Araç ve tesisler ekran üzerinde temiz ve görsel kartlar halinde listelenir.
+- **Anında Dinamik Filtreleme:** Yazmaya başladığınız an sonuçlar saniyesinde JavaScript ile filtrelenir.
 
 ### 📋 Operasyon ve Yönetim
-- **Ürün Yönetimi:** Sistemde kullanılan endüstriyel ürünlerin dinamik olarak eklenmesi, düzenlenmesi (Soft Delete desteği ile).
-- **Araç Türleri (Öncelik Sistemi):** Araçları türlerine (Tır, Damper, Beko vb.) göre kategorize eder ve sıralama önceliği atar.
+- **Ürün Yönetimi:** Sistemde kullanılan ürünlerin birim ve stok takibi ile yönetilmesi.
+- **Araç Türleri (Öncelik Sistemi):** Araç kategorizasyonu ve sıralama önceliği.
 
 ### 📨 Asenkron E-Posta Bildirim Sistemi
-- **Akıllı Mail Kuyruğu (Queue):** Mailler web sayfasını yavaşlatmadan arka planda sıraya eklenir ve arka plan işleyicisi (`mail_worker.php`) tarafından sırayla gönderilir.
-- **Limit & Kilit Mekanizmaları:** Spam kısıtlamaları ve race-condition koruması (`FOR UPDATE` SQL kilidi) kusursuz şekilde devrededir.
+- **Akıllı Mail Kuyruğu (Queue):** Sayfa yavaşlamadan arka planda asenkron mail gönderimi.
+- **Limit & Kilit:** Spam koruması ve race-condition önleme.
 
-### 🏗️ Sağlam Yazılım Mimarisi (v2.0+)
-- **Sınıf Tabanlı (OOP) Veri İşleme:** Hiçbir görünüm/arayüz (HTML) sayfasında doğrudan `$pdo->query` bulunmaz. Veriler `Arac`, `Kullanici`, `SistemGuncelleme` gibi izole servis sınıflarından yönetilir.
-- **Güvenlik Çemberi:** Otomatik CSRF token doğrulaması, Brute-force deneme-yanılma koruması, yetki kontrolleri (`girisKontrol()` vs.) ve kapalı dizin (`classes/`, `includes/`) koruması mevcuttur.
+### 🏗️ Yazılım Mimarisi & Güvenlik
+- **Saf OOP Mimari:** İş mantığı tamamen servis sınıflarında (classes/) toplanmıştır.
+- **Gelişmiş JSON Loglama:** Her işlemin "Eski" ve "Yeni" veri detayları JSON formatında tam şeffaflıkla kaydedilir.
+- **Güvenlik:** CSRF koruması, Brute-force koruması ve yetki hiyerarşisi.
 
 ---
 
 ## 🛠️ Yönetim Paneli (Sadece Yönetici / Admin)
 
-- **Kapsamlı Loglama:** Sistemde yapılan her ekleme, silme, şifre değiştirme işlemi loglanır ve paneldan izlenebilir.
-- **SMTP Port Otomasyonu:** Dinamik şifreleme ve deneme maili yetenekleriyle ayarlanabilir.
-- **Seçmeli Veritabanı Yedekleme:** Tüm tablo yapılarını ve dataları bir `.sql` dosyasına yedekler (`SistemYedek` servisi üzerinden tam izole).
-- **Güvenli Sistem Güncelleme:** GitHub üzerinden yayınlanan son kararlı sürümü otomatik olarak indrip kurar ve veritabanı migration (.sql) dosyalarını otomatik uygular.
+- **Aç/Kapat (Toggle) Özellikler:** Dashboard ve Stok Yönetimi özellikleri ayarlar sayfasından istendiği an kapatılarak sistem "Hızlı Kullanım" moduna geçirilebilir.
+- **Kapsamlı Loglama:** Yapılan her işlemin tüm teknik detaylarıyla izlenebilmesi.
+- **SMTP Port Otomasyonu:** Kolay mail ayarları ve test aracı.
+- **Veritabanı Yedekleme & Güncelleme:** Tek tıkla yedek alma ve GitHub üzerinden otomatik sistem güncelleme.
 
 ---
 
@@ -49,29 +60,28 @@ Personeller görsel kartlar üzerinden saniyeler içinde anlık arama (live sear
 
 - **Apache Web Server** (.htaccess desteği aktif olmalı)
 - **PHP ≥ 8.0**
-  - `PDO` & `PDO MySQL` (Veritabanı için)
-  - `ZipArchive` (Sistem veya eklenti güncellemeleri için)
-  - `file_get_contents` ve `allow_url_fopen` (GitHub API bağlantıları için aktif olmalı)
+  - `PDO` & `PDO MySQL`
+  - `ZipArchive`
+  - `file_get_contents` ve `allow_url_fopen`
 - **MySQL** veya **MariaDB** veritabanı sunucusu
 
 ---
 
 ## 🚀 Kurulum Adımları (Downloader)
 
-Uygulamanın çalışır duruma gelmesi için klasik `git clone` yöntemi yerine özel hazırladığımız **Downloader** sihirbazını kullanmanız şiddetle tavsiye edilir:
+Uygulamanın çalışır duruma gelmesi için özel hazırladığımız **Downloader** sihirbazını kullanmanız önerilir:
 
-1. Kurulum yapacağınız sunucu / hosting üzerinde projenin çalışacağı ve dışarıya açık olan boş bir klasör (örn. `htdocs/`) hazırlayın.
-2. Github **[Releases](https://github.com/Awosk/project-industry/releases)** sayfamızdan, indirmek istediğiniz son sürüme tıklayın. İndirilecekler arşivinden sadece **`downloader.php`** dosyasını ana dizininize atın.
-3. Web tarayıcınızdan `http://siteniz.com/downloader.php` adresine gidin. Script, saniyeler içinde GitHub alt yapısından en güncel Project Industry sürümünü çekip sunucunuza kuracaktır.
-4. Dosyalar çıkarıldıktan sonra script sizi otomatik olarak **`/install`** (kurulum sihirbazı) dizinine yönlendirir.
-5. Veritabanı bilgilerinizi girin, Admin hesabınızı oluşturun ve bitirin!
-6. *Opsiyonel: Arka plan mail gönderimleri için sunucunuza `cron/mail_worker.php` dosyasını her dakikada bir tetikleyen bir cron job ekleyin.*
+1. Sunucunuzda boş bir klasör (örn. `htdocs/`) hazırlayın.
+2. Github **[Releases](https://github.com/Awosk/project-industry/releases)** sayfasından **`downloader.php`** dosyasını indirin ve dizine atın.
+3. Web tarayıcınızdan `downloader.php`'ye gidin. Script sürümü çekip kuracaktır.
+4. Kurulum sihirbazında (`/install`) veritabanı bilgilerinizi girin ve **Dashboard/Stok** gibi özellikleri aktif edip Admin hesabınızı oluşturun.
+5. Kurulum bittiğinde `install/` klasörünü silin.
 
 ---
 
 ## 📄 Lisans
 
-Bu proje **GNU GPL v3** Lisansı ile özgür bir yazılımdır. Koddaki değiştirme/dağıtma işlemleri sırasında orijinal lisansı korumanız gereklidir. Daha fazla bilgi için proje kökündeki `LICENSE` dosyasına göz atabilirsiniz.
+Bu proje **GNU GPL v3** Lisansı ile özgür bir yazılımdır.
 
 ## ✉️ İletişim
 

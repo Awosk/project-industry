@@ -11,6 +11,13 @@ class SistemAyarlari {
             ->execute([$anahtar, $deger]);
     }
 
+    public static function getir($pdo, $anahtar, $varsayilan = '') {
+        $stmt = $pdo->prepare("SELECT deger FROM system_settings WHERE anahtar = ?");
+        $stmt->execute([$anahtar]);
+        $res = $stmt->fetch();
+        return $res ? $res['deger'] : $varsayilan;
+    }
+
     public static function cooldownIptal($pdo) {
         $pdo->prepare("UPDATE system_settings SET deger = '' WHERE anahtar = 'mail_cooldown_bitis'")->execute();
         $pdo->exec("UPDATE mail_queue SET status = 'cancelled' WHERE status = 'paused'");

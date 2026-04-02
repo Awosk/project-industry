@@ -63,6 +63,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cooldown_iptal'])) {
     header('Location: system_settings.php'); exit;
 }
 
+// ── ÖZELLİK AYARLARINI KAYDET ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ozellik_kaydet'])) {
+    csrfDogrula();
+    $d_aktif = isset($_POST['dashboard_aktif']) ? '1' : '0';
+    $s_aktif = isset($_POST['stok_yonetimi_aktif']) ? '1' : '0';
+    SistemAyarlari::ayarKaydet($pdo, 'dashboard_aktif', $d_aktif);
+    SistemAyarlari::ayarKaydet($pdo, 'stok_yonetimi_aktif', $s_aktif);
+    flash('Sistem özellikleri kaydedildi.');
+    header('Location: system_settings.php'); exit;
+}
+
 // ── TEST MAILI GÖNDER ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['test_mail'])) {
     csrfDogrula();
@@ -158,6 +169,31 @@ require_once __DIR__ . '/../../includes/header.php';
 
 <div class="page-header">
     <h1><span>⚙️</span> Sistem Ayarları</h1>
+</div>
+
+<!-- ── SİSTEM ÖZELLİKLERİ ── -->
+<div class="card">
+    <div class="card-title">🧩 Sistem Özellikleri</div>
+    <form method="post">
+        <?= csrfInput() ?>
+        <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:15px;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--card);padding:12px;border-radius:8px;border:1px solid var(--border);flex:1;">
+                <input type="checkbox" name="dashboard_aktif" value="1" <?= SistemAyarlari::getir($pdo, 'dashboard_aktif', '0') === '1' ? 'checked' : '' ?> style="width:20px;height:20px;accent-color:var(--primary);">
+                <div>
+                    <div style="font-weight:600;font-size:14px;">Dashboard (Özet Ekranı)</div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:2px;">Araçlar/Tesisler ve İşlemlerle alakalı özetleri gösteren Ana Sayfadır.</div>
+                </div>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--card);padding:12px;border-radius:8px;border:1px solid var(--border);flex:1;">
+                <input type="checkbox" name="stok_yonetimi_aktif" value="1" <?= SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', '0') === '1' ? 'checked' : '' ?> style="width:20px;height:20px;accent-color:var(--primary);">
+                <div>
+                    <div style="font-weight:600;font-size:14px;">Stok Yönetimi</div>
+                    <div style="font-size:12px;color:var(--muted);margin-top:2px;">Stok Yönetimi aktif olur. Ürün stoklarını yönetebilir, takibini yapabilirsiniz.</div>
+                </div>
+            </label>
+        </div>
+        <button type="submit" name="ozellik_kaydet" class="btn btn-primary">💾 Kaydet</button>
+    </form>
 </div>
 
 <!-- ── SMTP AYARLARI ── -->

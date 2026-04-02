@@ -17,82 +17,16 @@ if (!file_exists(__DIR__ . '/.env')) {
 
 require_once __DIR__ . '/config/database.php';
 require_once __DIR__ . '/includes/auth.php';
+require_once __DIR__ . '/classes/SistemAyarlari.php';
 girisKontrol();
 
-if (isset($_GET['hata']) && $_GET['hata'] === 'yetki') {
-    flash('Bu sayfaya erişim yetkiniz bulunmuyor.', 'danger');
+$isMobile = preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $_SERVER["HTTP_USER_AGENT"] ?? '');
+
+if (SistemAyarlari::getir($pdo, 'dashboard_aktif', '0') === '1' && !$isMobile) {
+    require_once __DIR__ . '/pages/operations/dashboard.php';
+    exit;
 }
 
-require_once __DIR__ . '/classes/Arac.php';
-
-$sayfa_basligi = 'Araçlar';
-
-$araclar = Arac::tumAraclar($pdo);
-
-$arama = trim($_GET['q'] ?? '');
-if ($arama) {
-    $araclar = array_filter($araclar, function($a) use ($arama) {
-        return stripos($a['plaka'], $arama) !== false
-            || stripos($a['marka_model'], $arama) !== false
-            || stripos($a['tur_adi'] ?? '', $arama) !== false;
-    });
-}
-
-require_once __DIR__ . '/includes/header.php';
-?>
-
-<div class="page-header">
-    <h1><span>🚗</span> Araçlar</h1>
-    <a href="pages/operations/vehicles.php" class="btn btn-primary btn-sm">➕ Araç Ekle</a>
-</div>
-
-<div class="card" style="padding:12px 16px; margin-bottom:14px;">
-    <div style="display:flex; gap:8px;">
-        <input type="text" id="liveArama" value="<?= htmlspecialchars($arama) ?>" placeholder="🔍  Plaka, model veya tür anında ara..." style="flex:1;" oninput="canliArama()">
-        <?php if ($arama): ?>
-        <a href="index.php" class="btn btn-secondary btn-sm">✕</a>
-        <?php endif; ?>
-    </div>
-</div>
-
-<?php if (empty($araclar)): ?>
-<div class="alert alert-info">Henüz araç kaydı yok. <a href="pages/operations/vehicles.php" class="btn btn-sm btn-primary" style="margin-left:8px">➕ Ekle</a></div>
-<?php else: ?>
-<div class="arac-grid">
-    <?php foreach ($araclar as $a): ?>
-    <a href="pages/operations/vehicle_detail.php?id=<?= $a['id'] ?>" class="arac-card">
-        <div class="arac-card-plaka"><?= htmlspecialchars($a['plaka']) ?></div>
-        <div class="arac-card-model"><?= htmlspecialchars($a['marka_model']) ?></div>
-        <div class="arac-card-meta">
-            <span class="badge badge-info arac-card-tur"><?= htmlspecialchars($a['tur_adi'] ?? '—') ?></span>
-            <span class="arac-card-sayi">
-                <?php if ($a['kayit_sayisi'] > 0): ?>
-                📋 <?= $a['kayit_sayisi'] ?> kayıt
-                <?php if ($a['son_kayit']): ?>
-                · <?= formatliTarih($a['son_kayit']) ?>
-                <?php endif; ?>
-                <?php else: ?>
-                <span style="color:var(--muted)">Kayıt yok</span>
-                <?php endif; ?>
-            </span>
-        </div>
-    </a>
-    <?php endforeach; ?>
-</div>
-<?php endif; ?>
-
-<script>
-function canliArama() {
-    var val = document.getElementById('liveArama').value.toLowerCase();
-    var kartlar = document.querySelectorAll('.arac-card');
-    kartlar.forEach(function(kart) {
-        if (kart.textContent.toLowerCase().indexOf(val) > -1) {
-            kart.style.display = '';
-        } else {
-            kart.style.display = 'none';
-        }
-    });
-}
-</script>
-
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+// Eğer dashboard aktif değilse veya mobil cihazdan giriliyorsa, araçlar sayfasını yükle
+require_once __DIR__ . '/pages/operations/vehicles_cards.php';
+exit;

@@ -4,11 +4,27 @@
  * Copyright (C) 2026 Awosk
  */
 
+require_once __DIR__ . '/SistemAyarlari.php';
+
 class Islem {
     public static function aracYagEkle($pdo, $arac_id, $urun_id, $miktar, $tarih, $aciklama, $yag_bakimi, $mevcut_km, $olusturan_id) {
-        $stmt = $pdo->prepare("INSERT INTO records (kayit_turu,arac_id,urun_id,miktar,tarih,aciklama,yag_bakimi,mevcut_km,olusturan_id) VALUES ('arac',?,?,?,?,?,?,?,?)");
-        $stmt->execute([$arac_id, $urun_id, $miktar, $tarih, $aciklama ?: null, $yag_bakimi, $mevcut_km, $olusturan_id]);
-        return $pdo->lastInsertId();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare("INSERT INTO records (kayit_turu,arac_id,urun_id,miktar,tarih,aciklama,yag_bakimi,mevcut_km,olusturan_id) VALUES ('arac',?,?,?,?,?,?,?,?)");
+            $stmt->execute([$arac_id, $urun_id, $miktar, $tarih, $aciklama ?: null, $yag_bakimi, $mevcut_km, $olusturan_id]);
+            $kayit_id = $pdo->lastInsertId();
+            
+            if ((int)SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', 0) === 1) {
+                $pdo->prepare("UPDATE products SET stok = stok - ? WHERE id = ?")->execute([$miktar, $urun_id]);
+                $pdo->prepare("INSERT INTO stock_movements (urun_id, islem_turu, miktar, kayit_id, aciklama, olusturan_id) VALUES (?, 'cikis', ?, ?, 'Araç Çıkışı', ?)")
+                    ->execute([$urun_id, $miktar, $kayit_id, $olusturan_id]);
+            }
+            $pdo->commit();
+            return $kayit_id;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 
     public static function aracKayitBul($pdo, $kayit_id, $arac_id) {
@@ -22,8 +38,46 @@ class Islem {
     }
 
     public static function kayitGuncelle($pdo, $kayit_id, $urun_id, $miktar, $tarih, $aciklama, $yag_bakimi = 0, $mevcut_km = null) {
-        return $pdo->prepare("UPDATE records SET urun_id=?, miktar=?, tarih=?, aciklama=?, yag_bakimi=?, mevcut_km=? WHERE id=?")
-            ->execute([$urun_id, $miktar, $tarih, $aciklama ?: null, $yag_bakimi, $mevcut_km, $kayit_id]);
+        $pdo->beginTransaction();
+        try {
+            if ((int)SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', 0) === 1) {
+                // Mevcut stok hareketini bul
+                $sm_stmt = $pdo->prepare("SELECT * FROM stock_movements WHERE kayit_id = ? LIMIT 1");
+                $sm_stmt->execute([$kayit_id]);
+                $mevcut_hareket = $sm_stmt->fetch();
+
+                if ($mevcut_hareket) {
+                    // 1. Eski stoğu iade et
+                    $pdo->prepare("UPDATE products SET stok = stok + ? WHERE id = ?")
+                        ->execute([$mevcut_hareket['miktar'], $mevcut_hareket['urun_id']]);
+                    
+                    // 2. Yeni stoğu düş
+                    $pdo->prepare("UPDATE products SET stok = stok - ? WHERE id = ?")
+                        ->execute([$miktar, $urun_id]);
+                    
+                    // 3. Stok hareketini güncelle
+                    $pdo->prepare("UPDATE stock_movements SET urun_id = ?, miktar = ?, tarih = NOW(), aciklama = ? WHERE id = ?")
+                        ->execute([$urun_id, $miktar, 'Kayıt Güncellendi: ' . ($aciklama ?: 'Açıklama yok'), $mevcut_hareket['id']]);
+                } else {
+                    // Hareket yoksa (sonradan aktif edildiyse) yeni hareket oluştur
+                    $pdo->prepare("UPDATE products SET stok = stok - ? WHERE id = ?")
+                        ->execute([$miktar, $urun_id]);
+                    
+                    $pdo->prepare("INSERT INTO stock_movements (urun_id, islem_turu, miktar, kayit_id, aciklama, tarih) VALUES (?, 'cikis', ?, ?, ?, NOW())")
+                        ->execute([$urun_id, $miktar, $kayit_id, 'Kayıt Güncellendi (Yeni Hareket)']);
+                }
+            }
+
+            // Ana kaydı güncelle
+            $res = $pdo->prepare("UPDATE records SET urun_id = ?, miktar = ?, tarih = ?, aciklama = ?, yag_bakimi = ?, mevcut_km = ? WHERE id = ?")
+                ->execute([$urun_id, $miktar, $tarih, $aciklama ?: null, $yag_bakimi, $mevcut_km, $kayit_id]);
+
+            $pdo->commit();
+            return $res;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
     
     public static function aracKayitSilBul($pdo, $kayit_id, $arac_id) {
@@ -33,7 +87,25 @@ class Islem {
     }
 
     public static function kayitSil($pdo, $kayit_id, $arac_id) {
-        return $pdo->prepare("UPDATE records SET aktif=0 WHERE id=? AND arac_id=?")->execute([$kayit_id, $arac_id]);
+        $pdo->beginTransaction();
+        try {
+            if ((int)SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', 0) === 1) {
+                $sm = $pdo->prepare("SELECT * FROM stock_movements WHERE kayit_id=?");
+                $sm->execute([$kayit_id]);
+                $mevcut_hareket = $sm->fetch();
+
+                if ($mevcut_hareket) {
+                    $pdo->prepare("UPDATE products SET stok = stok + ? WHERE id=?")->execute([$mevcut_hareket['miktar'], $mevcut_hareket['urun_id']]);
+                    $pdo->prepare("DELETE FROM stock_movements WHERE id=?")->execute([$mevcut_hareket['id']]);
+                }
+            }
+            $res = $pdo->prepare("UPDATE records SET aktif=0 WHERE id=? AND arac_id=?")->execute([$kayit_id, $arac_id]);
+            $pdo->commit();
+            return $res;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 
     public static function aracKayitlari($pdo, $arac_id) {
@@ -50,9 +122,23 @@ class Islem {
     }
 
     public static function tesisYagEkle($pdo, $tesis_id, $urun_id, $miktar, $tarih, $aciklama, $olusturan_id) {
-        $stmt = $pdo->prepare("INSERT INTO records (kayit_turu, tesis_id, urun_id, miktar, tarih, aciklama, olusturan_id) VALUES ('tesis', ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$tesis_id, $urun_id, $miktar, $tarih, $aciklama ?: null, $olusturan_id]);
-        return $pdo->lastInsertId();
+        $pdo->beginTransaction();
+        try {
+            $stmt = $pdo->prepare("INSERT INTO records (kayit_turu, tesis_id, urun_id, miktar, tarih, aciklama, olusturan_id) VALUES ('tesis', ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$tesis_id, $urun_id, $miktar, $tarih, $aciklama ?: null, $olusturan_id]);
+            $kayit_id = $pdo->lastInsertId();
+            
+            if ((int)SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', 0) === 1) {
+                $pdo->prepare("UPDATE products SET stok = stok - ? WHERE id = ?")->execute([$miktar, $urun_id]);
+                $pdo->prepare("INSERT INTO stock_movements (urun_id, islem_turu, miktar, kayit_id, aciklama, olusturan_id) VALUES (?, 'cikis', ?, ?, 'Tesis Çıkışı', ?)")
+                    ->execute([$urun_id, $miktar, $kayit_id, $olusturan_id]);
+            }
+            $pdo->commit();
+            return $kayit_id;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 
     public static function tesisKayitBul($pdo, $kayit_id, $tesis_id) {
@@ -68,7 +154,25 @@ class Islem {
     }
 
     public static function tesisKayitSil($pdo, $kayit_id, $tesis_id) {
-        return $pdo->prepare("UPDATE records SET aktif=0 WHERE id=? AND tesis_id=?")->execute([$kayit_id, $tesis_id]);
+        $pdo->beginTransaction();
+        try {
+            if ((int)SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', 0) === 1) {
+                $sm = $pdo->prepare("SELECT * FROM stock_movements WHERE kayit_id=?");
+                $sm->execute([$kayit_id]);
+                $mevcut_hareket = $sm->fetch();
+
+                if ($mevcut_hareket) {
+                    $pdo->prepare("UPDATE products SET stok = stok + ? WHERE id=?")->execute([$mevcut_hareket['miktar'], $mevcut_hareket['urun_id']]);
+                    $pdo->prepare("DELETE FROM stock_movements WHERE id=?")->execute([$mevcut_hareket['id']]);
+                }
+            }
+            $res = $pdo->prepare("UPDATE records SET aktif=0 WHERE id=? AND tesis_id=?")->execute([$kayit_id, $tesis_id]);
+            $pdo->commit();
+            return $res;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            throw $e;
+        }
     }
 
     public static function tesisKayitlari($pdo, $tesis_id) {
