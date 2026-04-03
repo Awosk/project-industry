@@ -91,6 +91,7 @@ $son_islemler = $pdo->query("
 
 <style>
 .dash-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
+.dash-grid > a { min-width: 0; }
 @media (min-width: 768px) { .dash-grid { grid-template-columns: repeat(4, 1fr); } }
 
 .dash-card {
@@ -106,6 +107,7 @@ $son_islemler = $pdo->query("
 .dash-label { font-size: 13px; color: var(--muted); font-weight: 600; margin-top: 5px; }
 
 .report-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 25px; }
+.report-grid > div { min-width: 0; }
 @media (min-width: 992px) { .report-grid { grid-template-columns: 2fr 1fr; } }
 
 .chart-container { background: var(--card); padding: 20px; border-radius: var(--r-md); border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
@@ -167,7 +169,7 @@ $son_islemler = $pdo->query("
         <div class="card" style="margin:0;">
             <div class="card-title">🕒 Son İşlemler</div>
             <div class="table-wrap">
-                <table>
+                <table style="min-width: 100%;">
                     <thead>
                         <tr><th>Tarih</th><th>Hedef</th><th>Ürün</th><th>Miktar</th></tr>
                     </thead>

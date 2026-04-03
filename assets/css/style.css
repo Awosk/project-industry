@@ -87,7 +87,7 @@ body {
     color: #fff;
     font-weight: 700;
     font-size: 14px;
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     min-width: 0;
 }
 
@@ -293,7 +293,7 @@ body {
 }
 
 /* ── DESKTOP ── */
-@media (min-width: 768px) {
+@media (min-width: 1200px) {
     .nav-hamburger {
         display: none;
     }
