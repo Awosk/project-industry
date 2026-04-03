@@ -34,18 +34,18 @@ $populer_urunler = $pdo->query("
     FROM records lk 
     JOIN products u ON lk.urun_id = u.id 
     WHERE lk.aktif=1 
-    GROUP BY lk.urun_id 
+    GROUP BY lk.urun_id, u.urun_adi, u.birim 
     ORDER BY toplam DESC 
     LIMIT 5
 ")->fetchAll();
 
 // Son 7 Günlük İşlem Trendi (Grafik için)
 $trend_data = $pdo->query("
-    SELECT DATE(tarih) as gun, COUNT(*) as adet 
+    SELECT tarih as gun, COUNT(*) as adet 
     FROM records 
     WHERE aktif=1 AND tarih >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) 
-    GROUP BY gun 
-    ORDER BY gun ASC
+    GROUP BY tarih 
+    ORDER BY tarih ASC
 ")->fetchAll();
 
 $trend_labels = [];
@@ -61,7 +61,7 @@ $tur_dagilimi = $pdo->query("
     FROM vehicles v 
     JOIN vehicles_type t ON v.arac_turu_id = t.id 
     WHERE v.aktif=1 
-    GROUP BY t.id
+    GROUP BY t.id, t.tur_adi
 ")->fetchAll();
 
 $tur_labels = [];
@@ -74,7 +74,7 @@ foreach ($tur_dagilimi as $td) {
 // Son 5 işlem
 $son_islemler = $pdo->query("
     SELECT lk.*, u.urun_adi, k.ad_soyad,
-           (CASE WHEN lk.arac_id IS NOT NULL THEN a.plaka ELSE t.firma_adi END) as hedef_adi
+           COALESCE(a.plaka, t.firma_adi, 'Bilinmiyor') as hedef_adi
     FROM records lk
     LEFT JOIN products u ON lk.urun_id = u.id
     LEFT JOIN users k ON lk.olusturan_id = k.id
@@ -86,8 +86,8 @@ $son_islemler = $pdo->query("
 ")->fetchAll();
 ?>
 
-<!-- Grafik Kütüphanesi -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Grafik Kütüphanesi (Yerel Dosyadan) -->
+<script src="<?= ROOT_URL ?>assets/js/chart.min.js"></script>
 
 <style>
 .dash-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
@@ -174,6 +174,9 @@ $son_islemler = $pdo->query("
                         <tr><th>Tarih</th><th>Hedef</th><th>Ürün</th><th>Miktar</th></tr>
                     </thead>
                     <tbody>
+                        <?php if (empty($son_islemler)): ?>
+                        <tr><td colspan="4" style="text-align:center; padding:20px; color:var(--muted);">Henüz bir işlem kaydı bulunmuyor.</td></tr>
+                        <?php endif; ?>
                         <?php foreach ($son_islemler as $islem): ?>
                         <tr>
                             <td><span style="font-size:12px;"><?= date('d.m H:i', strtotime($islem['olusturma_tarihi'])) ?></span></td>
@@ -230,46 +233,56 @@ $son_islemler = $pdo->query("
 
 <script>
 // İşlem Trend Grafiği
-const trendCtx = document.getElementById('trendChart').getContext('2d');
-new Chart(trendCtx, {
-    type: 'line',
-    data: {
-        labels: <?= json_encode($trend_labels) ?>,
-        datasets: [{
-            label: 'İşlem Sayısı',
-            data: <?= json_encode($trend_values) ?>,
-            borderColor: '#1e4d6b',
-            backgroundColor: 'rgba(30, 77, 107, 0.1)',
-            borderWidth: 3,
-            fill: true,
-            tension: 0.4
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
-    }
-});
+const trendLabels = <?= json_encode($trend_labels) ?>;
+const trendValues = <?= json_encode($trend_values) ?>;
+
+if (trendLabels.length > 0) {
+    const trendCtx = document.getElementById('trendChart').getContext('2d');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: trendLabels,
+            datasets: [{
+                label: 'İşlem Sayısı',
+                data: trendValues,
+                borderColor: '#1e4d6b',
+                backgroundColor: 'rgba(30, 77, 107, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+    });
+}
 
 // Araç Türü Pasta Grafiği
-const typeCtx = document.getElementById('typeChart').getContext('2d');
-new Chart(typeCtx, {
-    type: 'doughnut',
-    data: {
-        labels: <?= json_encode($tur_labels) ?>,
-        datasets: [{
-            data: <?= json_encode($tur_values) ?>,
-            backgroundColor: ['#1e4d6b', '#2980b9', '#3498db', '#a29bfe', '#dfe6e9'],
-            borderWidth: 0
-        }]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
-        cutout: '70%'
-    }
-});
+const typeLabels = <?= json_encode($tur_labels) ?>;
+const typeValues = <?= json_encode($tur_values) ?>;
+
+if (typeLabels.length > 0) {
+    const typeCtx = document.getElementById('typeChart').getContext('2d');
+    new Chart(typeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: typeLabels,
+            datasets: [{
+                data: typeValues,
+                backgroundColor: ['#1e4d6b', '#2980b9', '#3498db', '#a29bfe', '#dfe6e9'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } } },
+            cutout: '70%'
+        }
+    });
+}
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

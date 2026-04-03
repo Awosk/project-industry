@@ -22,3 +22,8 @@
 
 # Dizin listelemeyi kapat
 Options -Indexes
+
+# CSP Engelini Aşmak İçin Gerekli Header Ayarları
+<IfModule mod_headers.c>
+    Header set Content-Security-Policy "default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: gap: content:; script-src * 'self' 'unsafe-inline' 'unsafe-eval'; style-src * 'self' 'unsafe-inline'; img-src * 'self' data: content:; connect-src * 'self';"
+</IfModule>
