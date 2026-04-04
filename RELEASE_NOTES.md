@@ -8,10 +8,10 @@
 - Araya başka araç/tesis girerse gruplama otomatik kırılıyor
 - Her kayıt köşesiz kutu içinde, daha okunabilir görünüm
 
-### 🔔 Canlı Bildirim Sistemi (SSE)
-- İşlemler sayfası açıkken yeni kayıt eklendiğinde anında bildirim gösteriliyor
+### 🔔 Canlı Bildirim Sistemi (Polling)
+- İşlemler sayfası açıkken yeni kayıt eklendiğinde bildirim gösteriliyor
 - Sağ üst köşede "🔔 Yeni Kayıt Eklendi" bildirimi + "🔄 Yenile" butonu
-- Bağlantı kopsa bile otomatik yeniden bağlanma
+- Her 10 saniyede bir otomatik kontrol (Apache2+PHP-FPM uyumlu)
 - Bildirimler sayfa yenilenene kadar kalıcı
 
 ### 🔀 Sıralama Yönü Değiştirme
@@ -52,11 +52,12 @@
 ## 🐛 Hata Düzeltmeleri
 - İşlemler sayfası sayfalama URL hatası (`??` → `?`)
 - Gruplanmış kayıtlarda tesis URL yönlendirme hatası
-- SSE bağlantı sızıntısı (sayfa değişiminde eski bağlantı kapatılıyor)
 - `lastId` hesaplaması (sayfalama/filtreleme etkilemiyor)
+- SSE yerine polling kullanılıyor (Apache2+PHP-FPM uyumluluğu)
 
 ## 📦 Teknik Değişiklikler
-- `api/events.php` - SSE endpoint eklendi
+- `api/check_new_records.php` - Polling endpoint'i eklendi
+- `api/events.php` - SSE endpoint'i kaldırıldı
 - `assets/css/style.css` - Tüm stiller tek dosyada toplandı
-- `install/database.sql` - `fake_data_aktif` ayarı eklendi
+- `install/database.sql` - `fake_data_aktif` ayarı eklendi, `sse_bildirim_aktif` kaldırıldı
 - `.gitignore` - `test.php` eklendi

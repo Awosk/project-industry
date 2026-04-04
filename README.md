@@ -46,7 +46,7 @@ Personeller görsel kartlar üzerinden saniyeler içinde anlık arama (live sear
 - **Güvenlik:** CSRF koruması, Brute-force koruması ve yetki hiyerarşisi.
 
 ### 🔔 Canlı Bildirimler (v2.1.0)
-- **SSE (Server-Sent Events):** İşlemler sayfası açıkken yeni kayıt eklendiğinde anında bildirim.
+- **Polling Bildirim:** İşlemler sayfası açıkken yeni kayıt eklendiğinde bildirim (her 10 saniyede kontrol).
 - **Gruplama:** Art arda aynı araca/tesise eklenen kayıtlar tek kutuda gruplanır.
 
 ---
