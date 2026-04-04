@@ -543,15 +543,17 @@ document.querySelectorAll('.islendi-ajax-btn').forEach(function(btn) {
 <?php $sse_aktif = SistemAyarlari::getir($pdo, 'sse_bildirim_aktif', '0') === '1'; ?>
 <?php if ($sse_aktif): ?>
 (function() {
-    // Sayfa değişiminde eski bağlantıyı kapat
+    // Sayfa yüklenmeden önce eski bağlantıyı kapat (sayfa değişiminde)
     if (window._sseSource) {
         window._sseSource.close();
+        window._sseSource = null;
     }
     
     // Veritabanındaki en yüksek ID'yi kullan (sayfalama/filtreleme etkilemesin)
     var lastId = <?= (int)$pdo->query("SELECT MAX(id) FROM records WHERE aktif=1")->fetchColumn() ?>;
     var yeniKayitSayisi = 0;
     var bildirim = null;
+    var reconnectTimeout = null;
     
     function bildirimGuncelle() {
         if (!bildirim) {
@@ -570,8 +572,20 @@ document.querySelectorAll('.islendi-ajax-btn').forEach(function(btn) {
     }
     
     function baglan() {
+        // Önceki reconnect timeout'u temizle
+        if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout);
+            reconnectTimeout = null;
+        }
+        
+        // Önceki bağlantıyı kapat
+        if (window._sseSource) {
+            window._sseSource.close();
+            window._sseSource = null;
+        }
+        
         var source = new EventSource('<?= ROOT_URL ?>api/events.php?lastId=' + lastId);
-        window._sseSource = source; // Global referans
+        window._sseSource = source;
         
         source.addEventListener('yeni_islem', function(e) {
             var data = JSON.parse(e.data);
@@ -582,12 +596,28 @@ document.querySelectorAll('.islendi-ajax-btn').forEach(function(btn) {
         
         source.onerror = function() {
             source.close();
-            setTimeout(baglan, 10000); // 10 saniye bekle (daha uzun)
+            window._sseSource = null;
+            // 15 saniye sonra tekrar bağlan (daha uzun bekleme)
+            reconnectTimeout = setTimeout(baglan, 15000);
         };
         
         // Sayfa kapatılırken bağlantıyı kapat
         window.addEventListener('beforeunload', function() {
-            source.close();
+            if (window._sseSource) {
+                window._sseSource.close();
+                window._sseSource = null;
+            }
+            if (reconnectTimeout) {
+                clearTimeout(reconnectTimeout);
+            }
+        });
+        
+        // Sayfa gizlendiğinde bağlantıyı kapat (sekme değişimi)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden && window._sseSource) {
+                window._sseSource.close();
+                window._sseSource = null;
+            }
         });
     }
     
