@@ -37,8 +37,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aciklama_guncelle']))
     header('Location: transactions.php?' . http_build_query($qs)); exit;
 }
 
-if (isset($_GET['islendi_toggle'])) {
-    $toggle_id = (int)$_GET['islendi_toggle'];
+// ── AJAX: İŞLENDİ TOGGLE ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_islendi'])) {
+    header('Content-Type: application/json');
+    $toggle_id = (int)($_POST['kayit_id'] ?? 0);
     $mevcut_val = Islem::islendiMi($pdo, $toggle_id);
     $ku = mevcutKullanici();
     
@@ -48,15 +50,27 @@ if (isset($_GET['islendi_toggle'])) {
         $hedef = $kd ? ($kd['plaka'] ?? $kd['firma_adi'] ?? '?') : '?';
         $urun  = $kd ? ($kd['urun_kodu'].' '.$kd['urun_adi']) : '?';
         logYaz($pdo,'guncelle','islendi','Kayıt depoya işlendi: '.$hedef.' — '.$urun.', '.($kd['miktar']??'?').' '.($kd['birim']??'LT'), $toggle_id, ['islendi'=>0], ['islendi'=>1,'islendi_kullanici_id'=>$ku['id']], 'lite');
+        echo json_encode([
+            'ok' => true,
+            'islendi' => 1,
+            'ad_soyad' => $ku['ad_soyad'],
+            'bekleyen_sayisi' => Islem::bekleyenSayisi($pdo),
+            'islenen_sayisi' => Islem::islenenSayisi($pdo)
+        ]);
     } else {
         Islem::islendiIptal($pdo, $toggle_id);
         $kd = Islem::genelKayitBul($pdo, $toggle_id);
         $hedef = $kd ? ($kd['plaka'] ?? $kd['firma_adi'] ?? '?') : '?';
         $urun  = $kd ? ($kd['urun_kodu'].' '.$kd['urun_adi']) : '?';
         logYaz($pdo,'guncelle','islendi','İşlendi işareti geri alındı: '.$hedef.' — '.$urun.', '.($kd['miktar']??'?').' '.($kd['birim']??'LT'), $toggle_id, ['islendi'=>1], ['islendi'=>0], 'lite');
+        echo json_encode([
+            'ok' => true,
+            'islendi' => 0,
+            'bekleyen_sayisi' => Islem::bekleyenSayisi($pdo),
+            'islenen_sayisi' => Islem::islenenSayisi($pdo)
+        ]);
     }
-    $qs = $_GET; unset($qs['islendi_toggle']);
-    header('Location: transactions.php?' . http_build_query($qs)); exit;
+    exit;
 }
 
 $filtreler = [
@@ -66,7 +80,8 @@ $filtreler = [
     'tesis_id'  => (int)($_GET['tesis_id']  ?? 0),
     'urun_id'   => (int)($_GET['urun_id']   ?? 0),
     'tur'       => in_array($_GET['tur']     ?? '', ['arac','tesis']) ? $_GET['tur'] : 'tumu',
-    'islendi'   => in_array($_GET['islendi'] ?? '', ['islendi','islenmedi']) ? $_GET['islendi'] : 'tumu'
+    'islendi'   => in_array($_GET['islendi'] ?? '', ['islendi','islenmedi']) ? $_GET['islendi'] : 'tumu',
+    'sirala'    => in_array($_GET['sirala']  ?? '', ['asc','desc']) ? $_GET['sirala'] : 'desc'
 ];
 
 $f_tarih_bas = $filtreler['tarih_bas'];
@@ -76,6 +91,7 @@ $f_tesis_id  = $filtreler['tesis_id'];
 $f_urun_id   = $filtreler['urun_id'];
 $f_tur       = $filtreler['tur'];
 $f_islendi   = $filtreler['islendi'];
+$f_sirala    = $filtreler['sirala'];
 
 $sartlar = Islem::aramaSartlariniOlustur($filtreler);
 
@@ -92,7 +108,7 @@ $toplam_sayfa = max(1, (int)ceil($toplam_islem / $sayfa_basina));
 $sayfa = min($sayfa, $toplam_sayfa);
 $offset = ($sayfa - 1) * $sayfa_basina;
 
-$kayitlar = Islem::listeSayfalamali($pdo, $sartlar, $offset, $sayfa_basina);
+$kayitlar = Islem::listeSayfalamali($pdo, $sartlar, $offset, $sayfa_basina, $f_sirala);
 
 $bekleyen_sayisi = Islem::bekleyenSayisi($pdo);
 $islenen_sayisi = Islem::islenenSayisi($pdo);
@@ -102,6 +118,7 @@ $tum_tesisler = Tesis::tumTesislerIdAd($pdo);
 $tum_urunler  = Urun::tumUrunler($pdo);
 
 $filtre_aktif = $f_tarih_bas || $f_tarih_bit || $f_arac_id || $f_tesis_id || $f_urun_id || $f_tur !== 'tumu' || $f_islendi !== 'tumu';
+$sirala_label = $f_sirala === 'asc' ? '↑ Eski → Yeni' : '↓ Yeni → Eski';
 
 require_once __DIR__ . '/../../includes/header.php';
 ?>
@@ -205,6 +222,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     </select>
                 </div>
             </div>
+            <input type="hidden" name="sirala" value="<?= htmlspecialchars($f_sirala) ?>">
             <div class="btn-group" style="margin-top:14px;">
                 <button type="submit" class="btn btn-primary">🔍 Filtrele</button>
             </div>
@@ -222,11 +240,16 @@ require_once __DIR__ . '/../../includes/header.php';
             <span style="font-weight:400; font-size:13px; color:var(--muted);">(<?= $toplam_islem ?>)</span>
             <?php endif; ?>
         </span>
-        <?php if ($toplam_sayfa > 1): ?>
-        <span style="font-weight:400; font-size:13px; color:var(--muted);">
-            <?= (($sayfa-1)*$sayfa_basina+1) ?>–<?= min($sayfa*$sayfa_basina, $toplam_islem) ?> / <?= $toplam_islem ?> kayıt &nbsp;·&nbsp; Sayfa <?= $sayfa ?>/<?= $toplam_sayfa ?>
-        </span>
-        <?php endif; ?>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <a href="?<?= http_build_query(array_merge($_GET, ['sirala' => $f_sirala === 'asc' ? 'desc' : 'asc'])) ?>" class="btn btn-sm btn-secondary" title="Sıralamayı değiştir">
+                🔀 <?= $sirala_label ?>
+            </a>
+            <?php if ($toplam_sayfa > 1): ?>
+            <span style="font-weight:400; font-size:13px; color:var(--muted);">
+                <?= (($sayfa-1)*$sayfa_basina+1) ?>–<?= min($sayfa*$sayfa_basina, $toplam_islem) ?> / <?= $toplam_islem ?> kayıt &nbsp;·&nbsp; Sayfa <?= $sayfa ?>/<?= $toplam_sayfa ?>
+            </span>
+            <?php endif; ?>
+        </div>
     </div>
 
     <?php if (empty($kayitlar)): ?>
@@ -236,65 +259,146 @@ require_once __DIR__ . '/../../includes/header.php';
     </div>
     <?php else: ?>
     <div class="kayit-list">
-        <?php foreach ($kayitlar as $k):
-            $detay_url = $k['kayit_turu'] === 'arac'
-                ? 'vehicle_detail.php?id='.$k['arac_id'].'#kayit-'.$k['id']
-                : 'facility_detail.php?id='.$k['tesis_id'].'#kayit-'.$k['id'];
+        <?php
+        // Kayıtları grupla (art arda aynı hedefe ait kayıtlar)
+        $gruplar = [];
+        $currentGrup = null;
+        foreach ($kayitlar as $k) {
+            $hedefKey = $k['kayit_turu'] . '_' . ($k['kayit_turu'] === 'arac' ? $k['arac_id'] : $k['tesis_id']);
+            if ($currentGrup === null || $currentGrup['hedefKey'] !== $hedefKey) {
+                if ($currentGrup !== null) $gruplar[] = $currentGrup;
+                $currentGrup = ['hedefKey' => $hedefKey, 'kayitlar' => [$k], 'hedef' => $k];
+            } else {
+                $currentGrup['kayitlar'][] = $k;
+            }
+        }
+        if ($currentGrup !== null) $gruplar[] = $currentGrup;
+        
+        foreach ($gruplar as $grup):
+            $hedef = $grup['hedef'];
+            $kayitlar_grup = $grup['kayitlar'];
+            $detay_url = $hedef['kayit_turu'] === 'arac'
+                ? 'vehicle_detail.php?id='.$hedef['arac_id']
+                : 'facility_detail.php?id='.$hedef['tesis_id'];
+            $isGrup = count($kayitlar_grup) > 1;
         ?>
-        <div class="islem-item" class="<?= $k['islendi'] ? 'islem-islendi' : '' ?>"
-             onclick="window.location='<?= $detay_url ?>'" style="cursor:pointer;">
-            <div class="islem-hedef">
-                <?php if ($k['kayit_turu'] === 'arac'): ?>
-                <a href="vehicle_detail.php?id=<?= $k['arac_id'] ?>" class="islem-plaka">🚗 <?= htmlspecialchars($k['plaka']) ?></a>
-                <div class="islem-alt"><?= htmlspecialchars($k['marka_model']) ?></div>
-                <?php else: ?>
-                <a href="facility_detail.php?id=<?= $k['tesis_id'] ?>" class="islem-plaka">🏭 <?= htmlspecialchars($k['firma_adi']) ?></a>
-                <div class="islem-alt">Tesis</div>
-                <?php endif; ?>
-            </div>
-
-            <div class="islem-urun">
-                <div class="islem-urun-adi">
-                    <?= htmlspecialchars($k['urun_adi']) ?>
-                    <?php if ($k['yag_bakimi']): ?>
-                    <span style="background:var(--warning-l);color:var(--warning);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;">🔧 BAKIM</span>
+        <div class="islem-grup <?= $isGrup ? 'islem-grup-multi' : '' ?>">
+            <?php if ($isGrup): ?>
+            <!-- Gruplanmış: Sol hedef + Sağ kayıtlar -->
+            <div class="islem-grup-row">
+                <div class="islem-grup-hedef" onclick="window.location='<?= $detay_url ?>'" style="cursor:pointer;">
+                    <?php if ($hedef['kayit_turu'] === 'arac'): ?>
+                    <a href="vehicle_detail.php?id=<?= $hedef['arac_id'] ?>" class="islem-plaka" onclick="event.stopPropagation();">🚗 <?= htmlspecialchars($hedef['plaka']) ?></a>
+                    <div class="islem-alt"><?= htmlspecialchars($hedef['marka_model']) ?></div>
+                    <?php else: ?>
+                    <a href="facility_detail.php?id=<?= $hedef['tesis_id'] ?>" class="islem-plaka" onclick="event.stopPropagation();">🏭 <?= htmlspecialchars($hedef['firma_adi']) ?></a>
+                    <div class="islem-alt">Tesis</div>
                     <?php endif; ?>
                 </div>
-                <div class="islem-alt">
-                    <?= htmlspecialchars($k['urun_kodu']) ?>
-                    <?php if ($k['yag_bakimi'] && $k['mevcut_km']): ?> · 🛣️ <?= number_format($k['mevcut_km']) ?> KM<?php endif; ?>
-                    <?php if ($k['aciklama']): ?> · <?= htmlspecialchars($k['aciklama']) ?><?php endif; ?>
+                <div class="islem-grup-kayitlar">
+                    <?php foreach ($kayitlar_grup as $k): ?>
+                    <div class="islem-grup-kayit" onclick="window.location='<?= $k['kayit_turu'] === 'arac' ? 'vehicle_detail.php?id='.$k['arac_id'] : 'facility_detail.php?id='.$k['tesis_id'] ?>#kayit-<?= $k['id'] ?>'" style="cursor:pointer;">
+                        <div class="islem-urun">
+                            <div class="islem-urun-adi">
+                                <?= htmlspecialchars($k['urun_adi']) ?>
+                                <?php if ($k['yag_bakimi']): ?>
+                                <span style="background:var(--warning-l);color:var(--warning);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;">🔧 BAKIM</span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="islem-alt">
+                                <?= htmlspecialchars($k['urun_kodu']) ?>
+                                <?php if ($k['yag_bakimi'] && $k['mevcut_km']): ?> · 🛣️ <?= number_format($k['mevcut_km']) ?> KM<?php endif; ?>
+                                <?php if ($k['aciklama']): ?> · <?= htmlspecialchars($k['aciklama']) ?><?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="islem-sag">
+                            <div class="islem-miktar"><?= formatliMiktar($k['miktar'], $k['birim'] ?? 'LT') ?></div>
+                            <div class="islem-tarih">🛢️ <?= formatliTarih($k['tarih']) ?></div>
+                            <div class="islem-giris-tarihi">🕐 <?= formatliTarih($k['olusturma_tarihi']) ?></div>
+                            <div class="islem-kisi">👤 <?= htmlspecialchars($k['ad_soyad'] ?? '-') ?></div>
+                            <button onclick="event.stopPropagation(); aciklamaModal(<?= $k['id'] ?>, '<?= htmlspecialchars($k['aciklama'] ?? '', ENT_QUOTES) ?>')"
+                                    style="margin-top:4px;background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);padding:0;"
+                                    title="Açıklama düzenle">✏️ <?= $k['aciklama'] ? 'Düzenle' : 'Açıklama ekle' ?></button>
+                        </div>
+                        <div style="flex-shrink:0;text-align:center;">
+                            <?php if ($k['islendi']): ?>
+                            <button type="button" class="islendi-btn islendi-btn--on islendi-ajax-btn" data-id="<?= $k['id'] ?>" onclick="event.stopPropagation();">
+                                <span style="font-size:20px;">✅</span>
+                                <span class="islendi-text">İşlendi</span>
+                                <span class="islendi-ad"><?= $k['islendi_ad_soyad'] ? htmlspecialchars($k['islendi_ad_soyad']) : '' ?></span>
+                            </button>
+                            <?php else: ?>
+                            <button type="button" class="islendi-btn islendi-btn--off islendi-ajax-btn" data-id="<?= $k['id'] ?>" onclick="event.stopPropagation();">
+                                <span style="font-size:20px;">⬜</span>
+                                <span class="islendi-text">İşle</span>
+                            </button>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
+            <?php else: ?>
+            <!-- Tek kayıt: Normal görünüm -->
+            <?php foreach ($kayitlar_grup as $k):
+                $k_detay_url = $k['kayit_turu'] === 'arac'
+                    ? 'vehicle_detail.php?id='.$k['arac_id'].'#kayit-'.$k['id']
+                    : 'facility_detail.php?id='.$k['tesis_id'].'#kayit-'.$k['id'];
+            ?>
+            <div class="islem-item" onclick="window.location='<?= $k_detay_url ?>'" style="cursor:pointer;">
+                <div class="islem-hedef">
+                    <?php if ($k['kayit_turu'] === 'arac'): ?>
+                    <a href="vehicle_detail.php?id=<?= $k['arac_id'] ?>" class="islem-plaka" onclick="event.stopPropagation();">🚗 <?= htmlspecialchars($k['plaka']) ?></a>
+                    <div class="islem-alt"><?= htmlspecialchars($k['marka_model']) ?></div>
+                    <?php else: ?>
+                    <a href="facility_detail.php?id=<?= $k['tesis_id'] ?>" class="islem-plaka" onclick="event.stopPropagation();">🏭 <?= htmlspecialchars($k['firma_adi']) ?></a>
+                    <div class="islem-alt">Tesis</div>
+                    <?php endif; ?>
+                </div>
 
-            <div class="islem-sag">
-                <div class="islem-miktar"><?= formatliMiktar($k['miktar'], $k['birim'] ?? 'LT') ?></div>
-                <div class="islem-tarih">🛢️ <?= formatliTarih($k['tarih']) ?></div>
-                <div class="islem-giris-tarihi">🕐 <?= formatliTarih($k['olusturma_tarihi']) ?></div>
-                <div class="islem-kisi">👤 <?= htmlspecialchars($k['ad_soyad'] ?? '-') ?></div>
-                <button onclick="aciklamaModal(<?= $k['id'] ?>, '<?= htmlspecialchars($k['aciklama'] ?? '', ENT_QUOTES) ?>')"
-                        style="margin-top:4px;background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);padding:0;"
-                        title="Açıklama düzenle">✏️ <?= $k['aciklama'] ? 'Düzenle' : 'Açıklama ekle' ?></button>
-            </div>
+                <div class="islem-urun">
+                    <div class="islem-urun-adi">
+                        <?= htmlspecialchars($k['urun_adi']) ?>
+                        <?php if ($k['yag_bakimi']): ?>
+                        <span style="background:var(--warning-l);color:var(--warning);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:4px;">🔧 BAKIM</span>
+                        <?php endif; ?>
+                    </div>
+                    <div class="islem-alt">
+                        <?= htmlspecialchars($k['urun_kodu']) ?>
+                        <?php if ($k['yag_bakimi'] && $k['mevcut_km']): ?> · 🛣️ <?= number_format($k['mevcut_km']) ?> KM<?php endif; ?>
+                        <?php if ($k['aciklama']): ?> · <?= htmlspecialchars($k['aciklama']) ?><?php endif; ?>
+                    </div>
+                </div>
 
-            <div style="flex-shrink:0;text-align:center;">
-                <?php if ($k['islendi']): ?>
-                <a href="?islendi_toggle=<?= $k['id'] ?>&<?= http_build_query(array_diff_key($_GET, ['islendi_toggle'=>''])) ?>"
-                   class="islendi-btn islendi-btn--on"
-                   onclick="event.stopPropagation(); return confirm('İşlendi işaretini kaldırmak istiyor musunuz?')">
-                    <span style="font-size:20px;">✅</span>
-                    İşlendi
-                    <span class="islendi-ad"><?= $k['islendi_ad_soyad'] ? htmlspecialchars($k['islendi_ad_soyad']) : '' ?></span>
-                </a>
-                <?php else: ?>
-                <a href="?islendi_toggle=<?= $k['id'] ?>&<?= http_build_query(array_diff_key($_GET, ['islendi_toggle'=>''])) ?>"
-                   class="islendi-btn islendi-btn--off"
-                   onclick="event.stopPropagation();">
-                    <span style="font-size:20px;">⬜</span>
-                    İşle
-                </a>
-                <?php endif; ?>
+                <div class="islem-sag">
+                    <div class="islem-miktar"><?= formatliMiktar($k['miktar'], $k['birim'] ?? 'LT') ?></div>
+                    <div class="islem-tarih">🛢️ <?= formatliTarih($k['tarih']) ?></div>
+                    <div class="islem-giris-tarihi">🕐 <?= formatliTarih($k['olusturma_tarihi']) ?></div>
+                    <div class="islem-kisi">👤 <?= htmlspecialchars($k['ad_soyad'] ?? '-') ?></div>
+                    <button onclick="event.stopPropagation(); aciklamaModal(<?= $k['id'] ?>, '<?= htmlspecialchars($k['aciklama'] ?? '', ENT_QUOTES) ?>')"
+                            style="margin-top:4px;background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);padding:0;"
+                            title="Açıklama düzenle">✏️ <?= $k['aciklama'] ? 'Düzenle' : 'Açıklama ekle' ?></button>
+                </div>
+
+                <div style="flex-shrink:0;text-align:center;">
+                    <?php if ($k['islendi']): ?>
+                    <button type="button" class="islendi-btn islendi-btn--on islendi-ajax-btn" data-id="<?= $k['id'] ?>"
+                       onclick="event.stopPropagation();">
+                        <span style="font-size:20px;">✅</span>
+                        <span class="islendi-text">İşlendi</span>
+                        <span class="islendi-ad"><?= $k['islendi_ad_soyad'] ? htmlspecialchars($k['islendi_ad_soyad']) : '' ?></span>
+                    </button>
+                    <?php else: ?>
+                    <button type="button" class="islendi-btn islendi-btn--off islendi-ajax-btn" data-id="<?= $k['id'] ?>"
+                       onclick="event.stopPropagation();">
+                        <span style="font-size:20px;">⬜</span>
+                        <span class="islendi-text">İşle</span>
+                    </button>
+                    <?php endif; ?>
+                </div>
             </div>
+            <?php endforeach; ?>
+            <?php endif; ?>
         </div>
         <?php endforeach; ?>
     </div>
@@ -302,7 +406,8 @@ require_once __DIR__ . '/../../includes/header.php';
 
     <?php if ($toplam_sayfa > 1):
         $sayfa_params = array_diff_key($_GET, ['sayfa' => '']);
-        function sayfaUrl($n, $base) { return 'transactions.php??' . http_build_query(array_merge($base, ['sayfa' => $n])); }
+        $sayfa_params['sirala'] = $f_sirala;
+        function sayfaUrl($n, $base) { return 'transactions.php?' . http_build_query(array_merge($base, ['sayfa' => $n])); }
         $goster_bas  = max(1, $sayfa - 2);
         $goster_bit  = min($toplam_sayfa, $sayfa + 2);
     ?>
@@ -325,26 +430,6 @@ require_once __DIR__ . '/../../includes/header.php';
     </div>
     <?php endif; ?>
 </div>
-
-<style>
-.stat-card.active { border-color:var(--primary); background:var(--primary); color:#fff; }
-.stat-card.active .stat-label, .stat-card.active .stat-sub { color:rgba(255,255,255,0.8); }
-.stat-card.active .stat-value { color:#fff; }
-.islem-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); flex-wrap:wrap; cursor:pointer; transition:background .15s; }
-.islem-item:hover { background:var(--hover-bg-blue); }
-.islem-item:last-child { border-bottom:none; }
-.islem-hedef { min-width:110px; flex-shrink:0; }
-.islem-plaka { font-weight:800; font-size:14px; color:var(--primary); text-decoration:none; display:block; }
-.islem-plaka:hover { color:var(--primary-l); }
-.islem-urun { flex:1; min-width:120px; }
-.islem-urun-adi { font-weight:600; font-size:13px; color:var(--text); }
-.islem-alt { font-size:11px; color:var(--muted); margin-top:2px; }
-.islem-sag { text-align:right; flex-shrink:0; }
-.islem-miktar { font-size:18px; font-weight:800; color:var(--primary-l); }
-.islem-tarih  { font-size:11px; color:var(--muted); margin-top:2px; }
-.islem-kisi   { font-size:11px; color:var(--muted); }
-.islem-giris-tarihi { font-size: 11px; color: var(--muted); margin-top: 1px; }
-</style>
 
 <!-- Açıklama Modal -->
 <div id="aciklamaModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
@@ -387,6 +472,124 @@ function aciklamaModalKapat() {
 document.getElementById('aciklamaModal').addEventListener('click', function(e) {
     if (e.target === this) aciklamaModalKapat();
 });
+
+// ── AJAX: İŞLENDİ TOGGLE ──
+document.querySelectorAll('.islendi-ajax-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        var id = this.dataset.id;
+        var btnEl = this;
+        var isIslendi = btnEl.classList.contains('islendi-btn--on');
+        
+        // Sadece "İşlendi" durumundan çıkarken onay sor
+        if (isIslendi && !confirm('İşlendi işaretini kaldırmak istiyor musunuz?')) {
+            return;
+        }
+        
+        btnEl.style.opacity = '0.5';
+        btnEl.disabled = true;
+        
+        fetch('', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'ajax_islendi=1&kayit_id=' + id
+        })
+        .then(r => r.json())
+        .then(data => {
+            btnEl.style.opacity = '1';
+            btnEl.disabled = false;
+            
+            if (data.ok) {
+                if (data.islendi === 1) {
+                    btnEl.classList.remove('islendi-btn--off');
+                    btnEl.classList.add('islendi-btn--on');
+                    btnEl.innerHTML = '<span style="font-size:20px;">✅</span><span class="islendi-text">İşlendi</span><span class="islendi-ad">' + (data.ad_soyad || '') + '</span>';
+                } else {
+                    btnEl.classList.remove('islendi-btn--on');
+                    btnEl.classList.add('islendi-btn--off');
+                    btnEl.innerHTML = '<span style="font-size:20px;">⬜</span><span class="islendi-text">İşle</span>';
+                }
+                
+                // Stat kartlarını güncelle
+                if (data.bekleyen_sayisi !== undefined) {
+                    // Bekleyen kartını bul (warning class'ına göre)
+                    var statCards = document.querySelectorAll('.stat-card');
+                    statCards.forEach(function(card) {
+                        var label = card.querySelector('.stat-label');
+                        if (label && label.textContent.includes('Bekleyen')) {
+                            var valEl = card.querySelector('.stat-value');
+                            if (valEl) valEl.textContent = data.bekleyen_sayisi;
+                        }
+                        if (label && label.textContent.includes('İşlendi')) {
+                            var valEl = card.querySelector('.stat-value');
+                            if (valEl) valEl.textContent = data.islenen_sayisi;
+                        }
+                    });
+                }
+            }
+        })
+        .catch(() => {
+            btnEl.style.opacity = '1';
+            btnEl.disabled = false;
+            alert('İşlem sırasında hata oluştu.');
+        });
+    });
+});
+
+// ── SSE: YENİ KAYIT BİLDİRİMİ ──
+(function() {
+    // Sayfa değişiminde eski bağlantıyı kapat
+    if (window._sseSource) {
+        window._sseSource.close();
+    }
+    
+    // Veritabanındaki en yüksek ID'yi kullan (sayfalama/filtreleme etkilemesin)
+    var lastId = <?= (int)$pdo->query("SELECT MAX(id) FROM records WHERE aktif=1")->fetchColumn() ?>;
+    var yeniKayitSayisi = 0;
+    var bildirim = null;
+    
+    function bildirimGuncelle() {
+        if (!bildirim) {
+            bildirim = document.createElement('div');
+            bildirim.id = 'yeni-kayit-bildirim';
+            bildirim.style.cssText = 'position:fixed;top:70px;right:20px;background:#1e4d6b;color:#fff;padding:16px 20px;border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,.2);z-index:9999;display:flex;align-items:center;gap:12px;animation:slideIn 0.3s ease-out;max-width:350px;';
+            document.body.appendChild(bildirim);
+        }
+        bildirim.innerHTML = `
+            <div style="flex:1;">
+                <div style="font-weight:700;font-size:14px;">🔔 ${yeniKayitSayisi} Yeni Kayıt Eklendi</div>
+                <div style="font-size:12px;opacity:0.8;margin-top:2px;">İşlemler sayfasını güncelleyin</div>
+            </div>
+            <button onclick="location.reload()" style="background:var(--card);color:var(--primary);border:none;padding:8px 14px;border-radius:6px;font-weight:600;font-size:12px;cursor:pointer;white-space:nowrap;">🔄 Yenile</button>
+        `;
+    }
+    
+    function baglan() {
+        var source = new EventSource('<?= ROOT_URL ?>api/events.php?lastId=' + lastId);
+        window._sseSource = source; // Global referans
+        
+        source.addEventListener('yeni_islem', function(e) {
+            var data = JSON.parse(e.data);
+            lastId = data.kayit_id;
+            yeniKayitSayisi++;
+            bildirimGuncelle();
+        });
+        
+        source.onerror = function() {
+            source.close();
+            setTimeout(baglan, 10000); // 10 saniye bekle (daha uzun)
+        };
+        
+        // Sayfa kapatılırken bağlantıyı kapat
+        window.addEventListener('beforeunload', function() {
+            source.close();
+        });
+    }
+    
+    baglan();
+})();
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

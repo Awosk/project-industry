@@ -15,7 +15,7 @@ Personeller görsel kartlar üzerinden saniyeler içinde anlık arama (live sear
 
 ---
 
-## ✨ Temel Özellikler (v2.0.0 Yenilikleri)
+## ✨ Temel Özellikler (v2.1.0 Yenilikleri)
 
 ### 📊 Modern Dashboard & İstatistikler
 - **Sistem Özeti:** Aktif araç, tesis, ürün sayılarını ve bugünkü işlem trafiğini anlık takip edin.
@@ -44,6 +44,10 @@ Personeller görsel kartlar üzerinden saniyeler içinde anlık arama (live sear
 - **Saf OOP Mimari:** İş mantığı tamamen servis sınıflarında (classes/) toplanmıştır.
 - **Gelişmiş JSON Loglama:** Her işlemin "Eski" ve "Yeni" veri detayları JSON formatında tam şeffaflıkla kaydedilir.
 - **Güvenlik:** CSRF koruması, Brute-force koruması ve yetki hiyerarşisi.
+
+### 🔔 Canlı Bildirimler (v2.1.0)
+- **SSE (Server-Sent Events):** İşlemler sayfası açıkken yeni kayıt eklendiğinde anında bildirim.
+- **Gruplama:** Art arda aynı araca/tesise eklenen kayıtlar tek kutuda gruplanır.
 
 ---
 

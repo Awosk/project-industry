@@ -101,8 +101,8 @@
         <li><a href="<?= ROOT_URL ?>pages/operations/transactions.php" <?= $curr=='transactions.php'?'class="active"':'' ?>>📋 İşlemler</a></li>
         <li><a href="<?= ROOT_URL ?>pages/operations/reports.php" <?= $curr=='reports.php'?'class="active"':'' ?>>📊 Raporlar</a></li>
         <?php if (isAdmin()): ?>
-        <li class="dropdown <?= in_array($curr, ['users.php','logs.php','backup.php','update.php','system_settings.php','mail_queue.php']) ? 'active' : '' ?>">
-            <a href="#" <?= in_array($curr, ['users.php','logs.php','backup.php','update.php','system_settings.php','mail_queue.php']) ? 'class="active"' : '' ?>>⚙️ Yönetim ▾</a>
+        <li class="dropdown <?= in_array($curr, ['users.php','logs.php','backup.php','update.php','system_settings.php','mail_queue.php','fake_data.php']) ? 'active' : '' ?>">
+            <a href="#" <?= in_array($curr, ['users.php','logs.php','backup.php','update.php','system_settings.php','mail_queue.php','fake_data.php']) ? 'class="active"' : '' ?>>⚙️ Yönetim ▾</a>
             <ul class="dropdown-menu">
                 <li><a href="<?= ROOT_URL ?>pages/management/users.php">👥 Kullanıcı Yönetimi</a></li>
                 <li><a href="<?= ROOT_URL ?>pages/management/logs.php">🔍 Sistem Kayıtları</a></li>
@@ -110,6 +110,7 @@
                 <li><a href="<?= ROOT_URL ?>pages/management/update.php">🔄 Sistem Güncelleme</a></li>
                 <li><a href="<?= ROOT_URL ?>pages/management/system_settings.php">⚙️ Sistem Ayarları</a></li>
                 <li><a href="<?= ROOT_URL ?>pages/management/mail_queue.php">📬 Mail Kuyruğu</a></li>
+                <li><a href="<?= ROOT_URL ?>pages/management/fake_data.php">🎲 Fake Data (Test)</a></li>
             </ul>
         </li>
         <?php endif; ?>
@@ -161,6 +162,7 @@
             <li><a href="<?= ROOT_URL ?>pages/management/update.php" onclick="closeDrawer()">🔄 Sistem Güncelleme</a></li>
             <li><a href="<?= ROOT_URL ?>pages/management/system_settings.php" onclick="closeDrawer()">⚙️ Sistem Ayarları</a></li>
             <li><a href="<?= ROOT_URL ?>pages/management/mail_queue.php" onclick="closeDrawer()">📬 Mail Kuyruğu</a></li>
+            <li><a href="<?= ROOT_URL ?>pages/management/fake_data.php" onclick="closeDrawer()">🎲 Fake Data (Test)</a></li>
             <?php endif; ?>
         </ul>
         <div class="nav-drawer-footer">

@@ -280,7 +280,10 @@ class Islem {
         ];
     }
 
-    public static function listeSayfalamali($pdo, $sartlar, $offset, $limit) {
+    public static function listeSayfalamali($pdo, $sartlar, $offset, $limit, $sirala = 'desc') {
+        $order = $sirala === 'asc'
+            ? 'ORDER BY lk.tarih ASC, lk.olusturma_tarihi ASC'
+            : 'ORDER BY lk.tarih DESC, lk.olusturma_tarihi DESC';
         $stmt = $pdo->prepare("
             SELECT lk.*, u.urun_adi, u.urun_kodu, u.birim, a.plaka, a.marka_model, at.tur_adi AS arac_turu,
                    t.firma_adi, k.ad_soyad, ik.ad_soyad AS islendi_ad_soyad
@@ -292,7 +295,7 @@ class Islem {
             LEFT JOIN users k ON lk.olusturan_id = k.id
             LEFT JOIN users ik ON lk.islendi_kullanici_id = ik.id
             WHERE " . $sartlar['where'] . "
-            ORDER BY lk.tarih DESC, lk.olusturma_tarihi DESC
+            $order
             LIMIT " . (int)$limit . " OFFSET " . (int)$offset
         );
         $stmt->execute($sartlar['params']);

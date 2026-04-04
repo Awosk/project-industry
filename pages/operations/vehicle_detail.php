@@ -344,13 +344,4 @@ document.getElementById('kayitDuzenleModal').addEventListener('click', function(
 })();
 </script>
 
-<style>
-@keyframes parlat {
-    0%   { background: #fef9c3; box-shadow: 0 0 0 3px #fbbf24; }
-    60%  { background: #fef9c3; box-shadow: 0 0 0 3px #fbbf24; }
-    100% { background: transparent; box-shadow: none; }
-}
-.kayit-parlat { animation: parlat 2.5s ease-out forwards; border-radius: 8px; }
-</style>
-
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

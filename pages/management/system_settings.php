@@ -63,15 +63,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cooldown_iptal'])) {
     header('Location: system_settings.php'); exit;
 }
 
-// ── ÖZELLİK AYARLARINI KAYDET ──
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ozellik_kaydet'])) {
-    csrfDogrula();
-    $d_aktif = isset($_POST['dashboard_aktif']) ? '1' : '0';
-    $s_aktif = isset($_POST['stok_yonetimi_aktif']) ? '1' : '0';
-    SistemAyarlari::ayarKaydet($pdo, 'dashboard_aktif', $d_aktif);
-    SistemAyarlari::ayarKaydet($pdo, 'stok_yonetimi_aktif', $s_aktif);
-    flash('Sistem özellikleri kaydedildi.');
-    header('Location: system_settings.php'); exit;
+// ── AJAX: ÖZELLİK TOGGLE (anında kaydet) ──
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_ozellik'])) {
+    header('Content-Type: application/json');
+    $anahtar = $_POST['anahtar'] ?? '';
+    $deger = $_POST['deger'] ?? '0';
+    $reload_keys = ['dashboard_aktif', 'stok_yonetimi_aktif'];
+    if (in_array($anahtar, ['dashboard_aktif', 'stok_yonetimi_aktif', 'fake_data_aktif'])) {
+        SistemAyarlari::ayarKaydet($pdo, $anahtar, $deger);
+        echo json_encode(['ok' => true, 'reload' => in_array($anahtar, $reload_keys)]);
+    } else {
+        echo json_encode(['ok' => false, 'hata' => 'Geçersiz anahtar']);
+    }
+    exit;
 }
 
 // ── TEST MAILI GÖNDER ──
@@ -174,26 +178,39 @@ require_once __DIR__ . '/../../includes/header.php';
 <!-- ── SİSTEM ÖZELLİKLERİ ── -->
 <div class="card">
     <div class="card-title">🧩 Sistem Özellikleri</div>
-    <form method="post">
-        <?= csrfInput() ?>
-        <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:15px;">
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--card);padding:12px;border-radius:8px;border:1px solid var(--border);flex:1;">
-                <input type="checkbox" name="dashboard_aktif" value="1" <?= SistemAyarlari::getir($pdo, 'dashboard_aktif', '0') === '1' ? 'checked' : '' ?> style="width:20px;height:20px;accent-color:var(--primary);">
-                <div>
-                    <div style="font-weight:600;font-size:14px;">Dashboard (Özet Ekranı)</div>
-                    <div style="font-size:12px;color:var(--muted);margin-top:2px;">Araçlar/Tesisler ve İşlemlerle alakalı özetleri gösteren Ana Sayfadır.</div>
-                </div>
-            </label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--card);padding:12px;border-radius:8px;border:1px solid var(--border);flex:1;">
-                <input type="checkbox" name="stok_yonetimi_aktif" value="1" <?= SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', '0') === '1' ? 'checked' : '' ?> style="width:20px;height:20px;accent-color:var(--primary);">
-                <div>
-                    <div style="font-weight:600;font-size:14px;">Stok Yönetimi</div>
-                    <div style="font-size:12px;color:var(--muted);margin-top:2px;">Stok Yönetimi aktif olur. Ürün stoklarını yönetebilir, takibini yapabilirsiniz.</div>
-                </div>
-            </label>
-        </div>
-        <button type="submit" name="ozellik_kaydet" class="btn btn-primary">💾 Kaydet</button>
-    </form>
+    <div style="display:flex;gap:15px;flex-wrap:wrap;margin-bottom:15px;">
+        <label class="feature-toggle">
+            <input type="checkbox" class="toggle-input feature-toggle-input" data-anahtar="dashboard_aktif" <?= SistemAyarlari::getir($pdo, 'dashboard_aktif', '0') === '1' ? 'checked' : '' ?>>
+            <div class="toggle-track">
+                <div class="toggle-thumb"></div>
+            </div>
+            <div class="toggle-content">
+                <div class="toggle-title">Dashboard (Özet Ekranı)</div>
+                <div class="toggle-desc">Araçlar/Tesisler ve İşlemlerle alakalı özetleri gösteren Ana Sayfadır.</div>
+            </div>
+        </label>
+        <label class="feature-toggle">
+            <input type="checkbox" class="toggle-input feature-toggle-input" data-anahtar="stok_yonetimi_aktif" <?= SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', '0') === '1' ? 'checked' : '' ?>>
+            <div class="toggle-track">
+                <div class="toggle-thumb"></div>
+            </div>
+            <div class="toggle-content">
+                <div class="toggle-title">Stok Yönetimi</div>
+                <div class="toggle-desc">Stok Yönetimi aktif olur. Ürün stoklarını yönetebilir, takibini yapabilirsiniz.</div>
+            </div>
+        </label>
+        <label class="feature-toggle">
+            <input type="checkbox" class="toggle-input feature-toggle-input" data-anahtar="fake_data_aktif" <?= SistemAyarlari::getir($pdo, 'fake_data_aktif', '0') === '1' ? 'checked' : '' ?>>
+            <div class="toggle-track track-danger">
+                <div class="toggle-thumb"></div>
+            </div>
+            <div class="toggle-content">
+                <div class="toggle-title">🎲 Fake Data (Test Verisi)</div>
+                <div class="toggle-desc">Test verisi oluşturma aracını aktif eder. Her kullanımdan sonra otomatik kapanır.</div>
+            </div>
+        </label>
+    </div>
+    <div id="ozellik-flash" style="display:none;" class="alert alert-success" style="margin-top:10px;"></div>
 </div>
 
 <!-- ── SMTP AYARLARI ── -->
@@ -203,11 +220,15 @@ require_once __DIR__ . '/../../includes/header.php';
     <form method="post">
         <?= csrfInput() ?>
         <div style="margin-bottom:18px;">
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;text-transform:none;font-size:14px;font-weight:600;color:var(--text);background:var(--success-l);padding:12px 14px;border-radius:var(--r-sm);border:1.5px solid var(--success);">
-                <input type="checkbox" name="smtp_aktif" id="smtp_aktif" value="1"
-                       <?= ($smtp['smtp_aktif'] ?? '0') === '1' ? 'checked' : '' ?>
-                       style="width:20px;height:20px;accent-color:var(--success);cursor:pointer;flex-shrink:0;">
-                ✅ E-posta servisini aktif et
+            <label class="feature-toggle smtp-toggle" id="smtp-toggle-label">
+                <input type="checkbox" class="toggle-input" name="smtp_aktif" id="smtp_aktif_checkbox" value="1" <?= ($smtp['smtp_aktif'] ?? '0') === '1' ? 'checked' : '' ?>>
+                <div class="toggle-track track-success">
+                    <div class="toggle-thumb"></div>
+                </div>
+                <div class="toggle-content">
+                    <div class="toggle-title">✅ E-posta servisini aktif et</div>
+                    <div class="toggle-desc">SMTP üzerinden otomatik e-posta gönderimi yapılır. (Kaydet butonu ile aktif olur)</div>
+                </div>
             </label>
         </div>
 
@@ -248,7 +269,7 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
         </div>
         <div style="margin-top:14px;">
-            <button type="submit" name="smtp_kaydet" class="btn btn-primary">💾 Kaydet</button>
+            <button type="submit" name="smtp_kaydet" class="btn btn-primary">💾 SMTP Ayarlarını Kaydet</button>
         </div>
     </form>
 
@@ -390,6 +411,46 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <script>
+// ── AJAX: Sistem Özellikleri Toggle (anında kaydet + sayfa yenile) ──
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.feature-toggle-input').forEach(function(toggle) {
+        toggle.addEventListener('change', function() {
+            var anahtar = this.dataset.anahtar;
+            var deger = this.checked ? '1' : '0';
+            var label = this.closest('.feature-toggle');
+            label.style.opacity = '0.6';
+            
+            fetch('', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'ajax_ozellik=1&anahtar=' + encodeURIComponent(anahtar) + '&deger=' + encodeURIComponent(deger)
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok && data.reload) {
+                    // Header'ın güncellenmesi için sayfayı yenile
+                    location.reload();
+                } else {
+                    label.style.opacity = '1';
+                }
+            })
+            .catch(() => { label.style.opacity = '1'; });
+        });
+    });
+    
+    // SMTP toggle - sadece görsel, form submit ile kaydedilir
+    var smtpCheckbox = document.getElementById('smtp_aktif_checkbox');
+    if (smtpCheckbox) {
+        smtpCheckbox.addEventListener('change', function() {
+            // Görsel geri bildirim - toggle track rengini güncelle
+            var track = this.nextElementSibling;
+            if (track) {
+                track.classList.toggle('track-success', this.checked);
+            }
+        });
+    }
+});
+
 // Admin panel açıp kapatma (islemler.php mantığıyla)
 function toggleAdminPanel(adminId) {
     var panel = document.getElementById('admin_panel_' + adminId);

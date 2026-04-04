@@ -89,36 +89,6 @@ $son_islemler = $pdo->query("
 <!-- Grafik Kütüphanesi (Yerel Dosyadan) -->
 <script src="<?= ROOT_URL ?>assets/js/chart.min.js"></script>
 
-<style>
-.dash-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 25px; }
-.dash-grid > a { min-width: 0; }
-@media (min-width: 768px) { .dash-grid { grid-template-columns: repeat(4, 1fr); } }
-
-.dash-card {
-    background: var(--card); border-radius: var(--r-md); padding: 20px; text-align: center; border: 1px solid var(--border);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: 0.3s; position: relative; overflow: hidden; text-decoration: none; color: inherit;
-}
-.dash-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); border-color: var(--primary-l); }
-.dash-card::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; background:var(--primary); opacity:0.1; }
-.dash-card.warning::before { background:#e74c3c; opacity:1; }
-
-.dash-icon { font-size: 32px; margin-bottom: 10px; }
-.dash-value { font-size: 28px; font-weight: 800; color: var(--text); line-height: 1.2; }
-.dash-label { font-size: 13px; color: var(--muted); font-weight: 600; margin-top: 5px; }
-
-.report-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 25px; }
-.report-grid > div { min-width: 0; }
-@media (min-width: 992px) { .report-grid { grid-template-columns: 2fr 1fr; } }
-
-.chart-container { background: var(--card); padding: 20px; border-radius: var(--r-md); border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
-.chart-title { font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--text); }
-
-.list-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.list-item:last-child { border-bottom: none; }
-.list-item-title { font-weight: 600; font-size: 14px; }
-.list-item-sub { font-size: 12px; color: var(--muted); }
-</style>
-
 <div class="page-header">
     <h1><span>🚀</span> Hoş Geldiniz, <?= explode(' ', mevcutKullanici()['ad_soyad'])[0] ?></h1>
     <div style="font-size:14px; color:var(--muted);"><?= date('d F Y, l') ?></div>
@@ -199,8 +169,8 @@ $son_islemler = $pdo->query("
         
         <?php if ($is_stok && !empty($kritik_stoklar)): ?>
         <!-- Kritik Stok Uyarıları -->
-        <div class="card" style="margin:0; border-color: #e74c3c;">
-            <div class="card-title" style="color: #e74c3c;">⚠️ Kritik Stoklar (< 10)</div>
+        <div class="card" style="margin:0; border-color: var(--danger);">
+            <div class="card-title" style="color: var(--danger);">⚠️ Kritik Stoklar (< 10)</div>
             <?php foreach($kritik_stoklar as $ks): ?>
             <div class="list-item">
                 <div>
@@ -208,7 +178,7 @@ $son_islemler = $pdo->query("
                     <div class="list-item-sub"><?= htmlspecialchars($ks['urun_kodu']) ?></div>
                 </div>
                 <div style="text-align: right;">
-                    <div style="font-weight: 800; color: #e74c3c;"><?= (float)$ks['stok'] ?></div>
+                    <div style="font-weight: 800; color: var(--danger);"><?= (float)$ks['stok'] ?></div>
                     <div class="list-item-sub"><?= htmlspecialchars($ks['birim']) ?></div>
                 </div>
             </div>
@@ -266,13 +236,27 @@ const typeValues = <?= json_encode($tur_values) ?>;
 
 if (typeLabels.length > 0) {
     const typeCtx = document.getElementById('typeChart').getContext('2d');
+    
+    // Geniş renk paleti (30 renk - tekrar etmez)
+    const chartColors = [
+        '#1e4d6b', '#2980b9', '#3498db', '#a29bfe', '#dfe6e9',
+        '#e74c3c', '#f39c12', '#27ae60', '#8e44ad', '#16a085',
+        '#c0392b', '#d35400', '#f1c40f', '#2ecc71', '#9b59b6',
+        '#1abc9c', '#e67e22', '#34495e', '#7f8c8d', '#00cec9',
+        '#6c5ce7', '#fd79a8', '#00b894', '#e17055', '#636e72',
+        '#0984e3', '#b2bec3', '#d63031', '#a4b0be', '#57606f'
+    ];
+    
+    // Dinamik renk atama (veri sayısına göre)
+    const bgColors = typeLabels.map((_, i) => chartColors[i % chartColors.length]);
+    
     new Chart(typeCtx, {
         type: 'doughnut',
         data: {
             labels: typeLabels,
             datasets: [{
                 data: typeValues,
-                backgroundColor: ['#1e4d6b', '#2980b9', '#3498db', '#a29bfe', '#dfe6e9'],
+                backgroundColor: bgColors,
                 borderWidth: 0
             }]
         },
