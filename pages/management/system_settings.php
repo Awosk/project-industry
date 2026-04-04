@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_ozellik'])) {
     $anahtar = $_POST['anahtar'] ?? '';
     $deger = $_POST['deger'] ?? '0';
     $reload_keys = ['dashboard_aktif', 'stok_yonetimi_aktif'];
-    if (in_array($anahtar, ['dashboard_aktif', 'stok_yonetimi_aktif', 'fake_data_aktif'])) {
+    if (in_array($anahtar, ['dashboard_aktif', 'stok_yonetimi_aktif', 'fake_data_aktif', 'sse_bildirim_aktif'])) {
         SistemAyarlari::ayarKaydet($pdo, $anahtar, $deger);
         echo json_encode(['ok' => true, 'reload' => in_array($anahtar, $reload_keys)]);
     } else {
