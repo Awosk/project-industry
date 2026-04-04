@@ -43,13 +43,16 @@ self.addEventListener('fetch', e => {
     // PHP sayfalarını ve POST isteklerini her zaman ağdan al
     if (e.request.url.includes('.php') || e.request.method !== 'GET') return;
     e.respondWith(
-        caches.match(e.request).then(cached =>
-            cached || fetch(e.request).then(resp => {
-                if (resp && resp.status === 200) {
-                    caches.open(CACHE).then(c => c.put(e.request, resp.clone()));
+        caches.match(e.request).then(cached => {
+            if (cached) return cached;
+            return fetch(e.request).then(resp => {
+                if (!resp || resp.status !== 200 || resp.type !== 'basic') {
+                    return resp;
                 }
+                var respClone = resp.clone();
+                caches.open(CACHE).then(c => c.put(e.request, respClone));
                 return resp;
-            })
-        )
+            });
+        })
     );
 });
