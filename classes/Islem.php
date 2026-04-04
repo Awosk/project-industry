@@ -7,6 +7,43 @@
 require_once __DIR__ . '/SistemAyarlari.php';
 
 class Islem {
+    // ─────────────────────────────────────────────
+    // STOK YARDIMCI METODLARI (kod tekrarını önler)
+    // ─────────────────────────────────────────────
+
+    /**
+     * Stoktan çıkış yapar ve hareket kaydını oluşturur.
+     */
+    private static function stokCikisYap($pdo, $urun_id, $miktar, $kayit_id, $aciklama, $olusturan_id): void {
+        $pdo->prepare("UPDATE products SET stok = stok - ? WHERE id = ?")
+            ->execute([$miktar, $urun_id]);
+        $pdo->prepare("INSERT INTO stock_movements (urun_id, islem_turu, miktar, kayit_id, aciklama, olusturan_id) VALUES (?, 'cikis', ?, ?, ?, ?)")
+            ->execute([$urun_id, $miktar, $kayit_id, $aciklama, $olusturan_id]);
+    }
+
+    /**
+     * Stok iadesi yapar ve hareket kaydını siler.
+     */
+    private static function stokIadeEt($pdo, $kayit_id): void {
+        $sm = $pdo->prepare("SELECT * FROM stock_movements WHERE kayit_id=?");
+        $sm->execute([$kayit_id]);
+        $mevcut_hareket = $sm->fetch();
+
+        if ($mevcut_hareket) {
+            $pdo->prepare("UPDATE products SET stok = stok + ? WHERE id=?")
+                ->execute([$mevcut_hareket['miktar'], $mevcut_hareket['urun_id']]);
+            $pdo->prepare("DELETE FROM stock_movements WHERE id=?")
+                ->execute([$mevcut_hareket['id']]);
+        }
+    }
+
+    /**
+     * Stok yönetimi aktif mi?
+     */
+    private static function stokYonetimiAktifMi($pdo): bool {
+        return (int)SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', 0) === 1;
+    }
+
     public static function aracYagEkle($pdo, $arac_id, $urun_id, $miktar, $tarih, $aciklama, $yag_bakimi, $mevcut_km, $olusturan_id) {
         $pdo->beginTransaction();
         try {
@@ -14,10 +51,8 @@ class Islem {
             $stmt->execute([$arac_id, $urun_id, $miktar, $tarih, $aciklama ?: null, $yag_bakimi, $mevcut_km, $olusturan_id]);
             $kayit_id = $pdo->lastInsertId();
             
-            if ((int)SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', 0) === 1) {
-                $pdo->prepare("UPDATE products SET stok = stok - ? WHERE id = ?")->execute([$miktar, $urun_id]);
-                $pdo->prepare("INSERT INTO stock_movements (urun_id, islem_turu, miktar, kayit_id, aciklama, olusturan_id) VALUES (?, 'cikis', ?, ?, 'Araç Çıkışı', ?)")
-                    ->execute([$urun_id, $miktar, $kayit_id, $olusturan_id]);
+            if (self::stokYonetimiAktifMi($pdo)) {
+                self::stokCikisYap($pdo, $urun_id, $miktar, $kayit_id, 'Araç Çıkışı', $olusturan_id);
             }
             $pdo->commit();
             return $kayit_id;
@@ -89,15 +124,8 @@ class Islem {
     public static function kayitSil($pdo, $kayit_id, $arac_id) {
         $pdo->beginTransaction();
         try {
-            if ((int)SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', 0) === 1) {
-                $sm = $pdo->prepare("SELECT * FROM stock_movements WHERE kayit_id=?");
-                $sm->execute([$kayit_id]);
-                $mevcut_hareket = $sm->fetch();
-
-                if ($mevcut_hareket) {
-                    $pdo->prepare("UPDATE products SET stok = stok + ? WHERE id=?")->execute([$mevcut_hareket['miktar'], $mevcut_hareket['urun_id']]);
-                    $pdo->prepare("DELETE FROM stock_movements WHERE id=?")->execute([$mevcut_hareket['id']]);
-                }
+            if (self::stokYonetimiAktifMi($pdo)) {
+                self::stokIadeEt($pdo, $kayit_id);
             }
             $res = $pdo->prepare("UPDATE records SET aktif=0 WHERE id=? AND arac_id=?")->execute([$kayit_id, $arac_id]);
             $pdo->commit();
@@ -128,10 +156,8 @@ class Islem {
             $stmt->execute([$tesis_id, $urun_id, $miktar, $tarih, $aciklama ?: null, $olusturan_id]);
             $kayit_id = $pdo->lastInsertId();
             
-            if ((int)SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', 0) === 1) {
-                $pdo->prepare("UPDATE products SET stok = stok - ? WHERE id = ?")->execute([$miktar, $urun_id]);
-                $pdo->prepare("INSERT INTO stock_movements (urun_id, islem_turu, miktar, kayit_id, aciklama, olusturan_id) VALUES (?, 'cikis', ?, ?, 'Tesis Çıkışı', ?)")
-                    ->execute([$urun_id, $miktar, $kayit_id, $olusturan_id]);
+            if (self::stokYonetimiAktifMi($pdo)) {
+                self::stokCikisYap($pdo, $urun_id, $miktar, $kayit_id, 'Tesis Çıkışı', $olusturan_id);
             }
             $pdo->commit();
             return $kayit_id;
@@ -156,15 +182,8 @@ class Islem {
     public static function tesisKayitSil($pdo, $kayit_id, $tesis_id) {
         $pdo->beginTransaction();
         try {
-            if ((int)SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', 0) === 1) {
-                $sm = $pdo->prepare("SELECT * FROM stock_movements WHERE kayit_id=?");
-                $sm->execute([$kayit_id]);
-                $mevcut_hareket = $sm->fetch();
-
-                if ($mevcut_hareket) {
-                    $pdo->prepare("UPDATE products SET stok = stok + ? WHERE id=?")->execute([$mevcut_hareket['miktar'], $mevcut_hareket['urun_id']]);
-                    $pdo->prepare("DELETE FROM stock_movements WHERE id=?")->execute([$mevcut_hareket['id']]);
-                }
+            if (self::stokYonetimiAktifMi($pdo)) {
+                self::stokIadeEt($pdo, $kayit_id);
             }
             $res = $pdo->prepare("UPDATE records SET aktif=0 WHERE id=? AND tesis_id=?")->execute([$kayit_id, $tesis_id]);
             $pdo->commit();
@@ -239,10 +258,12 @@ class Islem {
         if (!empty($filtreler['arac_id'])) { $where[] = "lk.arac_id = ?"; $params[] = $filtreler['arac_id']; }
         if (!empty($filtreler['tesis_id'])) { $where[] = "lk.tesis_id = ?"; $params[] = $filtreler['tesis_id']; }
         if (!empty($filtreler['urun_id'])) { $where[] = "lk.urun_id = ?"; $params[] = $filtreler['urun_id']; }
-        if ($filtreler['tur'] === 'arac') { $where[] = "lk.kayit_turu = 'arac'"; }
-        elseif ($filtreler['tur'] === 'tesis') { $where[] = "lk.kayit_turu = 'tesis'"; }
-        if ($filtreler['islendi'] === 'islendi') { $where[] = "lk.islendi = 1"; }
-        elseif ($filtreler['islendi'] === 'islenmedi') { $where[] = "lk.islendi = 0"; }
+        $tur = $filtreler['tur'] ?? '';
+        if ($tur === 'arac') { $where[] = "lk.kayit_turu = 'arac'"; }
+        elseif ($tur === 'tesis') { $where[] = "lk.kayit_turu = 'tesis'"; }
+        $islendi = $filtreler['islendi'] ?? '';
+        if ($islendi === 'islendi') { $where[] = "lk.islendi = 1"; }
+        elseif ($islendi === 'islenmedi') { $where[] = "lk.islendi = 0"; }
 
         return ['where' => implode(" AND ", $where), 'params' => $params];
     }

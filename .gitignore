@@ -5,3 +5,4 @@ cron/mail_worker.log
 dev_updater.php
 .dev_version
 AGENTS.md
+test.php

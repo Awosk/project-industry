@@ -1172,3 +1172,27 @@ textarea {
     font-weight: 700;
     color: var(--warning-dark);
 }
+
+/* ── NAVİGASYON GERİ/İLERİ BUTONLARI ── */
+.nav-history {
+    display: flex;
+    gap: 2px;
+    margin-right: 4px;
+    flex-shrink: 0;
+}
+
+.nav-history-btn {
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .25);
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-size: 15px;
+    color: #fff;
+    line-height: 1;
+    transition: .2s;
+}
+
+.nav-history-btn:hover {
+    background: rgba(255, 255, 255, .25);
+}

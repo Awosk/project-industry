@@ -56,13 +56,9 @@
     </button>
 
     <!-- Geri / İleri -->
-    <div style="display:flex;gap:2px;margin-right:4px;flex-shrink:0;">
-        <button onclick="history.back()" title="Geri"
-                style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:5px 10px;border-radius:6px;font-size:15px;color:#fff;line-height:1;transition:.2s;"
-                onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">&#8592;</button>
-        <button onclick="history.forward()" title="İleri"
-                style="background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);cursor:pointer;padding:5px 10px;border-radius:6px;font-size:15px;color:#fff;line-height:1;transition:.2s;"
-                onmouseover="this.style.background='rgba(255,255,255,.25)'" onmouseout="this.style.background='rgba(255,255,255,.12)'">&#8594;</button>
+    <div class="nav-history">
+        <button class="nav-history-btn" onclick="history.back()" title="Geri">&#8592;</button>
+        <button class="nav-history-btn" onclick="history.forward()" title="İleri">&#8594;</button>
     </div>
 
     <div class="nav-brand">

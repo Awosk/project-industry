@@ -217,6 +217,22 @@ function getFlash() {
     return null;
 }
 
+// =====================================================
+// YARDIMCI FONKSİYONLAR
+// =====================================================
+
+/**
+ * İstemci IP adresini güvenli şekilde döner.
+ * Proxy/Cloudflare arkasında çalışır.
+ */
+function istemciIpAdresiGetir(): string {
+    $ip = $_SERVER['HTTP_X_FORWARDED_FOR']
+        ?? $_SERVER['HTTP_CF_CONNECTING_IP']
+        ?? $_SERVER['REMOTE_ADDR']
+        ?? '?';
+    return trim(explode(',', $ip)[0]);
+}
+
 function formatliTarih($t) {
     if (!$t) return '-';
     if (strlen($t) > 10) return date('d.m.Y H:i', strtotime($t));

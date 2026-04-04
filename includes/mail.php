@@ -257,16 +257,24 @@ function testMailiGonder($pdo, string $email): array {
 // ÖZEL YARDIMCI FONKSİYONLAR
 // ─────────────────────────────────────────────
 
-function _bildirimKonuOlustur(string $aksiyon, string $modul): string {
-    $aksiyon_etiket = [
+/**
+ * Bildirim aksiyon etiketleri (tek tanımlama)
+ */
+function _bildirimAksiyonEtiketleri(): array {
+    return [
         'ekle'     => '➕ Ekleme',
         'sil'      => '🗑️ Silme',
         'guncelle' => '✏️ Güncelleme',
         'giris'    => '🔐 Giriş',
         'cikis'    => '🚪 Çıkış',
-    ][$aksiyon] ?? $aksiyon;
+    ];
+}
 
-    $modul_etiket = [
+/**
+ * Bildirim modül etiketleri (tek tanımlama)
+ */
+function _bildirimModulEtiketleri(): array {
+    return [
         'arac'        => '🚗 Araç',
         'arac_tur'    => '🚗 Araç Türü',
         'tesis'       => '🏭 Tesis',
@@ -277,32 +285,27 @@ function _bildirimKonuOlustur(string $aksiyon, string $modul): string {
         'auth'        => '🔐 Oturum',
         'sistem'      => '⚙️ Sistem',
         'islendi'     => '✅ Depoya İşlendi',
-    ][$modul] ?? $modul;
+    ];
+}
+
+/**
+ * Aksiyon veya modül için etiket döner (bilinmeyen değerlerde olduğu gibi döner)
+ */
+function _bildirimEtiketGetir(string $deger, string $tur): string {
+    $etiketler = $tur === 'aksiyon' ? _bildirimAksiyonEtiketleri() : _bildirimModulEtiketleri();
+    return $etiketler[$deger] ?? $deger;
+}
+
+function _bildirimKonuOlustur(string $aksiyon, string $modul): string {
+    $aksiyon_etiket = _bildirimEtiketGetir($aksiyon, 'aksiyon');
+    $modul_etiket = _bildirimEtiketGetir($modul, 'modul');
 
     return '[' . (defined('SITE_ADI') ? SITE_ADI : 'Project Industry') . '] ' . $aksiyon_etiket . ' — ' . $modul_etiket;
 }
 
 function _bildirimIcerikOlustur(string $aksiyon, string $modul, string $aciklama, ?array $kullanici_bilgi): string {
-    $aksiyon_etiket = [
-        'ekle'     => '➕ Ekleme',
-        'sil'      => '🗑️ Silme',
-        'guncelle' => '✏️ Güncelleme',
-        'giris'    => '🔐 Giriş',
-        'cikis'    => '🚪 Çıkış',
-    ][$aksiyon] ?? $aksiyon;
-
-    $modul_etiket = [
-        'arac'        => '🚗 Araç',
-        'arac_tur'    => '🚗 Araç Türü',
-        'tesis'       => '🏭 Tesis',
-        'arac_kayit'  => '🛢️ Araç Ürün Kaydı',
-        'tesis_kayit' => '🛢️ Tesis Ürün Kaydı',
-        'urun'        => '📦 Ürün',
-        'kullanici'   => '👤 Kullanıcı',
-        'auth'        => '🔐 Oturum',
-        'sistem'      => '⚙️ Sistem',
-        'islendi'     => '✅ Depoya İşlendi',
-    ][$modul] ?? $modul;
+    $aksiyon_etiket = _bildirimEtiketGetir($aksiyon, 'aksiyon');
+    $modul_etiket = _bildirimEtiketGetir($modul, 'modul');
 
     $yapan = $kullanici_bilgi
         ? htmlspecialchars($kullanici_bilgi['ad_soyad'] ?? $kullanici_bilgi['adi'] ?? 'Bilinmiyor')

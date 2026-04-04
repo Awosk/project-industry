@@ -26,7 +26,7 @@ if (isset($_GET['oturum']) && $_GET['oturum'] === 'sonlandi') {
 }
 
 $hata = '';
-$ip   = trim(explode(',', $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1')[0]);
+$ip   = istemciIpAdresiGetir() ?: '127.0.0.1';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 

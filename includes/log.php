@@ -15,12 +15,7 @@
 // mail.php henüz yüklü değilse yükle
 function logYaz($pdo, $aksiyon, $modul, $aciklama, $kayit_id = null, $eski = null, $yeni = null, $sistem = 'ana') {
     $ku = mevcutKullanici();
-    $ip = $_SERVER['HTTP_X_FORWARDED_FOR']
-        ?? $_SERVER['HTTP_CF_CONNECTING_IP']
-        ?? $_SERVER['REMOTE_ADDR']
-        ?? '?';
-    // Birden fazla IP varsa ilkini al
-    $ip = trim(explode(',', $ip)[0]);
+    $ip = istemciIpAdresiGetir();
 
     try {
         $stmt = $pdo->prepare("
@@ -61,11 +56,7 @@ function logYaz($pdo, $aksiyon, $modul, $aciklama, $kayit_id = null, $eski = nul
 
 // Giriş/çıkış logları için oturum olmadan da çalışır
 function logGiris($pdo, $kullanici, $sistem = 'ana') {
-    $ip = $_SERVER['HTTP_X_FORWARDED_FOR']
-        ?? $_SERVER['HTTP_CF_CONNECTING_IP']
-        ?? $_SERVER['REMOTE_ADDR']
-        ?? '?';
-    $ip = trim(explode(',', $ip)[0]);
+    $ip = istemciIpAdresiGetir();
     try {
         $pdo->prepare("
             INSERT INTO system_logs (kullanici_id, kullanici_adi, ad_soyad, sistem, aksiyon, modul, aciklama, ip_adresi)
@@ -91,8 +82,7 @@ function logGiris($pdo, $kullanici, $sistem = 'ana') {
 function logCikis($pdo, $sistem = 'ana') {
     $ku = mevcutKullanici();
     if (!$ku['id']) return;
-    $ip = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '?';
-    $ip = trim(explode(',', $ip)[0]);
+    $ip = istemciIpAdresiGetir();
     try {
         $pdo->prepare("
             INSERT INTO system_logs (kullanici_id, kullanici_adi, ad_soyad, sistem, aksiyon, modul, aciklama, ip_adresi)
