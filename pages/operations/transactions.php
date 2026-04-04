@@ -538,24 +538,17 @@ document.querySelectorAll('.islendi-ajax-btn').forEach(function(btn) {
     });
 });
 
-// ── SSE: YENİ KAYIT BİLDİRİMİ ──
-// SSE desteklenmiyorsa veya ayar kapalıysa çalıştırma
-<?php $sse_aktif = SistemAyarlari::getir($pdo, 'sse_bildirim_aktif', '0') === '1'; ?>
-<?php if ($sse_aktif): ?>
+// ── POLLING: YENİ KAYIT BİLDİRİMİ ──
+// Apache2+PHP-FPM ile SSE çalışmadığı için polling kullanılıyor
+<?php $bildirim_aktif = SistemAyarlari::getir($pdo, 'sse_bildirim_aktif', '0') === '1'; ?>
+<?php if ($bildirim_aktif): ?>
 (function() {
-    // Sayfa yüklenmeden önce eski bağlantıyı kapat (sayfa değişiminde)
-    if (window._sseSource) {
-        window._sseSource.close();
-        window._sseSource = null;
-    }
-    
-    // Veritabanındaki en yüksek ID'yi kullan (sayfalama/filtreleme etkilemesin)
     var lastId = <?= (int)$pdo->query("SELECT MAX(id) FROM records WHERE aktif=1")->fetchColumn() ?>;
     var yeniKayitSayisi = 0;
     var bildirim = null;
-    var reconnectTimeout = null;
+    var pollingInterval = null;
     
-    function bildirimGuncelle() {
+    function bildirimGoster() {
         if (!bildirim) {
             bildirim = document.createElement('div');
             bildirim.id = 'yeni-kayit-bildirim';
@@ -571,57 +564,28 @@ document.querySelectorAll('.islendi-ajax-btn').forEach(function(btn) {
         `;
     }
     
-    function baglan() {
-        // Önceki reconnect timeout'u temizle
-        if (reconnectTimeout) {
-            clearTimeout(reconnectTimeout);
-            reconnectTimeout = null;
-        }
-        
-        // Önceki bağlantıyı kapat
-        if (window._sseSource) {
-            window._sseSource.close();
-            window._sseSource = null;
-        }
-        
-        var source = new EventSource('<?= ROOT_URL ?>api/events.php?lastId=' + lastId);
-        window._sseSource = source;
-        
-        source.addEventListener('yeni_islem', function(e) {
-            var data = JSON.parse(e.data);
-            lastId = data.kayit_id;
-            yeniKayitSayisi++;
-            bildirimGuncelle();
-        });
-        
-        source.onerror = function() {
-            source.close();
-            window._sseSource = null;
-            // 15 saniye sonra tekrar bağlan (daha uzun bekleme)
-            reconnectTimeout = setTimeout(baglan, 15000);
-        };
-        
-        // Sayfa kapatılırken bağlantıyı kapat
-        window.addEventListener('beforeunload', function() {
-            if (window._sseSource) {
-                window._sseSource.close();
-                window._sseSource = null;
-            }
-            if (reconnectTimeout) {
-                clearTimeout(reconnectTimeout);
-            }
-        });
-        
-        // Sayfa gizlendiğinde bağlantıyı kapat (sekme değişimi)
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden && window._sseSource) {
-                window._sseSource.close();
-                window._sseSource = null;
-            }
-        });
+    function yeniKayitKontrol() {
+        fetch('<?= ROOT_URL ?>api/check_new_records.php?lastId=' + lastId)
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok && data.yeni_var) {
+                    lastId = data.son_id;
+                    yeniKayitSayisi += data.yeni_sayisi;
+                    bildirimGoster();
+                }
+            })
+            .catch(() => {});
     }
     
-    baglan();
+    // Her 5 saniyede bir kontrol et
+    pollingInterval = setInterval(yeniKayitKontrol, 5000);
+    
+    // Sayfa kapatılırken polling'i durdur
+    window.addEventListener('beforeunload', function() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+        }
+    });
 })();
 <?php endif; ?>
 </script>
