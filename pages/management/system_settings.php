@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajax_ozellik'])) {
     $anahtar = $_POST['anahtar'] ?? '';
     $deger = $_POST['deger'] ?? '0';
     $reload_keys = ['dashboard_aktif', 'stok_yonetimi_aktif'];
-    if (in_array($anahtar, ['dashboard_aktif', 'stok_yonetimi_aktif', 'fake_data_aktif', 'sse_bildirim_aktif'])) {
+    if (in_array($anahtar, ['dashboard_aktif', 'stok_yonetimi_aktif', 'fake_data_aktif'])) {
         SistemAyarlari::ayarKaydet($pdo, $anahtar, $deger);
         echo json_encode(['ok' => true, 'reload' => in_array($anahtar, $reload_keys)]);
     } else {
@@ -207,16 +207,6 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="toggle-content">
                 <div class="toggle-title">🎲 Fake Data (Test Verisi)</div>
                 <div class="toggle-desc">Test verisi oluşturma aracını aktif eder. Her kullanımdan sonra otomatik kapanır.</div>
-            </div>
-        </label>
-        <label class="feature-toggle">
-            <input type="checkbox" class="toggle-input feature-toggle-input" data-anahtar="sse_bildirim_aktif" <?= SistemAyarlari::getir($pdo, 'sse_bildirim_aktif', '0') === '1' ? 'checked' : '' ?>>
-            <div class="toggle-track track-danger">
-                <div class="toggle-thumb"></div>
-            </div>
-            <div class="toggle-content">
-                <div class="toggle-title">🔔 SSE Canlı Bildirim</div>
-                <div class="toggle-desc">İşlemler sayfasında yeni kayıt eklendiğinde anında bildirim gösterir. (Sunucu SSE desteği gerektirir)</div>
             </div>
         </label>
     </div>

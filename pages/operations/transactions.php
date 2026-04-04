@@ -539,9 +539,7 @@ document.querySelectorAll('.islendi-ajax-btn').forEach(function(btn) {
 });
 
 // ── POLLING: YENİ KAYIT BİLDİRİMİ ──
-// Apache2+PHP-FPM ile SSE çalışmadığı için polling kullanılıyor
-<?php $bildirim_aktif = SistemAyarlari::getir($pdo, 'sse_bildirim_aktif', '0') === '1'; ?>
-<?php if ($bildirim_aktif): ?>
+// Her 10 saniyede bir yeni kayıt kontrolü
 (function() {
     var lastId = <?= (int)$pdo->query("SELECT MAX(id) FROM records WHERE aktif=1")->fetchColumn() ?>;
     var yeniKayitSayisi = 0;
@@ -577,8 +575,8 @@ document.querySelectorAll('.islendi-ajax-btn').forEach(function(btn) {
             .catch(() => {});
     }
     
-    // Her 5 saniyede bir kontrol et
-    pollingInterval = setInterval(yeniKayitKontrol, 5000);
+    // Her 10 saniyede bir kontrol et
+    pollingInterval = setInterval(yeniKayitKontrol, 10000);
     
     // Sayfa kapatılırken polling'i durdur
     window.addEventListener('beforeunload', function() {
@@ -587,7 +585,6 @@ document.querySelectorAll('.islendi-ajax-btn').forEach(function(btn) {
         }
     });
 })();
-<?php endif; ?>
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>
