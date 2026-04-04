@@ -539,6 +539,9 @@ document.querySelectorAll('.islendi-ajax-btn').forEach(function(btn) {
 });
 
 // ── SSE: YENİ KAYIT BİLDİRİMİ ──
+// SSE desteklenmiyorsa veya ayar kapalıysa çalıştırma
+<?php $sse_aktif = SistemAyarlari::getir($pdo, 'sse_bildirim_aktif', '0') === '1'; ?>
+<?php if ($sse_aktif): ?>
 (function() {
     // Sayfa değişiminde eski bağlantıyı kapat
     if (window._sseSource) {
@@ -590,6 +593,7 @@ document.querySelectorAll('.islendi-ajax-btn').forEach(function(btn) {
     
     baglan();
 })();
+<?php endif; ?>
 </script>
 
 <?php require_once __DIR__ . '/../../includes/footer.php'; ?>

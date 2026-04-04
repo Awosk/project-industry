@@ -193,7 +193,8 @@ INSERT IGNORE INTO `system_settings` (`anahtar`, `deger`) VALUES
 ('mail_cooldown_bitis',    ''),
 ('dashboard_aktif',        '0'),
 ('stok_yonetimi_aktif',    '0'),
-('fake_data_aktif',        '0');
+('fake_data_aktif',        '0'),
+('sse_bildirim_aktif',     '0');
 
 CREATE TABLE IF NOT EXISTS `users_notifications` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
