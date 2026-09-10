@@ -45,9 +45,11 @@
     
     require_once __DIR__ . '/../classes/SistemAyarlari.php';
     require_once __DIR__ . '/../classes/Fis.php';
+    require_once __DIR__ . '/../classes/Islem.php';
     $is_dashboard = SistemAyarlari::getir($pdo, 'dashboard_aktif', '0') === '1';
     $is_stok = SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', '0') === '1';
     $bekleyen_fis_sayisi = Fis::bekleyenSayisi($pdo);
+    $bekleyen_islem_sayisi = Islem::bekleyenSayisi($pdo);
 
     $ku = mevcutKullanici();
     $curr = basename($_SERVER['PHP_SELF']);
@@ -106,7 +108,11 @@
         </li>
         <?php endif; ?>
 
-        <li><a href="<?= ROOT_URL ?>pages/operations/transactions.php" <?= $curr=='transactions.php'?'class="active"':'' ?>>📋 İşlemler</a></li>
+        <li>
+            <a href="<?= ROOT_URL ?>pages/operations/transactions.php" <?= $curr=='transactions.php'?'class="active"':'' ?>>
+                📋 İşlemler<?php if ($bekleyen_islem_sayisi > 0): ?> <span class="badge badge-warning" style="font-size:10px;padding:2px 5px;vertical-align:middle;margin-left:2px;"><?= $bekleyen_islem_sayisi ?></span><?php endif; ?>
+            </a>
+        </li>
         <li><a href="<?= ROOT_URL ?>pages/operations/reports.php" <?= $curr=='reports.php'?'class="active"':'' ?>>📊 Raporlar</a></li>
         <?php if (isAdmin()): ?>
         <li class="dropdown <?= in_array($curr, ['users.php','logs.php','backup.php','update.php','system_settings.php','mail_queue.php','fake_data.php']) ? 'active' : '' ?>">
@@ -154,7 +160,14 @@
                     <?php endif; ?>
                 </a>
             </li>
-            <li><a href="<?= ROOT_URL ?>pages/operations/transactions.php" onclick="closeDrawer()">📋 İşlemler</a></li>
+            <li>
+                <a href="<?= ROOT_URL ?>pages/operations/transactions.php" onclick="closeDrawer()" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span>📋 İşlemler</span>
+                    <?php if ($bekleyen_islem_sayisi > 0): ?>
+                        <span class="badge badge-warning" style="font-size:10px;padding:2px 6px;"><?= $bekleyen_islem_sayisi ?> Bekliyor</span>
+                    <?php endif; ?>
+                </a>
+            </li>
             <li><a href="<?= ROOT_URL ?>pages/operations/reports.php" onclick="closeDrawer()">📊 Raporlar</a></li>
             
             <li><span class="drawer-section">Kayıtlar</span></li>
@@ -204,7 +217,7 @@
         <span class="bn-icon">🧾</span>Fişler<?= $bekleyen_fis_sayisi > 0 ? " ($bekleyen_fis_sayisi)" : '' ?>
     </a>
     <a href="<?= ROOT_URL ?>pages/operations/transactions.php" class="<?= $curr=='transactions.php'?'active':'' ?>">
-        <span class="bn-icon">📋</span>İşlemler
+        <span class="bn-icon">📋</span>İşlemler<?= $bekleyen_islem_sayisi > 0 ? " ($bekleyen_islem_sayisi)" : '' ?>
     </a>
     <a href="<?= ROOT_URL ?>pages/operations/reports.php" class="<?= $curr=='reports.php'?'active':'' ?>">
         <span class="bn-icon">📊</span>Raporlar
