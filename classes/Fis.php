@@ -50,7 +50,9 @@ class Fis {
                    t.firma_adi,
                    k1.ad_soyad AS olusturan_ad,
                    k2.ad_soyad AS onaylayan_ad,
-                   k3.ad_soyad AS iptal_eden_ad
+                   k3.ad_soyad AS iptal_eden_ad,
+                   r.id AS bagli_kayit_id,
+                   r.aktif AS kayit_aktif
             FROM slips s
             JOIN products u ON s.urun_id = u.id
             LEFT JOIN vehicles a ON s.arac_id = a.id
@@ -58,6 +60,7 @@ class Fis {
             LEFT JOIN users k1 ON s.olusturan_id = k1.id
             LEFT JOIN users k2 ON s.onaylayan_id = k2.id
             LEFT JOIN users k3 ON s.iptal_eden_id = k3.id
+            LEFT JOIN records r ON s.kayit_id = r.id
             WHERE s.id = ?
         ");
         $stmt->execute([$id]);
@@ -75,7 +78,9 @@ class Fis {
                    t.firma_adi,
                    k1.ad_soyad AS olusturan_ad,
                    k2.ad_soyad AS onaylayan_ad,
-                   k3.ad_soyad AS iptal_eden_ad
+                   k3.ad_soyad AS iptal_eden_ad,
+                   r.id AS bagli_kayit_id,
+                   r.aktif AS kayit_aktif
             FROM slips s
             JOIN products u ON s.urun_id = u.id
             LEFT JOIN vehicles a ON s.arac_id = a.id
@@ -83,6 +88,7 @@ class Fis {
             LEFT JOIN users k1 ON s.olusturan_id = k1.id
             LEFT JOIN users k2 ON s.onaylayan_id = k2.id
             LEFT JOIN users k3 ON s.iptal_eden_id = k3.id
+            LEFT JOIN records r ON s.kayit_id = r.id
         ";
         $params = [];
 
@@ -182,15 +188,21 @@ class Fis {
     }
 
     /**
-     * İptal edilmiş fişi kalıcı olarak siler.
+     * İptal edilmiş veya bağlı kaydı silinmiş fişi kalıcı olarak siler.
      */
     public static function sil($pdo, $id): bool {
         $slip = self::bul($pdo, $id);
-        if (!$slip || $slip['durum'] !== 'iptal') {
+        if (!$slip) {
             return false;
         }
 
-        $stmt = $pdo->prepare("DELETE FROM slips WHERE id = ? AND durum = 'iptal'");
+        $kayit_silinmis = ($slip['durum'] === 'onaylandi' && $slip['kayit_id'] && ($slip['kayit_aktif'] === null || (int)$slip['kayit_aktif'] === 0));
+
+        if ($slip['durum'] !== 'iptal' && !$kayit_silinmis) {
+            return false;
+        }
+
+        $stmt = $pdo->prepare("DELETE FROM slips WHERE id = ?");
         return $stmt->execute([$id]);
     }
 }

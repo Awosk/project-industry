@@ -108,24 +108,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['fis_iptal'])) {
     exit;
 }
 
-// ── İPTAL EDİLMİŞ FİŞİ SİL ──
+// ── İPTAL EDİLMİŞ VEYA KAYDI SİLİNMİŞ FİŞİ SİL ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['fis_sil'])) {
     csrfDogrula();
     $fis_id = (int)($_POST['fis_id'] ?? 0);
     $slip   = Fis::bul($pdo, $fis_id);
 
-    if ($slip && $slip['durum'] === 'iptal') {
-        if (isAdmin() || (int)$slip['olusturan_id'] === (int)$ku['id']) {
-            Fis::sil($pdo, $fis_id);
-            logYaz($pdo, 'sil', 'fis', "İptal edilen fiş kalıcı olarak silindi: #$fis_id", $fis_id, null, null, 'lite');
-            flash("Fiş #$fis_id kalıcı olarak silindi.");
+    if ($slip) {
+        $kayit_silinmis = ($slip['durum'] === 'onaylandi' && $slip['kayit_id'] && ($slip['kayit_aktif'] === null || (int)$slip['kayit_aktif'] === 0));
+        if ($slip['durum'] === 'iptal' || $kayit_silinmis) {
+            if (isAdmin() || (int)$slip['olusturan_id'] === (int)$ku['id']) {
+                Fis::sil($pdo, $fis_id);
+                logYaz($pdo, 'sil', 'fis', "Fiş kalıcı olarak silindi: #$fis_id", $fis_id, null, null, 'lite');
+                flash("Fiş #$fis_id kalıcı olarak silindi.");
+            } else {
+                flash('Sadece fişi oluşturan personel veya admin silebilir.', 'danger');
+            }
         } else {
-            flash('Sadece fişi oluşturan personel veya admin silebilir.', 'danger');
+            flash('Yalnızca iptal edilmiş veya bağlı kaydı silinmiş fişler silinebilir.', 'danger');
         }
     } else {
-        flash('Yalnızca iptal edilmiş fişler silinebilir.', 'danger');
+        flash('Silinecek fiş bulunamadı.', 'danger');
     }
-    $tab = $_GET['tab'] ?? 'iptal';
+    $tab = $_GET['tab'] ?? 'onaylandi';
     header('Location: slips.php?tab=' . urlencode($tab));
     exit;
 }
@@ -198,8 +203,16 @@ require_once __DIR__ . '/../../includes/header.php';
             $hedef_baslik = $is_arac ? htmlspecialchars($f['plaka']) : htmlspecialchars($f['firma_adi']);
             $hedef_alt = $is_arac ? htmlspecialchars($f['marka_model'] ?? '') : 'Endüstriyel Tesis';
             $hedef_link = $is_arac ? "vehicle_detail.php?id=" . $f['arac_id'] : "facility_detail.php?id=" . $f['tesis_id'];
+            $kayit_silinmis = ($f['durum'] === 'onaylandi' && $f['kayit_id'] && ($f['kayit_aktif'] === null || (int)$f['kayit_aktif'] === 0));
+            
+            $border_renk = 'var(--primary-l)';
+            if ($f['durum'] === 'onaylandi') {
+                $border_renk = $kayit_silinmis ? '#e74c3c' : '#27ae60';
+            } elseif ($f['durum'] === 'iptal') {
+                $border_renk = '#e74c3c';
+            }
         ?>
-        <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;padding:16px;border-left:4px solid <?= $f['durum'] === 'bekliyor' ? 'var(--primary-l)' : ($f['durum'] === 'onaylandi' ? '#27ae60' : '#e74c3c') ?>;">
+        <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;padding:16px;border-left:4px solid <?= $border_renk ?>;">
             
             <!-- Sol Bilgi -->
             <div style="flex:1;min-width:240px;">
@@ -218,7 +231,11 @@ require_once __DIR__ . '/../../includes/header.php';
                     <?php if ($f['durum'] === 'bekliyor'): ?>
                         <span class="badge badge-warning">⏳ Onay Bekliyor</span>
                     <?php elseif ($f['durum'] === 'onaylandi'): ?>
-                        <span class="badge badge-success">✅ Onaylandı</span>
+                        <?php if ($kayit_silinmis): ?>
+                            <span class="badge badge-danger" style="background:#e74c3c;color:#fff;">🗑️ Kayıt Silindi</span>
+                        <?php else: ?>
+                            <span class="badge badge-success">✅ Onaylandı</span>
+                        <?php endif; ?>
                     <?php else: ?>
                         <span class="badge badge-danger">🚫 İptal Edildi</span>
                     <?php endif; ?>
@@ -240,6 +257,12 @@ require_once __DIR__ . '/../../includes/header.php';
                 <?php if (!empty($f['aciklama'])): ?>
                     <div style="font-size:12px;color:var(--text);margin-top:6px;background:rgba(0,0,0,0.03);padding:6px 10px;border-radius:4px;display:inline-block;">
                         💬 <?= htmlspecialchars($f['aciklama']) ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($kayit_silinmis): ?>
+                    <div style="font-size:12px;color:#e74c3c;margin-top:6px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);padding:6px 10px;border-radius:4px;display:inline-block;font-weight:600;">
+                        ⚠️ Bu fiş onaylanarak ürün çıkışı yapılmıştı ancak çıkış kaydı araç/tesis üzerinden silinmiş.
                     </div>
                 <?php endif; ?>
 
@@ -277,10 +300,22 @@ require_once __DIR__ . '/../../includes/header.php';
                     </form>
                     <?php endif; ?>
 
-                <?php elseif ($f['durum'] === 'onaylandi' && $f['kayit_id']): ?>
-                    <a href="transactions.php?id=<?= $f['kayit_id'] ?>" class="btn btn-secondary" style="font-size:12px;display:flex;align-items:center;gap:4px;">
-                        <span>📋</span> İşlem Kaydı
-                    </a>
+                <?php elseif ($f['durum'] === 'onaylandi'): ?>
+                    <?php if ($kayit_silinmis): ?>
+                        <?php if (isAdmin() || (int)$f['olusturan_id'] === (int)$ku['id']): ?>
+                        <form method="post" onsubmit="return confirm('Çıkış kaydı silinmiş olan bu fişi sistemden kalıcı olarak silmek istediğinize emin misiniz?');">
+                            <?= csrfInput() ?>
+                            <input type="hidden" name="fis_id" value="<?= $f['id'] ?>">
+                            <button type="submit" name="fis_sil" class="btn btn-secondary" style="color:var(--danger);border-color:var(--danger);font-size:12px;display:flex;align-items:center;gap:4px;">
+                                <span>🗑️</span> Fişi Sil
+                            </button>
+                        </form>
+                        <?php endif; ?>
+                    <?php elseif ($f['kayit_id']): ?>
+                        <a href="transactions.php?id=<?= $f['kayit_id'] ?>" class="btn btn-secondary" style="font-size:12px;display:flex;align-items:center;gap:4px;">
+                            <span>📋</span> İşlem Kaydı
+                        </a>
+                    <?php endif; ?>
 
                 <?php elseif ($f['durum'] === 'iptal'): ?>
                     <?php if (isAdmin() || (int)$f['olusturan_id'] === (int)$ku['id']): ?>
