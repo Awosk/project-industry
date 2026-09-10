@@ -1621,3 +1621,38 @@ textarea {
     font-size: 12px;
     color: var(--muted);
 }
+
+/* ── ARAMALI SEÇİM (SEARCHABLE SELECT) ── */
+.search-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    box-shadow: var(--shadow-md);
+    z-index: 3000;
+    margin-top: 4px;
+}
+
+.search-opt-item {
+    padding: 10px 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s;
+}
+
+.search-opt-item:last-child {
+    border-bottom: none;
+}
+
+.search-opt-item:hover {
+    background: var(--hover-bg);
+}

@@ -365,43 +365,93 @@ require_once __DIR__ . '/../../includes/header.php';
                 </div>
             </div>
 
-            <!-- Araç Seçimi -->
-            <div class="form-group" id="alan_arac" style="margin-bottom:14px;">
+            <!-- Araç Seçimi (Aramalı) -->
+            <div class="form-group" id="alan_arac" style="margin-bottom:14px;position:relative;">
                 <label style="font-weight:600;margin-bottom:6px;display:block;">Araç Seçin *</label>
-                <select name="hedef_id_arac" id="hedef_id_arac" class="form-control" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);">
-                    <option value="">-- Araç Seçin --</option>
+                <div style="position:relative;">
+                    <input type="text" id="arac_arama_input" placeholder="🔍 Plaka veya araç ara (örn: 52 AGD veya Tank)..." autocomplete="off"
+                           class="form-control" style="width:100%;padding:9px 34px 9px 12px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;"
+                           onfocus="dropdownAc('arac')" oninput="filtrele('arac')">
+                    <span id="arac_temizle" onclick="secimTemizle('arac')" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-weight:bold;font-size:14px;" title="Temizle">✕</span>
+                </div>
+                <input type="hidden" name="hedef_id_arac" id="hedef_id_arac" value="">
+                
+                <div id="arac_dropdown" class="search-dropdown-menu" style="display:none;">
                     <?php foreach ($araclar as $a): ?>
-                        <option value="<?= $a['id'] ?>">
-                            <?= htmlspecialchars($a['plaka']) ?> (<?= htmlspecialchars($a['marka_model'] ?? 'Belirtilmedi') ?>)
-                        </option>
+                        <div class="search-opt-item arac-opt" 
+                             data-id="<?= $a['id'] ?>" 
+                             data-text="<?= htmlspecialchars(mb_strtolower($a['plaka'] . ' ' . ($a['marka_model'] ?? '') . ' ' . ($a['tur_adi'] ?? ''), 'UTF-8')) ?>"
+                             data-label="<?= htmlspecialchars($a['plaka'] . ' (' . ($a['marka_model'] ?? 'Belirtilmedi') . ')') ?>"
+                             onclick="ogeSec('arac', this)">
+                            <div>
+                                <span style="font-weight:700;color:var(--primary);font-size:13px;"><?= htmlspecialchars($a['plaka']) ?></span>
+                                <?php if (!empty($a['marka_model'])): ?>
+                                    <span style="color:var(--text);font-size:12px;margin-left:4px;">— <?= htmlspecialchars($a['marka_model']) ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <?php if (!empty($a['tur_adi'])): ?>
+                                <span class="badge badge-info" style="font-size:10px;"><?= htmlspecialchars($a['tur_adi']) ?></span>
+                            <?php endif; ?>
+                        </div>
                     <?php endforeach; ?>
-                </select>
+                    <div id="arac_yok" style="display:none;padding:12px;text-align:center;color:var(--muted);font-size:12px;">Eşleşen araç bulunamadı.</div>
+                </div>
             </div>
 
-            <!-- Tesis Seçimi -->
-            <div class="form-group" id="alan_tesis" style="display:none;margin-bottom:14px;">
+            <!-- Tesis Seçimi (Aramalı) -->
+            <div class="form-group" id="alan_tesis" style="display:none;margin-bottom:14px;position:relative;">
                 <label style="font-weight:600;margin-bottom:6px;display:block;">Tesis Seçin *</label>
-                <select name="hedef_id_tesis" id="hedef_id_tesis" class="form-control" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);">
-                    <option value="">-- Tesis Seçin --</option>
+                <div style="position:relative;">
+                    <input type="text" id="tesis_arama_input" placeholder="🔍 Tesis adı ara..." autocomplete="off"
+                           class="form-control" style="width:100%;padding:9px 34px 9px 12px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;"
+                           onfocus="dropdownAc('tesis')" oninput="filtrele('tesis')">
+                    <span id="tesis_temizle" onclick="secimTemizle('tesis')" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-weight:bold;font-size:14px;" title="Temizle">✕</span>
+                </div>
+                <input type="hidden" name="hedef_id_tesis" id="hedef_id_tesis" value="">
+                
+                <div id="tesis_dropdown" class="search-dropdown-menu" style="display:none;">
                     <?php foreach ($tesisler as $t): ?>
-                        <option value="<?= $t['id'] ?>">
-                            <?= htmlspecialchars($t['firma_adi']) ?>
-                        </option>
+                        <div class="search-opt-item tesis-opt" 
+                             data-id="<?= $t['id'] ?>" 
+                             data-text="<?= htmlspecialchars(mb_strtolower($t['firma_adi'], 'UTF-8')) ?>"
+                             data-label="<?= htmlspecialchars($t['firma_adi']) ?>"
+                             onclick="ogeSec('tesis', this)">
+                            <span style="font-weight:700;color:var(--primary);font-size:13px;"><?= htmlspecialchars($t['firma_adi']) ?></span>
+                        </div>
                     <?php endforeach; ?>
-                </select>
+                    <div id="tesis_yok" style="display:none;padding:12px;text-align:center;color:var(--muted);font-size:12px;">Eşleşen tesis bulunamadı.</div>
+                </div>
             </div>
 
-            <!-- Ürün Seçimi -->
-            <div class="form-group" style="margin-bottom:14px;">
+            <!-- Ürün Seçimi (Aramalı) -->
+            <div class="form-group" style="margin-bottom:14px;position:relative;">
                 <label style="font-weight:600;margin-bottom:6px;display:block;">Ürün *</label>
-                <select name="urun_id" id="modal_urun_id" required class="form-control" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);">
-                    <option value="">-- Ürün Seçin --</option>
+                <div style="position:relative;">
+                    <input type="text" id="urun_arama_input" placeholder="🔍 Ürün adı veya kodu yazın (örn: 10w40, Castrol)..." autocomplete="off"
+                           class="form-control" style="width:100%;padding:9px 34px 9px 12px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;"
+                           onfocus="dropdownAc('urun')" oninput="filtrele('urun')">
+                    <span id="urun_temizle" onclick="secimTemizle('urun')" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-weight:bold;font-size:14px;" title="Temizle">✕</span>
+                </div>
+                <input type="hidden" name="urun_id" id="modal_urun_id" value="">
+                
+                <div id="urun_dropdown" class="search-dropdown-menu" style="display:none;">
                     <?php foreach ($urunler as $u): ?>
-                        <option value="<?= $u['id'] ?>">
-                            <?= htmlspecialchars($u['urun_kodu']) ?> — <?= htmlspecialchars($u['urun_adi']) ?> (Mevcut Stok: <?= number_format($u['stok'], 2, ',', '.') ?> <?= $u['birim'] ?>)
-                        </option>
+                        <div class="search-opt-item urun-opt" 
+                             data-id="<?= $u['id'] ?>" 
+                             data-text="<?= htmlspecialchars(mb_strtolower($u['urun_kodu'] . ' ' . $u['urun_adi'], 'UTF-8')) ?>"
+                             data-label="<?= htmlspecialchars($u['urun_kodu'] . ' — ' . $u['urun_adi']) ?>"
+                             onclick="ogeSec('urun', this)">
+                            <div>
+                                <span style="font-weight:700;color:var(--text);font-size:13px;"><?= htmlspecialchars($u['urun_kodu']) ?></span>
+                                <span style="color:var(--muted);font-size:12px;margin-left:4px;">— <?= htmlspecialchars($u['urun_adi']) ?></span>
+                            </div>
+                            <span class="badge <?= $u['stok'] > 0 ? 'badge-success' : 'badge-danger' ?>" style="font-size:11px;">
+                                Stok: <?= number_format($u['stok'], 2, ',', '.') ?> <?= htmlspecialchars($u['birim']) ?>
+                            </span>
+                        </div>
                     <?php endforeach; ?>
-                </select>
+                    <div id="urun_yok" style="display:none;padding:12px;text-align:center;color:var(--muted);font-size:12px;">Eşleşen ürün bulunamadı.</div>
+                </div>
             </div>
 
             <!-- Miktar -->
@@ -450,6 +500,10 @@ function fisModalAc() {
 function fisModalKapat() {
     var m = document.getElementById('fisModal');
     m.style.display = 'none';
+    ['arac', 'tesis', 'urun'].forEach(function(t) {
+        var dd = document.getElementById(t + '_dropdown');
+        if (dd) dd.style.display = 'none';
+    });
 }
 
 function turDegisti(tur) {
@@ -474,6 +528,104 @@ function yagBakimiToggle() {
     km.style.display = chk.checked ? 'block' : 'none';
 }
 
+function trKucuk(str) {
+    return (str || '').toLocaleLowerCase('tr-TR').trim();
+}
+
+function dropdownAc(tur) {
+    ['arac', 'tesis', 'urun'].forEach(function(t) {
+        if (t !== tur) {
+            var el = document.getElementById(t + '_dropdown');
+            if (el) el.style.display = 'none';
+        }
+    });
+    var dd = document.getElementById(tur + '_dropdown');
+    if (dd) dd.style.display = 'block';
+    filtrele(tur);
+}
+
+function filtrele(tur) {
+    var inputEl = document.getElementById(tur + '_arama_input');
+    var val = trKucuk(inputEl.value);
+    var items = document.querySelectorAll('.' + tur + '-opt');
+    var yokDiv = document.getElementById(tur + '_yok');
+    var temizle = document.getElementById(tur + '_temizle');
+    
+    if (temizle) {
+        temizle.style.display = val.length > 0 ? 'block' : 'none';
+    }
+
+    var gorunen = 0;
+    items.forEach(function(item) {
+        var text = trKucuk(item.getAttribute('data-text'));
+        if (!val || text.indexOf(val) > -1) {
+            item.style.display = 'flex';
+            gorunen++;
+        } else {
+            item.style.display = 'none';
+        }
+    });
+
+    if (yokDiv) {
+        yokDiv.style.display = (gorunen === 0) ? 'block' : 'none';
+    }
+}
+
+function ogeSec(tur, el) {
+    var id = el.getAttribute('data-id');
+    var label = el.getAttribute('data-label');
+    
+    if (tur === 'arac') {
+        document.getElementById('hedef_id_arac').value = id;
+        document.getElementById('arac_arama_input').value = label;
+    } else if (tur === 'tesis') {
+        document.getElementById('hedef_id_tesis').value = id;
+        document.getElementById('tesis_arama_input').value = label;
+    } else if (tur === 'urun') {
+        document.getElementById('modal_urun_id').value = id;
+        document.getElementById('urun_arama_input').value = label;
+    }
+    
+    var temizle = document.getElementById(tur + '_temizle');
+    if (temizle) temizle.style.display = 'block';
+
+    var dd = document.getElementById(tur + '_dropdown');
+    if (dd) dd.style.display = 'none';
+}
+
+function secimTemizle(tur) {
+    if (tur === 'arac') {
+        document.getElementById('hedef_id_arac').value = '';
+        document.getElementById('arac_arama_input').value = '';
+        document.getElementById('arac_arama_input').focus();
+    } else if (tur === 'tesis') {
+        document.getElementById('hedef_id_tesis').value = '';
+        document.getElementById('tesis_arama_input').value = '';
+        document.getElementById('tesis_arama_input').focus();
+    } else if (tur === 'urun') {
+        document.getElementById('modal_urun_id').value = '';
+        document.getElementById('urun_arama_input').value = '';
+        document.getElementById('urun_arama_input').focus();
+    }
+    var temizle = document.getElementById(tur + '_temizle');
+    if (temizle) temizle.style.display = 'none';
+    filtrele(tur);
+    dropdownAc(tur);
+}
+
+// Modal dışına tıklandığında dropdownları kapat
+document.addEventListener('click', function(e) {
+    ['arac', 'tesis', 'urun'].forEach(function(t) {
+        var input = document.getElementById(t + '_arama_input');
+        var dropdown = document.getElementById(t + '_dropdown');
+        if (dropdown && dropdown.style.display !== 'none') {
+            if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        }
+    });
+});
+
 function formDogrula() {
     var tur = document.querySelector('input[name="kayit_turu"]:checked').value;
     var hedefIdInput = document.getElementById('modal_hedef_id');
@@ -481,18 +633,28 @@ function formDogrula() {
     if (tur === 'arac') {
         var val = document.getElementById('hedef_id_arac').value;
         if (!val) {
-            alert('Lütfen bir araç seçin.');
+            alert('Lütfen listeden bir araç arayıp seçin.');
+            document.getElementById('arac_arama_input').focus();
             return false;
         }
         hedefIdInput.value = val;
     } else {
         var val = document.getElementById('hedef_id_tesis').value;
         if (!val) {
-            alert('Lütfen bir tesis seçin.');
+            alert('Lütfen listeden bir tesis arayıp seçin.');
+            document.getElementById('tesis_arama_input').focus();
             return false;
         }
         hedefIdInput.value = val;
     }
+    
+    var urunVal = document.getElementById('modal_urun_id').value;
+    if (!urunVal) {
+        alert('Lütfen listeden bir ürün arayıp seçin.');
+        document.getElementById('urun_arama_input').focus();
+        return false;
+    }
+
     return true;
 }
 
