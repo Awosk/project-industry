@@ -83,10 +83,12 @@ class Fis {
     public static function kalemleriGetir($pdo, $slip_id) {
         $stmt = $pdo->prepare("
             SELECT si.*, 
-                   u.urun_kodu, u.urun_adi, u.birim,
+                   COALESCE(u.urun_kodu, '—') AS urun_kodu, 
+                   COALESCE(u.urun_adi, '[Silinmiş Ürün]') AS urun_adi, 
+                   COALESCE(u.birim, 'LT') AS birim,
                    r.aktif AS kayit_aktif
             FROM slip_items si
-            JOIN products u ON si.urun_id = u.id
+            LEFT JOIN products u ON si.urun_id = u.id
             LEFT JOIN records r ON si.kayit_id = r.id
             WHERE si.slip_id = ?
             ORDER BY si.id ASC
@@ -128,18 +130,23 @@ class Fis {
                     'urun_id' => $slip['urun_id'],
                     'miktar' => $slip['miktar'],
                     'kayit_id' => $slip['kayit_id'],
-                    'kayit_aktif' => 1
+                    'kayit_aktif' => 1,
+                    'urun_kodu' => '—',
+                    'urun_adi' => '[Ürün]',
+                    'birim' => 'LT'
                 ]];
             }
 
             // Kayıt silinmişlik kontrolü
             $tum_kayitlar_silindi = false;
-            if ($slip['durum'] === 'onaylandi' && !empty($slip['kalemler'])) {
+            if ($slip['durum'] === 'onaylandi') {
                 $tum_kayitlar_silindi = true;
-                foreach ($slip['kalemler'] as $item) {
-                    if ($item['kayit_id'] && (int)($item['kayit_aktif'] ?? 0) === 1) {
-                        $tum_kayitlar_silindi = false;
-                        break;
+                if (!empty($slip['kalemler'])) {
+                    foreach ($slip['kalemler'] as $item) {
+                        if ($item['kayit_id'] && isset($item['kayit_aktif']) && (int)$item['kayit_aktif'] === 1) {
+                            $tum_kayitlar_silindi = false;
+                            break;
+                        }
                     }
                 }
             }
@@ -189,10 +196,12 @@ class Fis {
 
         $items_stmt = $pdo->prepare("
             SELECT si.*, 
-                   u.urun_kodu, u.urun_adi, u.birim,
+                   COALESCE(u.urun_kodu, '—') AS urun_kodu, 
+                   COALESCE(u.urun_adi, '[Silinmiş Ürün]') AS urun_adi, 
+                   COALESCE(u.birim, 'LT') AS birim,
                    r.aktif AS kayit_aktif
             FROM slip_items si
-            JOIN products u ON si.urun_id = u.id
+            LEFT JOIN products u ON si.urun_id = u.id
             LEFT JOIN records r ON si.kayit_id = r.id
             WHERE si.slip_id IN ($in_clause)
             ORDER BY si.id ASC
@@ -209,12 +218,14 @@ class Fis {
             $s['kalemler'] = $kalem_map[$s['id']] ?? [];
 
             $tum_kayitlar_silindi = false;
-            if ($s['durum'] === 'onaylandi' && !empty($s['kalemler'])) {
+            if ($s['durum'] === 'onaylandi') {
                 $tum_kayitlar_silindi = true;
-                foreach ($s['kalemler'] as $item) {
-                    if ($item['kayit_id'] && (int)($item['kayit_aktif'] ?? 0) === 1) {
-                        $tum_kayitlar_silindi = false;
-                        break;
+                if (!empty($s['kalemler'])) {
+                    foreach ($s['kalemler'] as $item) {
+                        if ($item['kayit_id'] && isset($item['kayit_aktif']) && (int)$item['kayit_aktif'] === 1) {
+                            $tum_kayitlar_silindi = false;
+                            break;
+                        }
                     }
                 }
             }

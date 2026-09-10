@@ -1,3 +1,14 @@
+# Release Notes - v2.2.2
+
+## 🛠️ Hata Düzeltmeleri & İyileştirmeler
+
+### 🎲 Fake Data Temizliği ve Fiş Entegrasyonu
+- **Veri Temizleme Düzeltildi:** "Tüm Verileri Temizle" seçeneği çalıştırıldığında `slips` ve `slip_items` tablolarının silinmemesi sebebiyle oluşan yetim (orphaned) fiş hatası giderildi. Artık fişler ve kalemleri de temizleniyor.
+- **Fake Data Fiş Oluşturma:** Fake Data oluşturulurken sisteme rastgele araç/tesis ve ürünlere bağlı demo fişler (bekleyen, onaylanan, iptal) eklenmesi sağlandı.
+- **Silinmiş Varlık Dayanıklılığı:** Bağlı aracı, tesisi veya ürünü silinmiş olan fişlerin sayfayı bozması engellendi; bu tür kayıtlar otomatik olarak `Kayıt Silindi` statüsüne alınarak admin tarafından güvenle silinebilmesi sağlandı.
+
+---
+
 # Release Notes - v2.2.1
 
 ## 🎉 Yeni Özellikler

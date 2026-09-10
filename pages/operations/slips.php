@@ -133,7 +133,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['fis_sil'])) {
 
     if ($slip) {
         $kayit_silinmis = !empty($slip['kayit_silinmis']);
-        if ($slip['durum'] === 'iptal' || $kayit_silinmis) {
+        $hedef_yok = ($slip['kayit_turu'] === 'arac' && empty($slip['plaka'])) || ($slip['kayit_turu'] === 'tesis' && empty($slip['firma_adi']));
+        if ($slip['durum'] === 'iptal' || $kayit_silinmis || $hedef_yok || isAdmin()) {
             if (isAdmin() || (int)$slip['olusturan_id'] === (int)$ku['id']) {
                 Fis::sil($pdo, $fis_id);
                 logYaz($pdo, 'sil', 'fis', "Fiş kalıcı olarak silindi: #$fis_id", $fis_id, null, null, 'lite');
@@ -231,15 +232,16 @@ require_once __DIR__ . '/../../includes/header.php';
     <div style="display:flex;flex-direction:column;gap:12px;">
         <?php foreach ($fisler as $f): 
             $is_arac = ($f['kayit_turu'] === 'arac');
-            $hedef_baslik = $is_arac ? htmlspecialchars($f['plaka']) : htmlspecialchars($f['firma_adi']);
+            $hedef_baslik = $is_arac ? (!empty($f['plaka']) ? htmlspecialchars($f['plaka']) : '[Silinmiş Araç #' . ($f['arac_id'] ?? '?') . ']') : (!empty($f['firma_adi']) ? htmlspecialchars($f['firma_adi']) : '[Silinmiş Tesis #' . ($f['tesis_id'] ?? '?') . ']');
             $hedef_alt = $is_arac ? htmlspecialchars($f['marka_model'] ?? '') : 'Endüstriyel Tesis';
-            $hedef_link = $is_arac ? "vehicle_detail.php?id=" . $f['arac_id'] : "facility_detail.php?id=" . $f['tesis_id'];
+            $hedef_link = $is_arac ? (!empty($f['arac_id']) ? "vehicle_detail.php?id=" . $f['arac_id'] : "#") : (!empty($f['tesis_id']) ? "facility_detail.php?id=" . $f['tesis_id'] : "#");
             $kayit_silinmis = !empty($f['kayit_silinmis']);
+            $hedef_yok = ($is_arac && empty($f['plaka'])) || (!$is_arac && empty($f['firma_adi']));
             $kalem_sayisi = count($f['kalemler'] ?? []);
             
             $border_renk = 'var(--primary-l)';
             if ($f['durum'] === 'onaylandi') {
-                $border_renk = $kayit_silinmis ? '#e74c3c' : '#27ae60';
+                $border_renk = ($kayit_silinmis || $hedef_yok) ? '#e74c3c' : '#27ae60';
             } elseif ($f['durum'] === 'iptal') {
                 $border_renk = '#e74c3c';
             }
@@ -263,7 +265,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     <?php if ($f['durum'] === 'bekliyor'): ?>
                         <span class="badge badge-warning">⏳ Onay Bekliyor</span>
                     <?php elseif ($f['durum'] === 'onaylandi'): ?>
-                        <?php if ($kayit_silinmis): ?>
+                        <?php if ($kayit_silinmis || $hedef_yok): ?>
                             <span class="badge badge-danger" style="background:#e74c3c;color:#fff;">🗑️ Kayıt Silindi</span>
                         <?php else: ?>
                             <span class="badge badge-success">✅ Onaylandı</span>
@@ -314,7 +316,7 @@ require_once __DIR__ . '/../../includes/header.php';
                     </div>
                 <?php endif; ?>
 
-                <?php if ($kayit_silinmis): ?>
+                <?php if ($kayit_silinmis || $hedef_yok): ?>
                     <div style="font-size:12px;color:#e74c3c;margin-top:6px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);padding:6px 10px;border-radius:4px;display:inline-block;font-weight:600;">
                         ⚠️ Bu fiş onaylanarak ürün çıkışı yapılmıştı ancak bağlı tüm çıkış kayıtları silinmiş.
                     </div>
@@ -362,9 +364,9 @@ require_once __DIR__ . '/../../includes/header.php';
                     <?php endif; ?>
 
                 <?php elseif ($f['durum'] === 'onaylandi'): ?>
-                    <?php if ($kayit_silinmis): ?>
+                    <?php if ($kayit_silinmis || $hedef_yok): ?>
                         <?php if (isAdmin() || (int)$f['olusturan_id'] === (int)$ku['id']): ?>
-                        <form method="post" onsubmit="return confirm('Çıkış kayıtları silinmiş olan bu fişi sistemden kalıcı olarak silmek istediğinize emin misiniz?');">
+                        <form method="post" onsubmit="return confirm('Çıkış kayıtları veya hedefi silinmiş olan bu fişi sistemden kalıcı olarak silmek istediğinize emin misiniz?');">
                             <?= csrfInput() ?>
                             <input type="hidden" name="fis_id" value="<?= $f['id'] ?>">
                             <button type="submit" name="fis_sil" class="btn btn-secondary" style="color:var(--danger);border-color:var(--danger);font-size:12px;display:flex;align-items:center;gap:4px;">

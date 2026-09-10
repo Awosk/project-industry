@@ -17,6 +17,7 @@ require_once __DIR__ . '/../../classes/Tesis.php';
 require_once __DIR__ . '/../../classes/Urun.php';
 require_once __DIR__ . '/../../classes/Stok.php';
 require_once __DIR__ . '/../../classes/Islem.php';
+require_once __DIR__ . '/../../classes/Fis.php';
 require_once __DIR__ . '/../../classes/SistemAyarlari.php';
 
 adminKontrol();
@@ -59,6 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['olustur']) || isset(
                 $fake_pdo->exec("DELETE FROM system_logs");
                 $fake_pdo->exec("DELETE FROM stock_movements");
                 $fake_pdo->exec("DELETE FROM records");
+                $fake_pdo->exec("DELETE FROM slip_items");
+                $fake_pdo->exec("DELETE FROM slips");
                 $fake_pdo->exec("DELETE FROM invoices");
                 $fake_pdo->exec("DELETE FROM suppliers");
                 $fake_pdo->exec("DELETE FROM products");
@@ -66,9 +69,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['olustur']) || isset(
                 $fake_pdo->exec("DELETE FROM vehicles");
                 $fake_pdo->exec("DELETE FROM vehicles_type");
                 $fake_pdo->exec("DELETE FROM users WHERE id != 1");
+                $fake_pdo->exec("ALTER TABLE slip_items AUTO_INCREMENT = 1");
+                $fake_pdo->exec("ALTER TABLE slips AUTO_INCREMENT = 1");
+                $fake_pdo->exec("ALTER TABLE records AUTO_INCREMENT = 1");
+                $fake_pdo->exec("ALTER TABLE stock_movements AUTO_INCREMENT = 1");
+                $fake_pdo->exec("ALTER TABLE invoices AUTO_INCREMENT = 1");
+                $fake_pdo->exec("ALTER TABLE suppliers AUTO_INCREMENT = 1");
+                $fake_pdo->exec("ALTER TABLE products AUTO_INCREMENT = 1");
+                $fake_pdo->exec("ALTER TABLE facilities AUTO_INCREMENT = 1");
+                $fake_pdo->exec("ALTER TABLE vehicles AUTO_INCREMENT = 1");
+                $fake_pdo->exec("ALTER TABLE vehicles_type AUTO_INCREMENT = 1");
                 $fake_pdo->exec("SET foreign_key_checks = 1");
                 $mesaj_tip = 'success';
-                $mesajlar[] = "✅ Tüm test verileri temizlendi!";
+                $mesajlar[] = "✅ Tüm test verileri (fişler dahil) temizlendi!";
             }
 
             if (isset($_POST['olustur'])) {
@@ -79,9 +92,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['olustur']) || isset(
                 $kayit_sayisi       = max(0, (int)($_POST['kayit_sayisi'] ?? 20));
                 $tedarikci_sayisi   = max(0, (int)($_POST['tedarikci_sayisi'] ?? 2));
                 $fatura_sayisi      = max(0, (int)($_POST['fatura_sayisi'] ?? 3));
+                $fis_sayisi         = max(0, (int)($_POST['fis_sayisi'] ?? 5));
                 $stok_baslangic     = max(0, (int)($_POST['stok_baslangic'] ?? 100));
                 
-                $olusturulan = ['arac_turu' => 0, 'arac' => 0, 'tesis' => 0, 'urun' => 0, 'kayit' => 0, 'tedarikci' => 0, 'fatura' => 0];
+                $olusturulan = ['arac_turu' => 0, 'arac' => 0, 'tesis' => 0, 'urun' => 0, 'kayit' => 0, 'tedarikci' => 0, 'fatura' => 0, 'fis' => 0];
                 
                 $arac_tur_adlari = ['Kamyon', 'Kamyonet', 'Vinç', 'Forklift', 'Dozer', 'Ekskavatör', 'Beton Mikseri', 'Damperli Kamyon', 'Tanker', 'Pickup'];
                 $arac_markalar = ['Mercedes Actros', 'Volvo FH', 'Scania R', 'MAN TGX', 'DAF XF', 'Iveco Stralis', 'Renault T', 'Ford Cargo', 'BMC Pro', 'Otokar'];
@@ -152,6 +166,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (isset($_POST['olustur']) || isset(
                         Islem::tesisYagEkle($fake_pdo, $tesis_ids[array_rand($tesis_ids)], $urun_id, $miktar, $tarih, $aciklamalar[array_rand($aciklamalar)], $ADMIN_ID);
                     }
                     $olusturulan['kayit']++;
+                }
+
+                // Fişler (Çıkış Talepleri)
+                if ($fis_sayisi > 0 && !empty($urun_ids) && (!empty($arac_ids) || !empty($tesis_ids))) {
+                    for ($i = 0; $i < $fis_sayisi; $i++) {
+                        $tur = (!empty($arac_ids) && (empty($tesis_ids) || rand(1, 100) <= 70)) ? 'arac' : 'tesis';
+                        $hedef_id = ($tur === 'arac') ? $arac_ids[array_rand($arac_ids)] : $tesis_ids[array_rand($tesis_ids)];
+                        $kalem_adedi = rand(1, min(2, count($urun_ids)));
+                        $secili_keys = (array)array_rand($urun_ids, $kalem_adedi);
+                        $kalemler = [];
+                        foreach ($secili_keys as $k_idx) {
+                            $kalemler[] = ['urun_id' => $urun_ids[$k_idx], 'miktar' => rand(2, 25)];
+                        }
+                        $yag_b = ($tur === 'arac') ? rand(0, 1) : 0;
+                        $km = ($yag_b) ? rand(10000, 200000) : null;
+                        $aciklama = (rand(1, 100) <= 50) ? $aciklamalar[array_rand($aciklamalar)] : '';
+                        
+                        $f_id = Fis::ekleCoklu($fake_pdo, $tur, $hedef_id, $kalemler, $aciklama, $yag_b, $km, $ADMIN_ID);
+                        if ($f_id) {
+                            $zar = rand(1, 100);
+                            if ($zar <= 40) {
+                                Fis::onayla($fake_pdo, $f_id, $ADMIN_ID);
+                            } elseif ($zar <= 60) {
+                                Fis::iptalEt($fake_pdo, $f_id, $ADMIN_ID);
+                            }
+                            $olusturulan['fis']++;
+                        }
+                    }
                 }
                 
                 $mesaj_tip = 'success';
@@ -235,6 +277,11 @@ require_once __DIR__ . '/../../includes/header.php';
                 <input type="number" name="fatura_sayisi" value="3" min="0" max="20">
                 <div class="form-note">Stok girişi</div>
             </div>
+            <div class="form-group">
+                <label>🧾 Çıkış Fişi</label>
+                <input type="number" name="fis_sayisi" value="5" min="0" max="30">
+                <div class="form-note">Talep fişi</div>
+            </div>
         </div>
         <div style="display:flex;gap:10px;margin-top:18px;">
             <button type="submit" name="olustur" class="btn btn-primary" style="flex:1;">🎲 Fake Data Oluştur</button>
@@ -257,6 +304,7 @@ function setMax() {
     document.querySelector('[name="stok_baslangic"]').value = 10000;
     document.querySelector('[name="tedarikci_sayisi"]').value = 10;
     document.querySelector('[name="fatura_sayisi"]').value = 20;
+    document.querySelector('[name="fis_sayisi"]').value = 30;
 }
 </script>
 
