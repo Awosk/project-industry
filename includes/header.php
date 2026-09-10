@@ -44,8 +44,10 @@
     }
     
     require_once __DIR__ . '/../classes/SistemAyarlari.php';
+    require_once __DIR__ . '/../classes/Fis.php';
     $is_dashboard = SistemAyarlari::getir($pdo, 'dashboard_aktif', '0') === '1';
     $is_stok = SistemAyarlari::getir($pdo, 'stok_yonetimi_aktif', '0') === '1';
+    $bekleyen_fis_sayisi = Fis::bekleyenSayisi($pdo);
 
     $ku = mevcutKullanici();
     $curr = basename($_SERVER['PHP_SELF']);
@@ -77,6 +79,11 @@
         <?php endif; ?>
         
         <li><a href="<?= ROOT_URL ?>pages/operations/facilities.php" <?= $curr=='facilities.php'?'class="active"':'' ?>>🏭 Tesisler</a></li>
+        <li>
+            <a href="<?= ROOT_URL ?>pages/operations/slips.php" <?= $curr=='slips.php'?'class="active"':'' ?>>
+                🧾 Fişler<?php if ($bekleyen_fis_sayisi > 0): ?> <span class="badge badge-warning" style="font-size:10px;padding:2px 5px;vertical-align:middle;margin-left:2px;"><?= $bekleyen_fis_sayisi ?></span><?php endif; ?>
+            </a>
+        </li>
         
         <li class="dropdown <?= in_array($curr, ['products.php','vehicles.php','vehicle_types.php','facilities_management.php']) ? 'active' : '' ?>">
             <a href="#" <?= in_array($curr, ['products.php','vehicles.php','vehicle_types.php','facilities_management.php']) ? 'class="active"' : '' ?>>📁 Yönet ▾</a>
@@ -139,6 +146,14 @@
             <li><a href="<?= ROOT_URL ?>index.php" onclick="closeDrawer()">🚗 Araçlar</a></li>
             <?php endif; ?>
             <li><a href="<?= ROOT_URL ?>pages/operations/facilities.php" onclick="closeDrawer()">🏭 Tesisler</a></li>
+            <li>
+                <a href="<?= ROOT_URL ?>pages/operations/slips.php" onclick="closeDrawer()" style="display:flex;align-items:center;justify-content:space-between;">
+                    <span>🧾 Fişler</span>
+                    <?php if ($bekleyen_fis_sayisi > 0): ?>
+                        <span class="badge badge-warning" style="font-size:10px;padding:2px 6px;"><?= $bekleyen_fis_sayisi ?> Bekliyor</span>
+                    <?php endif; ?>
+                </a>
+            </li>
             <li><a href="<?= ROOT_URL ?>pages/operations/transactions.php" onclick="closeDrawer()">📋 İşlemler</a></li>
             <li><a href="<?= ROOT_URL ?>pages/operations/reports.php" onclick="closeDrawer()">📊 Raporlar</a></li>
             
@@ -184,6 +199,9 @@
     </a>
     <a href="<?= ROOT_URL ?>pages/operations/facilities.php" class="<?= $curr=='facilities.php'?'active':'' ?>">
         <span class="bn-icon">🏭</span>Tesisler
+    </a>
+    <a href="<?= ROOT_URL ?>pages/operations/slips.php" class="<?= $curr=='slips.php'?'active':'' ?>">
+        <span class="bn-icon">🧾</span>Fişler<?= $bekleyen_fis_sayisi > 0 ? " ($bekleyen_fis_sayisi)" : '' ?>
     </a>
     <a href="<?= ROOT_URL ?>pages/operations/transactions.php" class="<?= $curr=='transactions.php'?'active':'' ?>">
         <span class="bn-icon">📋</span>İşlemler

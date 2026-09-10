@@ -9,4 +9,4 @@
  * (at your option) any later version.
  */
 
-define('SITE_VERSIYONU', '2.1.0');
+define('SITE_VERSIYONU', '2.2.0');

@@ -1,3 +1,17 @@
+# Release Notes - v2.2.0
+
+## 🎉 Yeni Özellikler
+
+### 🧾 Dijital Fiş Sistemi (Talep & Onaylı Ürün Çıkışı)
+- **Depo & Saha Entegrasyonu:** Depo personelinin fiziksel kağıt fiş yazma ihtiyacı ortadan kaldırıldı; araç/tesis seçilerek anında sistem üzerinden dijital çıkış fişi oluşturulabiliyor.
+- **Onay Mekanizması:** Saha personeli yağı/ürünü teslim ederken tek tıkla fişi onaylayabilir. Onaylandığı an otomatik olarak `records` tablosuna kesin çıkış işlenir ve ürün stoğu düşülür.
+- **İptal & Silme Yaşam Döngüsü:** Hatalı veya vazgeçilen fişler oluşturan personel veya admin tarafından önce "İptal Edildi" statüsüne alınır; iptal edilen fişler istendiğinde sistemden kalıcı olarak silinebilir.
+- **Canlı Bildirim (Polling):** Yeni bir fiş açıldığında sahada ekranı açık olan personellere anlık `🔔 Yeni Fiş Açıldı` bildirimi gösterilir.
+- **Navigasyon Rozeti:** Masaüstü menüde, mobil menüde ve alt gezinme çubuğunda bekleyen fiş adedi canlı rozet (badge) ile gösterilir (`🧾 Fişler [X]`).
+- **Esnek Yetkilendirme:** Saha personeli fiş onaylamanın yanı sıra dilerse eskisi gibi doğrudan manuel ürün çıkışı da yapabilir.
+
+---
+
 # Release Notes - v2.1.0
 
 ## 🎉 Yeni Özellikler
