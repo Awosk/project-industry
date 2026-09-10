@@ -273,6 +273,21 @@ CREATE TABLE IF NOT EXISTS `slips` (
   CONSTRAINT `fk_slips_iptal_eden` FOREIGN KEY (`iptal_eden_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 
+CREATE TABLE IF NOT EXISTS `slip_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `slip_id` int(11) NOT NULL,
+  `urun_id` int(11) NOT NULL,
+  `miktar` decimal(10,2) NOT NULL,
+  `kayit_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `slip_id` (`slip_id`),
+  KEY `urun_id` (`urun_id`),
+  KEY `kayit_id` (`kayit_id`),
+  CONSTRAINT `fk_slip_items_slip` FOREIGN KEY (`slip_id`) REFERENCES `slips` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_slip_items_urun` FOREIGN KEY (`urun_id`) REFERENCES `products` (`id`),
+  CONSTRAINT `fk_slip_items_kayit` FOREIGN KEY (`kayit_id`) REFERENCES `records` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
 CREATE TABLE IF NOT EXISTS `system_migrations` (
   `versiyon` varchar(20) NOT NULL,
   `uygulandi_tarih` datetime NOT NULL DEFAULT current_timestamp(),

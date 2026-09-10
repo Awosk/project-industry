@@ -1,3 +1,17 @@
+# Release Notes - v2.2.1
+
+## 🎉 Yeni Özellikler
+
+### 📦 Fişlerde Çoklu Ürün Kalemi Desteği
+- **Tek Fişte Birden Fazla Ürün:** Tek bir çıkış fişine birden fazla ürün ve miktar eklenebilmesi sağlandı.
+- **➕ Başka Ürün Ekle Düğmesi:** Ürün seçim kutusunun altına yerleştirilen düğme ile dinamik olarak yeni ürün satırları eklenebilir ve gerekirse satırlar silinebilir.
+- **Dinamik Aramalı Ürün Seçimi:** Her eklenen ürün satırında ürün kodu veya adına göre anında filtreleme yapan arama kutusu ve canlı stok bilgisi entegre edildi.
+- **Gelişmiş Fiş Kartı Görünümü:** Fiş listesinde fişe bağlı tüm ürün kalemleri miktar, birim ve işlem detay bağlantılarıyla birlikte temiz kartlar halinde gösterilir.
+- **Çoklu Çıkış & Stok Düşümü:** Fiş sahada onaylandığında tüm ürünler için ayrı ayrı çıkış kaydı oluşturulur ve stoklar düşülür.
+- **Aramalı Araç ve Tesis Seçimi:** Fiş açma modalında yüzlerce araç veya tesis arasından plaka, model ve firma adına göre anında filtreleme sağlandı.
+
+---
+
 # Release Notes - v2.2.0
 
 ## 🎉 Yeni Özellikler

@@ -15,11 +15,13 @@ Personeller görsel kartlar üzerinden saniyeler içinde anlık arama (live sear
 
 ---
 
-## ✨ Temel Özellikler (v2.2.0 Yenilikleri)
+## ✨ Temel Özellikler (v2.2.1 Yenilikleri)
 
-### 🧾 Dijital Fiş Sistemi (Talep & Saha Onaylı Çıkış)
-- **Kağıtsız Operasyon:** Depo personeli araç/tesis ve ürün seçerek anında çıkış fişi açar; kağıt trafiği tamamen biter.
-- **Saha Onayı ile Otomatik Çıkış:** Saha personeli ürünü teslim ederken tek tıkla fişi onaylar; sistem anında `records` çıkışını yazar ve stoktan düşer.
+### 🧾 Dijital Fiş Sistemi (Çoklu Ürün & Saha Onaylı Çıkış)
+- **Çoklu Ürün Desteği:** Tek bir fişe "➕ Başka Ürün Ekle" butonu ile birden fazla ürün kalemi ve miktar eklenebilir.
+- **Aramalı Hızlı Seçim:** Araç, tesis ve ürün seçim kutularında anında Türkçe uyumlu filtreleme ile saniyeler içinde seçim yapılabilir.
+- **Kağıtsız Operasyon:** Depo personeli araç/tesis ve ürünleri seçerek anında çıkış fişi açar; kağıt trafiği tamamen biter.
+- **Saha Onayı ile Otomatik Çıkış:** Saha personeli ürünleri teslim ederken tek tıkla fişi onaylar; sistem her ürün için `records` çıkışını yazar ve stoktan düşer.
 - **İptal & Silme Yaşam Döngüsü:** Hatalı fişler iptal edilebilir, iptal edilenler kalıcı olarak silinebilir.
 - **Canlı Bildirimler:** Bekleyen fişler menüde dinamik rozetle gösterilir, yeni fiş açıldığında ekranda anlık uyarı belirir.
 

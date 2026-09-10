@@ -22,22 +22,32 @@ girisKontrol();
 $sayfa_basligi = 'Fiş Yönetimi';
 $ku = mevcutKullanici();
 
-// ── YENİ FİŞ OLUŞTUR ──
+// ── YENİ FİŞ OLUŞTUR (ÇOKLU ÜRÜN DESTEKLİ) ──
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['fis_ekle'])) {
     csrfDogrula();
     $kayit_turu = ($_POST['kayit_turu'] ?? '') === 'tesis' ? 'tesis' : 'arac';
     $hedef_id   = (int)($_POST['hedef_id'] ?? 0);
-    $urun_id    = (int)($_POST['urun_id'] ?? 0);
-    $miktar     = (float)str_replace(',', '.', $_POST['miktar'] ?? '0');
     $aciklama   = trim($_POST['aciklama'] ?? '');
     $yag_bakimi = isset($_POST['yag_bakimi']) ? 1 : 0;
     $mevcut_km  = (!empty($_POST['mevcut_km'])) ? (int)$_POST['mevcut_km'] : null;
 
-    if ($hedef_id > 0 && $urun_id > 0 && $miktar > 0) {
-        $yeni_id = Fis::ekle($pdo, $kayit_turu, $hedef_id, $urun_id, $miktar, $aciklama, $yag_bakimi, $mevcut_km, $ku['id']);
+    $urun_ids  = $_POST['urun_id'] ?? [];
+    $miktarlar = $_POST['miktar'] ?? [];
+
+    $kalemler = [];
+    if (is_array($urun_ids) && is_array($miktarlar)) {
+        foreach ($urun_ids as $idx => $uid) {
+            $u_id = (int)$uid;
+            $mikt = (float)str_replace(',', '.', (string)($miktarlar[$idx] ?? '0'));
+            if ($u_id > 0 && $mikt > 0) {
+                $kalemler[] = ['urun_id' => $u_id, 'miktar' => $mikt];
+            }
+        }
+    }
+
+    if ($hedef_id > 0 && !empty($kalemler)) {
+        $yeni_id = Fis::ekleCoklu($pdo, $kayit_turu, $hedef_id, $kalemler, $aciklama, $yag_bakimi, $mevcut_km, $ku['id']);
         
-        $u = Urun::bulId($pdo, $urun_id);
-        $urun_ad = $u ? ($u['urun_kodu'] . ' ' . $u['urun_adi']) : '?';
         $hedef_ad = '?';
         if ($kayit_turu === 'arac') {
             $a = Arac::aktifDetayliBulId($pdo, $hedef_id);
@@ -47,18 +57,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['fis_ekle'])) {
             $hedef_ad = $t ? $t['firma_adi'] : '?';
         }
 
-        $log_mesaj = "Yeni çıkış fişi açıldı: #$yeni_id — $hedef_ad ($urun_ad, $miktar " . ($u['birim'] ?? 'LT') . ")";
+        $kalem_ozetleri = [];
+        foreach ($kalemler as $k) {
+            $u = Urun::bulId($pdo, $k['urun_id']);
+            $kalem_ozetleri[] = ($u ? $u['urun_kodu'] . ' ' . $u['urun_adi'] : '?') . ' (' . $k['miktar'] . ' ' . ($u['birim'] ?? 'LT') . ')';
+        }
+        $kalem_str = implode(', ', $kalem_ozetleri);
+
+        $log_mesaj = "Yeni çıkış fişi açıldı: #$yeni_id — $hedef_ad [Kalemler: $kalem_str]";
         logYaz($pdo, 'ekle', 'fis', $log_mesaj, $yeni_id, null, [
             'kayit_turu' => $kayit_turu,
             'hedef_id'   => $hedef_id,
-            'urun_id'    => $urun_id,
-            'miktar'     => $miktar,
+            'kalemler'   => $kalemler,
             'aciklama'   => $aciklama
         ], 'lite');
 
-        flash("Fiş #$yeni_id başarıyla oluşturuldu.");
+        flash("Fiş #$yeni_id başarıyla oluşturuldu (" . count($kalemler) . " ürün kalemi).");
     } else {
-        flash('Lütfen tüm zorunlu alanları eksiksiz ve geçerli doldurun.', 'danger');
+        flash('Lütfen araç/tesis seçimini ve en az bir geçerli ürün ile miktarını girin.', 'danger');
     }
     header('Location: slips.php');
     exit;
@@ -74,9 +90,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['fis_onayla'])) {
         $kayit_id = Fis::onayla($pdo, $fis_id, $ku['id']);
         if ($kayit_id) {
             $hedef_ad = $slip['kayit_turu'] === 'arac' ? $slip['plaka'] : $slip['firma_adi'];
-            $log_mesaj = "Fiş #$fis_id onaylandı ve çıkış işlendi: $hedef_ad — {$slip['urun_adi']}, {$slip['miktar']} {$slip['birim']}";
+            $adet = count($slip['kalemler'] ?? []);
+            $log_mesaj = "Fiş #$fis_id onaylandı ve çıkış işlendi: $hedef_ad ($adet ürün kalemi)";
             logYaz($pdo, 'guncelle', 'fis', $log_mesaj, $fis_id, ['durum' => 'bekliyor'], ['durum' => 'onaylandi', 'kayit_id' => $kayit_id], 'lite');
-            flash("Fiş #$fis_id onaylandı ve ürün çıkışı başarıyla gerçekleştirildi.");
+            flash("Fiş #$fis_id onaylandı ve ürün çıkışları ($adet kalem) başarıyla gerçekleştirildi.");
         } else {
             flash('Fiş onaylanırken bir hata oluştu.', 'danger');
         }
@@ -115,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['fis_sil'])) {
     $slip   = Fis::bul($pdo, $fis_id);
 
     if ($slip) {
-        $kayit_silinmis = ($slip['durum'] === 'onaylandi' && $slip['kayit_id'] && ($slip['kayit_aktif'] === null || (int)$slip['kayit_aktif'] === 0));
+        $kayit_silinmis = !empty($slip['kayit_silinmis']);
         if ($slip['durum'] === 'iptal' || $kayit_silinmis) {
             if (isAdmin() || (int)$slip['olusturan_id'] === (int)$ku['id']) {
                 Fis::sil($pdo, $fis_id);
@@ -125,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['fis_sil'])) {
                 flash('Sadece fişi oluşturan personel veya admin silebilir.', 'danger');
             }
         } else {
-            flash('Yalnızca iptal edilmiş veya bağlı kaydı silinmiş fişler silinebilir.', 'danger');
+            flash('Yalnızca iptal edilmiş veya bağlı kayıtları silinmiş fişler silinebilir.', 'danger');
         }
     } else {
         flash('Silinecek fiş bulunamadı.', 'danger');
@@ -152,6 +169,20 @@ $urunler   = Urun::tumUrunler($pdo);
 
 require_once __DIR__ . '/../../includes/header.php';
 ?>
+
+<style>
+.urun-satir-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 10px;
+    align-items: start;
+}
+@media (max-width: 520px) {
+    .urun-satir-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 
 <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;">
     <div>
@@ -203,7 +234,8 @@ require_once __DIR__ . '/../../includes/header.php';
             $hedef_baslik = $is_arac ? htmlspecialchars($f['plaka']) : htmlspecialchars($f['firma_adi']);
             $hedef_alt = $is_arac ? htmlspecialchars($f['marka_model'] ?? '') : 'Endüstriyel Tesis';
             $hedef_link = $is_arac ? "vehicle_detail.php?id=" . $f['arac_id'] : "facility_detail.php?id=" . $f['tesis_id'];
-            $kayit_silinmis = ($f['durum'] === 'onaylandi' && $f['kayit_id'] && ($f['kayit_aktif'] === null || (int)$f['kayit_aktif'] === 0));
+            $kayit_silinmis = !empty($f['kayit_silinmis']);
+            $kalem_sayisi = count($f['kalemler'] ?? []);
             
             $border_renk = 'var(--primary-l)';
             if ($f['durum'] === 'onaylandi') {
@@ -212,11 +244,11 @@ require_once __DIR__ . '/../../includes/header.php';
                 $border_renk = '#e74c3c';
             }
         ?>
-        <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;padding:16px;border-left:4px solid <?= $border_renk ?>;">
+        <div class="card" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;padding:16px;border-left:4px solid <?= $border_renk ?>;">
             
             <!-- Sol Bilgi -->
             <div style="flex:1;min-width:240px;">
-                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
                     <span style="font-size:12px;font-weight:700;color:var(--muted);">#<?= $f['id'] ?></span>
                     <span class="badge badge-<?= $is_arac ? 'arac' : 'tesis' ?>" style="font-size:11px;">
                         <?= $is_arac ? '🚗 Araç' : '🏭 Tesis' ?>
@@ -240,19 +272,41 @@ require_once __DIR__ . '/../../includes/header.php';
                         <span class="badge badge-danger">🚫 İptal Edildi</span>
                     <?php endif; ?>
 
+                    <?php if ($kalem_sayisi > 1): ?>
+                        <span class="badge badge-secondary" style="font-size:11px;">📦 <?= $kalem_sayisi ?> Ürün</span>
+                    <?php endif; ?>
+
                     <?php if ($f['yag_bakimi']): ?>
                         <span class="badge badge-info" style="font-size:11px;">🛢️ Bakım<?= $f['mevcut_km'] ? ' - ' . number_format($f['mevcut_km']) . ' KM' : '' ?></span>
                     <?php endif; ?>
                 </div>
 
-                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px;">
-                    <span style="font-size:15px;font-weight:700;color:var(--text);">
-                        <?= htmlspecialchars($f['urun_kodu']) ?> — <?= htmlspecialchars($f['urun_adi']) ?>
-                    </span>
-                    <span style="font-size:16px;font-weight:800;color:var(--primary-l);">
-                        <?= formatliMiktar($f['miktar'], $f['birim']) ?>
-                    </span>
-                </div>
+                <!-- Ürün Kalemleri Listesi -->
+                <?php if (!empty($f['kalemler'])): ?>
+                    <div style="display:flex;flex-direction:column;gap:6px;margin:8px 0;max-width:560px;">
+                        <?php foreach ($f['kalemler'] as $item): 
+                            $item_silinmis = ($f['durum'] === 'onaylandi' && $item['kayit_id'] && ($item['kayit_aktif'] === null || (int)$item['kayit_aktif'] === 0));
+                        ?>
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--bg);padding:7px 12px;border-radius:6px;border:1px solid var(--border);">
+                                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                    <span style="font-weight:700;color:var(--text);font-size:13px;"><?= htmlspecialchars($item['urun_kodu']) ?></span>
+                                    <span style="color:var(--muted);font-size:13px;">— <?= htmlspecialchars($item['urun_adi']) ?></span>
+                                    <?php if ($item_silinmis): ?>
+                                        <span class="badge badge-danger" style="font-size:10px;padding:2px 6px;">Kayıt Silindi</span>
+                                    <?php endif; ?>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                                    <span style="font-size:14px;font-weight:800;color:var(--primary-l);white-space:nowrap;">
+                                        <?= formatliMiktar($item['miktar'], $item['birim']) ?>
+                                    </span>
+                                    <?php if ($item['kayit_id'] && !$item_silinmis): ?>
+                                        <a href="transactions.php?id=<?= $item['kayit_id'] ?>" style="font-size:11px;color:var(--primary);text-decoration:none;font-weight:600;padding:2px 6px;border-radius:4px;background:var(--card);border:1px solid var(--border);" title="İşlem Detayına Git">#<?= $item['kayit_id'] ?> ↗</a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
 
                 <?php if (!empty($f['aciklama'])): ?>
                     <div style="font-size:12px;color:var(--text);margin-top:6px;background:rgba(0,0,0,0.03);padding:6px 10px;border-radius:4px;display:inline-block;">
@@ -262,7 +316,7 @@ require_once __DIR__ . '/../../includes/header.php';
 
                 <?php if ($kayit_silinmis): ?>
                     <div style="font-size:12px;color:#e74c3c;margin-top:6px;background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.2);padding:6px 10px;border-radius:4px;display:inline-block;font-weight:600;">
-                        ⚠️ Bu fiş onaylanarak ürün çıkışı yapılmıştı ancak çıkış kaydı araç/tesis üzerinden silinmiş.
+                        ⚠️ Bu fiş onaylanarak ürün çıkışı yapılmıştı ancak bağlı tüm çıkış kayıtları silinmiş.
                     </div>
                 <?php endif; ?>
 
@@ -278,10 +332,17 @@ require_once __DIR__ . '/../../includes/header.php';
             </div>
 
             <!-- Sağ Aksiyonlar -->
-            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-top:4px;">
                 <?php if ($f['durum'] === 'bekliyor'): ?>
                     <!-- Onay Butonu (Saha) -->
-                    <form method="post" onsubmit="return confirm('Bu fişi onaylayarak ürün çıkışını yapmak istediğinize emin misiniz?\n\nAraç/Tesis: <?= addslashes($hedef_baslik) ?>\nÜrün: <?= addslashes($f['urun_adi']) ?> (<?= $f['miktar'] . ' ' . $f['birim'] ?>)\n\nStoktan düşülecek ve işlem kaydı açılacaktır.');">
+                    <?php
+                        $onay_kalemler = [];
+                        foreach ($f['kalemler'] as $item) {
+                            $onay_kalemler[] = '• ' . $item['urun_kodu'] . ' ' . $item['urun_adi'] . ': ' . $item['miktar'] . ' ' . $item['birim'];
+                        }
+                        $onay_kalem_metni = implode('\n', array_map('addslashes', $onay_kalemler));
+                    ?>
+                    <form method="post" onsubmit="return confirm('Bu fişi onaylayarak ürün çıkışını yapmak istediğinize emin misiniz?\n\nHedef: <?= addslashes($hedef_baslik) ?>\nÜrünler:\n<?= $onay_kalem_metni ?>\n\nStoktan düşülecek ve işlem kayıtları oluşturulacaktır.');">
                         <?= csrfInput() ?>
                         <input type="hidden" name="fis_id" value="<?= $f['id'] ?>">
                         <button type="submit" name="fis_onayla" class="btn btn-primary" style="display:flex;align-items:center;gap:6px;">
@@ -303,7 +364,7 @@ require_once __DIR__ . '/../../includes/header.php';
                 <?php elseif ($f['durum'] === 'onaylandi'): ?>
                     <?php if ($kayit_silinmis): ?>
                         <?php if (isAdmin() || (int)$f['olusturan_id'] === (int)$ku['id']): ?>
-                        <form method="post" onsubmit="return confirm('Çıkış kaydı silinmiş olan bu fişi sistemden kalıcı olarak silmek istediğinize emin misiniz?');">
+                        <form method="post" onsubmit="return confirm('Çıkış kayıtları silinmiş olan bu fişi sistemden kalıcı olarak silmek istediğinize emin misiniz?');">
                             <?= csrfInput() ?>
                             <input type="hidden" name="fis_id" value="<?= $f['id'] ?>">
                             <button type="submit" name="fis_sil" class="btn btn-secondary" style="color:var(--danger);border-color:var(--danger);font-size:12px;display:flex;align-items:center;gap:4px;">
@@ -311,8 +372,8 @@ require_once __DIR__ . '/../../includes/header.php';
                             </button>
                         </form>
                         <?php endif; ?>
-                    <?php elseif ($f['kayit_id']): ?>
-                        <a href="transactions.php?id=<?= $f['kayit_id'] ?>" class="btn btn-secondary" style="font-size:12px;display:flex;align-items:center;gap:4px;">
+                    <?php elseif (!empty($f['kalemler'][0]['kayit_id'])): ?>
+                        <a href="transactions.php?id=<?= $f['kalemler'][0]['kayit_id'] ?>" class="btn btn-secondary" style="font-size:12px;display:flex;align-items:center;gap:4px;">
                             <span>📋</span> İşlem Kaydı
                         </a>
                     <?php endif; ?>
@@ -339,7 +400,7 @@ require_once __DIR__ . '/../../includes/header.php';
 <!-- YENİ FİŞ MODAL -->
 <!-- ===================================================== -->
 <div id="fisModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;align-items:center;justify-content:center;padding:16px;">
-    <div class="modal-box" style="max-width:500px;width:100%;max-height:90vh;overflow-y:auto;">
+    <div class="modal-box" style="max-width:560px;width:100%;max-height:90vh;overflow-y:auto;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:10px;">
             <div style="font-weight:700;font-size:16px;display:flex;align-items:center;gap:6px;">
                 <span>🧾</span> Yeni Çıkış Fişi Aç
@@ -347,7 +408,7 @@ require_once __DIR__ . '/../../includes/header.php';
             <button type="button" onclick="fisModalKapat()" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--muted);">✕</button>
         </div>
 
-        <form method="post">
+        <form method="post" id="fisForm">
             <?= csrfInput() ?>
 
             <!-- Kayıt Türü -->
@@ -423,41 +484,20 @@ require_once __DIR__ . '/../../includes/header.php';
                 </div>
             </div>
 
-            <!-- Ürün Seçimi (Aramalı) -->
-            <div class="form-group" style="margin-bottom:14px;position:relative;">
-                <label style="font-weight:600;margin-bottom:6px;display:block;">Ürün *</label>
-                <div style="position:relative;">
-                    <input type="text" id="urun_arama_input" placeholder="🔍 Ürün adı veya kodu yazın (örn: 10w40, Castrol)..." autocomplete="off"
-                           class="form-control" style="width:100%;padding:9px 34px 9px 12px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;"
-                           onfocus="dropdownAc('urun')" oninput="filtrele('urun')">
-                    <span id="urun_temizle" onclick="secimTemizle('urun')" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-weight:bold;font-size:14px;" title="Temizle">✕</span>
-                </div>
-                <input type="hidden" name="urun_id" id="modal_urun_id" value="">
-                
-                <div id="urun_dropdown" class="search-dropdown-menu" style="display:none;">
-                    <?php foreach ($urunler as $u): ?>
-                        <div class="search-opt-item urun-opt" 
-                             data-id="<?= $u['id'] ?>" 
-                             data-text="<?= htmlspecialchars(mb_strtolower($u['urun_kodu'] . ' ' . $u['urun_adi'], 'UTF-8')) ?>"
-                             data-label="<?= htmlspecialchars($u['urun_kodu'] . ' — ' . $u['urun_adi']) ?>"
-                             onclick="ogeSec('urun', this)">
-                            <div>
-                                <span style="font-weight:700;color:var(--text);font-size:13px;"><?= htmlspecialchars($u['urun_kodu']) ?></span>
-                                <span style="color:var(--muted);font-size:12px;margin-left:4px;">— <?= htmlspecialchars($u['urun_adi']) ?></span>
-                            </div>
-                            <span class="badge <?= $u['stok'] > 0 ? 'badge-success' : 'badge-danger' ?>" style="font-size:11px;">
-                                Stok: <?= number_format($u['stok'], 2, ',', '.') ?> <?= htmlspecialchars($u['birim']) ?>
-                            </span>
-                        </div>
-                    <?php endforeach; ?>
-                    <div id="urun_yok" style="display:none;padding:12px;text-align:center;color:var(--muted);font-size:12px;">Eşleşen ürün bulunamadı.</div>
-                </div>
-            </div>
-
-            <!-- Miktar -->
+            <!-- Çıkış Yapılacak Ürünler (Çoklu Kalem Desteği) -->
             <div class="form-group" style="margin-bottom:14px;">
-                <label style="font-weight:600;margin-bottom:6px;display:block;">Miktar *</label>
-                <input type="number" name="miktar" step="any" min="0.01" required class="form-control" placeholder="Örn: 20" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                    <label style="font-weight:600;margin:0;">Ürünler ve Miktarlar *</label>
+                    <span style="font-size:12px;color:var(--muted);">Tek fişe birden fazla ürün ekleyebilirsiniz</span>
+                </div>
+
+                <!-- Dinamik Ürün Satırları -->
+                <div id="urun_kalemleri_kapsayici"></div>
+
+                <!-- Ürün Ekleme Düğmesi -->
+                <button type="button" class="btn btn-secondary" onclick="yeniUrunSatiriEkle()" style="width:100%;margin-top:6px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;padding:8px 14px;border:1px dashed var(--border);background:rgba(0,0,0,0.02);">
+                    <span>➕</span> Başka Ürün Ekle
+                </button>
             </div>
 
             <!-- Araç Ek Bilgileri (KM ve Yağ Bakımı) -->
@@ -492,16 +532,49 @@ require_once __DIR__ . '/../../includes/header.php';
 </div>
 
 <script>
+// PHP ürün listesi
+var urunlerListesi = <?= json_encode(array_map(function($u) {
+    return [
+        'id'     => (int)$u['id'],
+        'kod'    => (string)$u['urun_kodu'],
+        'ad'     => (string)$u['urun_adi'],
+        'birim'  => (string)($u['birim'] ?? 'LT'),
+        'stok'   => (float)$u['stok'],
+        'search' => mb_strtolower($u['urun_kodu'] . ' ' . $u['urun_adi'], 'UTF-8')
+    ];
+}, $urunler), JSON_UNESCAPED_UNICODE) ?>;
+
+var rowCounter = 0;
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 function fisModalAc() {
     var m = document.getElementById('fisModal');
     m.style.display = 'flex';
+    var kapsayici = document.getElementById('urun_kalemleri_kapsayici');
+    if (kapsayici && kapsayici.children.length === 0) {
+        yeniUrunSatiriEkle();
+    }
 }
 
 function fisModalKapat() {
     var m = document.getElementById('fisModal');
     m.style.display = 'none';
-    ['arac', 'tesis', 'urun'].forEach(function(t) {
+    ['arac', 'tesis'].forEach(function(t) {
         var dd = document.getElementById(t + '_dropdown');
+        if (dd) dd.style.display = 'none';
+    });
+    document.querySelectorAll('.urun-satir').forEach(function(satir) {
+        var idx = satir.id.replace('urun_satir_', '');
+        var dd = document.getElementById('urun_dropdown_' + idx);
         if (dd) dd.style.display = 'none';
     });
 }
@@ -533,11 +606,17 @@ function trKucuk(str) {
 }
 
 function dropdownAc(tur) {
-    ['arac', 'tesis', 'urun'].forEach(function(t) {
+    ['arac', 'tesis'].forEach(function(t) {
         if (t !== tur) {
             var el = document.getElementById(t + '_dropdown');
             if (el) el.style.display = 'none';
         }
+    });
+    // Tüm ürün dropdownlarını kapat
+    document.querySelectorAll('.urun-satir').forEach(function(satir) {
+        var idx = satir.id.replace('urun_satir_', '');
+        var dd = document.getElementById('urun_dropdown_' + idx);
+        if (dd) dd.style.display = 'none';
     });
     var dd = document.getElementById(tur + '_dropdown');
     if (dd) dd.style.display = 'block';
@@ -581,9 +660,6 @@ function ogeSec(tur, el) {
     } else if (tur === 'tesis') {
         document.getElementById('hedef_id_tesis').value = id;
         document.getElementById('tesis_arama_input').value = label;
-    } else if (tur === 'urun') {
-        document.getElementById('modal_urun_id').value = id;
-        document.getElementById('urun_arama_input').value = label;
     }
     
     var temizle = document.getElementById(tur + '_temizle');
@@ -602,10 +678,6 @@ function secimTemizle(tur) {
         document.getElementById('hedef_id_tesis').value = '';
         document.getElementById('tesis_arama_input').value = '';
         document.getElementById('tesis_arama_input').focus();
-    } else if (tur === 'urun') {
-        document.getElementById('modal_urun_id').value = '';
-        document.getElementById('urun_arama_input').value = '';
-        document.getElementById('urun_arama_input').focus();
     }
     var temizle = document.getElementById(tur + '_temizle');
     if (temizle) temizle.style.display = 'none';
@@ -613,14 +685,179 @@ function secimTemizle(tur) {
     dropdownAc(tur);
 }
 
+// ── ÇOKLU ÜRÜN KALEMİ YÖNETİMİ ──
+function yeniUrunSatiriEkle() {
+    var kapsayici = document.getElementById('urun_kalemleri_kapsayici');
+    var idx = rowCounter++;
+    
+    var div = document.createElement('div');
+    div.className = 'urun-satir';
+    div.id = 'urun_satir_' + idx;
+    div.style.cssText = 'background:var(--bg);border:1px solid var(--border);padding:10px 12px;border-radius:8px;margin-bottom:10px;position:relative;';
+    
+    div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <span class="satir-no-label" style="font-weight:700;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;">Ürün</span>
+            <button type="button" class="satir-sil-btn" onclick="urunSatiriSil(${idx})" style="background:none;border:none;color:var(--danger);font-size:12px;cursor:pointer;display:none;padding:2px 4px;font-weight:600;" title="Bu ürünü kaldır">✕ Kaldır</button>
+        </div>
+        <div class="urun-satir-grid">
+            <div style="position:relative;">
+                <input type="text" id="urun_arama_${idx}" placeholder="🔍 Ürün adı veya kodu yazın..." autocomplete="off"
+                       class="form-control urun-arama-input" style="width:100%;padding:8px 28px 8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;"
+                       onfocus="urunDropdownAc(${idx})" oninput="urunFiltrele(${idx})">
+                <span id="urun_temizle_${idx}" onclick="urunSecimTemizle(${idx})" style="display:none;position:absolute;right:8px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-weight:bold;font-size:13px;" title="Temizle">✕</span>
+                <input type="hidden" name="urun_id[]" id="urun_id_${idx}" value="" class="secili-urun-id">
+                
+                <div id="urun_dropdown_${idx}" class="search-dropdown-menu" style="display:none;"></div>
+            </div>
+            <div>
+                <div style="position:relative;display:flex;align-items:center;">
+                    <input type="number" name="miktar[]" id="miktar_${idx}" step="any" min="0.01" required placeholder="0.00"
+                           class="form-control secili-miktar" style="width:100%;padding:8px 36px 8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;">
+                    <span id="birim_etiket_${idx}" style="position:absolute;right:8px;font-size:11px;color:var(--muted);pointer-events:none;font-weight:600;">LT</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    kapsayici.appendChild(div);
+    guncelleSatirGorunumleri();
+    
+    var input = document.getElementById('urun_arama_' + idx);
+    if (input) input.focus();
+}
+
+function urunSatiriSil(idx) {
+    var satir = document.getElementById('urun_satir_' + idx);
+    if (satir) {
+        satir.remove();
+        guncelleSatirGorunumleri();
+    }
+}
+
+function guncelleSatirGorunumleri() {
+    var satirlar = document.querySelectorAll('.urun-satir');
+    satirlar.forEach(function(satir, index) {
+        var noLabel = satir.querySelector('.satir-no-label');
+        if (noLabel) noLabel.textContent = 'Ürün #' + (index + 1);
+        
+        var silBtn = satir.querySelector('.satir-sil-btn');
+        if (silBtn) {
+            silBtn.style.display = (satirlar.length > 1) ? 'inline-block' : 'none';
+        }
+    });
+}
+
+function urunDropdownAc(idx) {
+    document.querySelectorAll('.urun-satir').forEach(function(satir) {
+        var otherIdx = satir.id.replace('urun_satir_', '');
+        if (otherIdx != idx) {
+            var dd = document.getElementById('urun_dropdown_' + otherIdx);
+            if (dd) dd.style.display = 'none';
+        }
+    });
+    ['arac', 'tesis'].forEach(function(t) {
+        var dd = document.getElementById(t + '_dropdown');
+        if (dd) dd.style.display = 'none';
+    });
+    
+    urunFiltrele(idx);
+}
+
+function urunFiltrele(idx) {
+    var input = document.getElementById('urun_arama_' + idx);
+    var dd = document.getElementById('urun_dropdown_' + idx);
+    var temizle = document.getElementById('urun_temizle_' + idx);
+    if (!input || !dd) return;
+
+    var val = trKucuk(input.value);
+    if (temizle) temizle.style.display = val.length > 0 ? 'block' : 'none';
+
+    var html = '';
+    var count = 0;
+    for (var i = 0; i < urunlerListesi.length; i++) {
+        var u = urunlerListesi[i];
+        if (!val || u.search.indexOf(val) > -1) {
+            count++;
+            var stokRenk = u.stok > 0 ? 'badge-success' : 'badge-danger';
+            var stokYazi = u.stok > 0 ? 'Stok: ' + u.stok.toLocaleString('tr-TR') + ' ' + escapeHtml(u.birim) : 'Stok Yok';
+
+            html += '<div class="search-opt-item" onclick="urunSec(' + idx + ', ' + u.id + ')">' +
+                        '<div>' +
+                            '<span style="font-weight:700;color:var(--text);font-size:13px;">' + escapeHtml(u.kod) + '</span>' +
+                            '<span style="color:var(--muted);font-size:12px;margin-left:4px;">— ' + escapeHtml(u.ad) + '</span>' +
+                        '</div>' +
+                        '<span class="badge ' + stokRenk + '" style="font-size:11px;">' + stokYazi + '</span>' +
+                    '</div>';
+            if (count >= 50) break;
+        }
+    }
+
+    if (count === 0) {
+        html = '<div style="padding:12px;text-align:center;color:var(--muted);font-size:12px;">Eşleşen ürün bulunamadı.</div>';
+    }
+
+    dd.innerHTML = html;
+    dd.style.display = 'block';
+}
+
+function urunSec(idx, urunId) {
+    var u = urunlerListesi.find(function(item) { return item.id == urunId; });
+    if (!u) return;
+
+    var idInput = document.getElementById('urun_id_' + idx);
+    var aramaInput = document.getElementById('urun_arama_' + idx);
+    var birimSpan = document.getElementById('birim_etiket_' + idx);
+    var temizle = document.getElementById('urun_temizle_' + idx);
+    var dd = document.getElementById('urun_dropdown_' + idx);
+
+    if (idInput) idInput.value = u.id;
+    if (aramaInput) aramaInput.value = u.kod + ' — ' + u.ad;
+    if (birimSpan) birimSpan.textContent = u.birim || 'LT';
+    if (temizle) temizle.style.display = 'block';
+    if (dd) dd.style.display = 'none';
+
+    var miktarInput = document.getElementById('miktar_' + idx);
+    if (miktarInput && !miktarInput.value) {
+        miktarInput.focus();
+    }
+}
+
+function urunSecimTemizle(idx) {
+    var idInput = document.getElementById('urun_id_' + idx);
+    var aramaInput = document.getElementById('urun_arama_' + idx);
+    var birimSpan = document.getElementById('birim_etiket_' + idx);
+    var temizle = document.getElementById('urun_temizle_' + idx);
+
+    if (idInput) idInput.value = '';
+    if (aramaInput) {
+        aramaInput.value = '';
+        aramaInput.focus();
+    }
+    if (birimSpan) birimSpan.textContent = 'LT';
+    if (temizle) temizle.style.display = 'none';
+    urunFiltrele(idx);
+}
+
 // Modal dışına tıklandığında dropdownları kapat
 document.addEventListener('click', function(e) {
-    ['arac', 'tesis', 'urun'].forEach(function(t) {
+    ['arac', 'tesis'].forEach(function(t) {
         var input = document.getElementById(t + '_arama_input');
         var dropdown = document.getElementById(t + '_dropdown');
         if (dropdown && dropdown.style.display !== 'none') {
             if (!input.contains(e.target) && !dropdown.contains(e.target)) {
                 dropdown.style.display = 'none';
+            }
+        }
+    });
+
+    document.querySelectorAll('.urun-satir').forEach(function(satir) {
+        var idx = satir.id.replace('urun_satir_', '');
+        var input = document.getElementById('urun_arama_' + idx);
+        var dd = document.getElementById('urun_dropdown_' + idx);
+        if (dd && dd.style.display !== 'none') {
+            if (!input.contains(e.target) && !dd.contains(e.target)) {
+                dd.style.display = 'none';
             }
         }
     });
@@ -648,15 +885,44 @@ function formDogrula() {
         hedefIdInput.value = val;
     }
     
-    var urunVal = document.getElementById('modal_urun_id').value;
-    if (!urunVal) {
-        alert('Lütfen listeden bir ürün arayıp seçin.');
-        document.getElementById('urun_arama_input').focus();
+    var urunSatirlari = document.querySelectorAll('.urun-satir');
+    var gecerliUrunSayisi = 0;
+
+    for (var i = 0; i < urunSatirlari.length; i++) {
+        var satir = urunSatirlari[i];
+        var idx = satir.id.replace('urun_satir_', '');
+        var urunId = document.getElementById('urun_id_' + idx).value;
+        var miktar = parseFloat(document.getElementById('miktar_' + idx).value);
+
+        if (!urunId) {
+            alert((i + 1) + '. sıradaki ürün seçilmemiş. Lütfen ürünü arayıp seçin.');
+            document.getElementById('urun_arama_' + idx).focus();
+            return false;
+        }
+
+        if (isNaN(miktar) || miktar <= 0) {
+            alert((i + 1) + '. sıradaki ürün için geçerli bir miktar girin.');
+            document.getElementById('miktar_' + idx).focus();
+            return false;
+        }
+
+        gecerliUrunSayisi++;
+    }
+
+    if (gecerliUrunSayisi === 0) {
+        alert('Lütfen en az bir geçerli ürün ve miktar girin.');
         return false;
     }
 
     return true;
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    var kapsayici = document.getElementById('urun_kalemleri_kapsayici');
+    if (kapsayici && kapsayici.children.length === 0) {
+        yeniUrunSatiriEkle();
+    }
+});
 
 // ── POLLING: YENİ FİŞ BİLDİRİMİ (HER 10 SANİYE) ──
 (function() {
